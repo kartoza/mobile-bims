@@ -1,0 +1,36 @@
+import React from 'react'
+import { View, ViewStyle } from "react-native"
+import { Badge } from 'react-native-elements'
+import Well from "../../models/site/well"
+
+export interface WellStatusBadgeProps {
+  well: Well,
+  containerStyle?: ViewStyle
+}
+
+const BADGE_STYLE: ViewStyle = {
+  position: 'absolute',
+  top: 10,
+  left: 10
+}
+
+export function WellStatusBadge(props: WellStatusBadgeProps) {
+  return (
+    <View style={[BADGE_STYLE, props.containerStyle]}>
+      {typeof props.well.synced !== "undefined" || typeof props.well.newData !== "undefined" ? (
+        props.well.newData ? <Badge
+          status="warning"
+          value="New Data"
+        /> : (
+          props.well.synced === false ? <Badge
+            status="error"
+            badgeStyle={{ backgroundColor: "rgb(234, 206, 53)" }}
+            value="Unsynced"
+          /> : <Badge
+            status="success"
+            value="Synced"
+          />
+        )) : null}
+    </View>
+  )
+}
