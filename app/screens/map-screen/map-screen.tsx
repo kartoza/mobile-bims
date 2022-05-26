@@ -205,6 +205,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     refreshMap
   ])
 
+  const addOccurrenceRecord = React.useMemo(() => () => props.navigation.navigate(
+    "occurrenceForm", {
+      sitePk: selectedSite.pk,
+      onBackToMap: () => refreshMap()
+    }), [
+    props.navigation,
+    selectedSite,
+    refreshMap
+  ])
+
   const deleteRecord = async (wellPk) => {
     await Alert.alert(
       'Deleting Location Data',
@@ -481,7 +491,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   buttonStyle={ styles.MID_BOTTOM_BUTTON }
                   titleStyle={{ color: "#ffffff" }}
                   containerStyle={{ width: "40%" }}
-                  onPress={ () => { viewRecord() }}
+                  onPress={ () => { addOccurrenceRecord() }}
                 />
                 { selectedSite.newData ? <Button
                   title="Delete"

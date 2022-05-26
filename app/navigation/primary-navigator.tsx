@@ -8,6 +8,7 @@ import React from "react"
 
 import { createNativeStackNavigator } from "react-native-screens/native-stack"
 import { MapScreen, FormScreen, LoginScreenPage, MeasurementFormScreen, MeasurementListScreen } from "../screens"
+import { OccurrenceFormScreen } from "../screens/form-screen/occurrence-form-screen"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -25,6 +26,7 @@ export type PrimaryParamList = {
   map: undefined
   form: undefined
   login: undefined
+  occurrenceForm: undefined
   measurementForm: undefined
   measurementList: undefined
 }
@@ -43,6 +45,7 @@ export function PrimaryNavigator() {
       <Stack.Screen name="login" component={LoginScreenPage} />
       <Stack.Screen name="map" component={MapScreen} />
       <Stack.Screen name="form" component={FormScreen} />
+      <Stack.Screen name="occurrenceForm" component={OccurrenceFormScreen} />
       <Stack.Screen name="measurementForm" component={MeasurementFormScreen} />
       <Stack.Screen name="measurementList" component={MeasurementListScreen} />
     </Stack.Navigator>
