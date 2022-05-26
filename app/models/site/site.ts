@@ -5,17 +5,20 @@ export default class Site {
   name: string
   latitude: number
   longitude: number
+  datetime: number
   synced: boolean
   newData?: boolean
 
   parse = (data) => {
-    console.log(data)
     this.id = data.id
     this.siteCode = data.site_code
     this.name = data.name
     const geometry = JSON.parse(data.geometry)
     this.longitude = geometry.coordinates[0]
     this.latitude = geometry.coordinates[1]
+    if (data.datetime) {
+      this.datetime = data.datetime
+    }
     return this
   }
 

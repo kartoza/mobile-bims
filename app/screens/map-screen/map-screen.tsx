@@ -13,7 +13,15 @@ import { delay } from "../../utils/delay"
 import NetInfo from "@react-native-community/netinfo"
 import * as Progress from 'react-native-progress'
 import { Api } from "../../services/api/api"
-import { clearTemporaryNewWells, createNewWell, getWellsByField, loadSites, saveSites, removeWellsByField } from "../../models/site/site.store"
+import {
+  clearTemporaryNewWells,
+  createNewWell,
+  getWellsByField,
+  loadSites,
+  saveSites,
+  removeWellsByField,
+  createNewSite, clearTemporaryNewSites,
+} from "../../models/site/site.store"
 import { saveTerms } from "../../models/site/term.store"
 import Well from "../../models/site/well"
 import { WellStatusBadge } from "../../components/well/well-status-badge"
@@ -31,13 +39,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const { navigation } = props
   const [sites, setSites] = useState([])
   const [markers, setMarkers] = useState([])
-  const [newRecordMarker, setNewRecordMarker] = useState(null)
+  const [newSiteMarker, setNewSiteMarker] = useState(null)
   const [search, setSearch] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState('')
   const [isViewRecord, setIsViewRecord] = useState(false)
-  const [isAddRecord, setIsAddRecord] = useState(false)
+  const [isAddSite, setIsAddSite] = useState(false)
   const [selectedSite, setSelectedSite] = useState({} as Well)
   const [unsyncedData, setUnsyncedData] = useState([])
   const [syncProgress, setSyncProgress] = useState(0)
@@ -66,7 +74,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   }
 
   const getSites = async(_latitude?, _longitude?) => {
-    // await clearTemporaryNewWells()
+    await clearTemporaryNewSites()
     let _sites = await loadSites()
     if (_sites.length === 0) {
       const userLatitude = _latitude || latitude
@@ -81,11 +89,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         _sites = apiResult.sites
         await saveTerms(apiResult.terms)
       }
-      // await saveSites(_sites)
+      await saveSites(_sites)
     }
     if (_sites) {
-      setNewRecordMarker(null)
-      setIsAddRecord(false)
+      setNewSiteMarker(null)
+      setIsAddSite(false)
       setSites(_sites)
       drawMarkers(_sites)
       setIsViewRecord(false)
@@ -120,7 +128,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   }
 
   const markerSelected = (marker) => {
-    if (isAddRecord) return
+    if (isAddSite) return
     for (const site of sites) {
       if (site.id === marker.key) {
         setSelectedSite(site)
@@ -136,8 +144,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   }
 
   const mapSelected = async (e) => {
-    if (isAddRecord) {
-      setNewRecordMarker({
+    if (isAddSite) {
+      setNewSiteMarker({
         coordinate: e.nativeEvent.coordinate
       })
     }
@@ -154,7 +162,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         if (mapViewRef && mapViewRef.current) {
           setLatitude(position.coords.latitude)
           setLongitude(position.coords.longitude)
-          getSites(position.coords.latitude, position.coords.longitude)
+          if (sites.length === 0) {
+            getSites(position.coords.latitude, position.coords.longitude)
+          }
           mapViewRef.current.animateCamera({
             center: {
               latitude: position.coords.latitude,
@@ -241,20 +251,20 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     )
   }
 
-  const addNewRecord = async () => {
-    const newWell = await createNewWell(newRecordMarker.coordinate.latitude, newRecordMarker.coordinate.longitude)
+  const addNewSite = async () => {
+    const newSite = await createNewSite(newSiteMarker.coordinate.latitude, newSiteMarker.coordinate.longitude)
     props.navigation.navigate("form", {
-      wellPk: newWell.pk,
+      wellPk: newSite.pk,
       editMode: true,
       onBackToMap: () => refreshMap()
     })
   }
 
-  const addNewRecordMode = async () => {
+  const addNewSiteMode = async () => {
     watchLocation()
-    setIsAddRecord(true)
+    setIsAddSite(true)
     if (latitude && longitude) {
-      setNewRecordMarker({
+      setNewSiteMarker({
         coordinate: {
           latitude: latitude,
           longitude: longitude
@@ -274,7 +284,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const submitSearch = async() => {
     setIsViewRecord(false)
     setSelectedMarker(null)
-    setIsAddRecord(false)
+    setIsAddSite(false)
     setIsLoading(true)
     const results = []
     if (sites) {
@@ -433,10 +443,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             )
           })}
           {selectedMarker ? <Marker coordinate={ selectedMarker.coordinate } pinColor={'blue'} /> : null }
-          {newRecordMarker
+          {newSiteMarker
             ? <Marker
               key={'newRecord'}
-              coordinate={newRecordMarker.coordinate}
+              coordinate={newSiteMarker.coordinate}
               title={'New Record'}
               pinColor={'orange'}
             /> : null }
@@ -475,15 +485,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               <WellStatusBadge well={selectedSite} containerStyle={{ position: 'absolute', top: 10, left: 10 }}></WellStatusBadge>
               <Text style={ styles.MID_BOTTOM_TEXT }>{ selectedSite.siteCode } </Text>
               <View style={{ flexDirection: 'row' }}>
-                {/* <Button */}
-                {/*   title="View Site" */}
-                {/*   type="outline" */}
-                {/*   raised */}
-                {/*   buttonStyle={ styles.MID_BOTTOM_BUTTON } */}
-                {/*   titleStyle={{ color: "#ffffff" }} */}
-                {/*   containerStyle={{ width: "40%" }} */}
-                {/*   onPress={ () => { viewRecord() }} */}
-                {/* /> */}
                 <Button
                   title="Add Record"
                   type="outline"
@@ -491,6 +492,15 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   buttonStyle={ styles.MID_BOTTOM_BUTTON }
                   titleStyle={{ color: "#ffffff" }}
                   containerStyle={{ width: "40%" }}
+                  onPress={ () => { addOccurrenceRecord() }}
+                />
+                <Button
+                  title="Add SASS"
+                  type="outline"
+                  raised
+                  buttonStyle={ styles.SASS_BUTTON }
+                  titleStyle={{ color: "#ffffff" }}
+                  containerStyle={{ width: "40%", marginLeft: 10 }}
                   onPress={ () => { addOccurrenceRecord() }}
                 />
                 { selectedSite.newData ? <Button
@@ -507,7 +517,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           </View>
         ) : <View></View>}
 
-      { isAddRecord
+      { isAddSite
         ? (
           <View style={styles.MID_BOTTOM_CONTAINER}>
             <View style={styles.MID_BOTTOM_CONTENTS}>
@@ -520,16 +530,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   buttonStyle={ styles.MID_BOTTOM_BUTTON }
                   titleStyle={{ color: "#ffffff" }}
                   containerStyle={{ width: "30%" }}
-                  onPress={ () => { setNewRecordMarker(null); setIsAddRecord(false) }}
+                  onPress={ () => { setNewSiteMarker(null); setIsAddSite(false) }}
                 />
-                { newRecordMarker ? <Button
+                { newSiteMarker ? <Button
                   title="Add"
                   type="outline"
                   raised
                   buttonStyle={ styles.MID_BOTTOM_BUTTON }
                   titleStyle={{ color: "#ffffff" }}
                   containerStyle={{ width: "30%", marginLeft: 10 }}
-                  onPress={ () => { addNewRecord() }}
+                  onPress={ () => { addNewSite() }}
                 /> : null }
               </View>
             </View>
@@ -547,7 +557,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               color="rgb(196, 196, 196)"
             ></Icon>
           }
-          onPress={ () => addNewRecordMode() }
+          onPress={ () => addNewSiteMode() }
           buttonStyle={ styles.USER_BUTTON }
           containerStyle={ styles.USER_BUTTON_CONTAINER }
           TouchableComponent={TouchableWithoutFeedback}
