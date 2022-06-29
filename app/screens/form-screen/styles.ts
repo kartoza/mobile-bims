@@ -132,7 +132,40 @@ const ERROR_INPUT: TextStyle = {
   paddingLeft: 3
 }
 
+const AUTOCOMPLETE_CONTAINER: ViewStyle = {
+  flex: 1,
+  left: 0,
+  position: 'absolute',
+  right: 0,
+  top: 35,
+  zIndex: 1
+}
+
+const AUTOCOMPLETE_LIST: ViewStyle = {
+  backgroundColor: 'white',
+  padding: 5,
+  borderBottomWidth: 0.2,
+  borderBottomColor: 'rgba(0,0,0,0.21)'
+}
+
+const AUTOCOMPLETE_LIST_TEXT: TextStyle = {
+  color: 'black',
+  fontSize: 14,
+  margin: 2,
+  backgroundColor: 'white'
+}
+
+const OBSERVED_TAXA_LIST: ViewStyle = {
+  flexDirection: 'row',
+  alignItems: "center",
+  backgroundColor: "white",
+  marginBottom: 5
+}
+
 export const styles = StyleSheet.create({
+  AUTOCOMPLETE_CONTAINER,
+  AUTOCOMPLETE_LIST,
+  AUTOCOMPLETE_LIST_TEXT,
   CHART_CONTAINER,
   CHART_LABEL,
   CONTAINER,
@@ -146,6 +179,7 @@ export const styles = StyleSheet.create({
   LAST_UPDATE_TEXT,
   LOADING,
   MULTIPLE_INPUT_STYLE,
+  OBSERVED_TAXA_LIST,
   PICKER_INPUT_STYLE,
   PICKER_SM_INPUT_STYLE,
   REQUIRED_LABEL,
