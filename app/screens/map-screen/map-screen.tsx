@@ -27,6 +27,7 @@ import Well from "../../models/site/well"
 import { WellStatusBadge } from "../../components/well/well-status-badge"
 import { OverlayMenu } from "../map-screen/overlay-menu"
 import { load } from "../../utils/storage"
+import { loadTaxonGroups, saveTaxa, saveTaxonGroups } from "../../models/taxon/taxon.store"
 
 const mapViewRef = createRef()
 let SUBS = null
@@ -353,10 +354,33 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     markerDeselected()
     setSyncProgress(0)
     setIsSyncing(true)
-    setSyncMessage('Downloading taxa list')
+    setSyncMessage('Downloading Taxa List')
+
+    const api = new Api()
+    await api.setup()
+    let taxonGroups = await loadTaxonGroups()
+    if (taxonGroups.length === 0) {
+      const taxonGroupResult = await api.getTaxonGroup()
+      if (taxonGroupResult.kind === 'ok') {
+        taxonGroups = taxonGroupResult.taxonGroups
+        await saveTaxonGroups(taxonGroups)
+      }
+    }
+    if (taxonGroups) {
+      for (let i = 0; i < taxonGroups.length; i++) {
+        const taxonGroup = taxonGroups[i]
+        const apiResult = await api.getTaxa(taxonGroup.id + "")
+        if (apiResult.kind === "ok") {
+          await saveTaxa(apiResult.taxa)
+        }
+        setSyncProgress((i + 1) / taxonGroups.length)
+      }
+    }
     delay(500).then(() => {
       setIsSyncing(false)
     })
+
+    // TODO
     // let currentUnsyncedData = unsyncedData
     // if (currentUnsyncedData.length > 0) {
     //   currentUnsyncedData = await pushUnsynced()

@@ -9,7 +9,8 @@ import { loadChoices } from "../../models/site/term.store"
 import { LIMIT } from "@env"
 import { securedUrl } from "../../utils/url"
 import Site from "../../models/site/site"
-import { GetSitesResult } from "./api.types"
+import { GetSitesResult, GetTaxonGroupResult } from "./api.types"
+import Taxon, { TaxonGroup } from "../../models/taxon/taxon"
 
 /**
  * Manages all requests to the API.
@@ -43,7 +44,7 @@ export class Api {
    */
   async setup() {
     // construct the apisauce instance
-    const uuid = await load("uuid")
+    const uuid = await load("token")
     this.apisauce = create({
       baseURL: this.config.url,
       timeout: this.config.timeout,
@@ -111,6 +112,46 @@ export class Api {
   }
 
   /**
+   * Get taxon group
+   */
+  async getTaxonGroup(): Promise<Types.GetTaxonGroupResult> {
+    const response: ApiResponse<any> = (
+      await this.apisauce.get(`/mobile/taxon-group/`)
+    )
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      const rawData = response.data
+      const resultTaxa: TaxonGroup[] = rawData.map((raw) => new TaxonGroup({}).parse(raw))
+      return { kind: "ok", taxonGroups: resultTaxa }
+    } catch (e) {
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Get taxa list
+   */
+  async getTaxa(module = ""): Promise<Types.GetTaxaResult> {
+    const response: ApiResponse<any> = (
+      await this.apisauce.get(`/mobile/all-taxa/?module=${module}`)
+    )
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      const rawData = response.data
+      const resultTaxa: Taxon[] = rawData.map((raw) => new Taxon({}).parse(raw))
+      return { kind: "ok", taxa: resultTaxa }
+    } catch (e) {
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
    * Get nearest sites
    */
   async getSites(latitude = "", longitude = ""): Promise<Types.GetSitesResult> {
@@ -124,14 +165,11 @@ export class Api {
     const response: ApiResponse<any> = await this.apisauce.get(
       apiUrl
     )
-    console.log(response.status)
-
     // the typical ways to die when calling an api
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
     }
-
     // transform the data into the format we are expecting
     try {
       const rawData = response.data

@@ -1,6 +1,7 @@
 import { GeneralApiProblem } from "./api-problem"
 import Well from "../../models/site/well"
 import Site from "../../models/site/site"
+import Taxon, { TaxonGroup } from "../../models/taxon/taxon"
 
 export interface User {
   id: number
@@ -13,3 +14,5 @@ export type GetWellsResult = { kind: "ok"; wells: Well[]; terms: any[] } | Gener
 export type GetWellResult = { kind: "ok"; well: Well; terms?: any[] } | GeneralApiProblem
 export type GetSitesResult = { kind: "ok"; sites: Site[]; terms: any[] } | GeneralApiProblem
 export type GetSiteResult = { kind: "ok"; site: Site; terms?: any[] } | GeneralApiProblem
+export type GetTaxaResult = { kind: "ok"; taxa: Taxon[] } | GeneralApiProblem
+export type GetTaxonGroupResult = { kind: "ok"; taxonGroups: TaxonGroup[] } | GeneralApiProblem
