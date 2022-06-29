@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import React, { useState, useEffect, createRef } from "react"
 import { FormScreenProps } from "./form-screen"
-import { View, ScrollView, Text, TextInput, Platform, TouchableOpacity } from "react-native"
+import { View, ScrollView, Text, TextInput, Platform, TouchableOpacity, LogBox } from "react-native"
 import CheckBox from '@react-native-community/checkbox'
 import { styles } from "./styles"
 import { Button, Header } from "react-native-elements"
@@ -11,6 +11,9 @@ import { TouchableWithoutFeedback } from "react-native-gesture-handler"
 import DateTimePicker from "@react-native-community/datetimepicker"
 import { Picker } from "@react-native-picker/picker"
 import { Camera } from "../../components/camera/camera"
+import Autocomplete from "react-native-autocomplete-input"
+import { loadTaxonGroups, loadTaxa } from "../../models/taxon/taxon.store"
+import Taxon from "../../models/taxon/taxon"
 
 export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = props => {
   const [date, setDate] = useState(new Date())
@@ -19,12 +22,17 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
   const [broadBiotope, setBroadBiotope] = useState('not_specified')
   const [selectedObservedTaxa, setSelectedObservedTaxa] = useState([])
   const [takingPicture, setTakingPicture] = useState(false)
+  const [taxonQuery, setTaxonQuery] = useState('')
+  const [taxaList, setTaxaList] = useState([])
+  const [observedTaxaList, setObservedTaxaList] = useState([])
 
-  const listObservedTaxa = [
-    { id: 1, value: 'Amphilius natalensis' },
-    { id: 2, value: 'Amphilius uranoscopus' },
-    { id: 3, value: 'Brycinus imberi' }
-  ]
+  useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
+    ;(async () => {
+      const _taxaList = await loadTaxa()
+      setTaxaList(_taxaList)
+    })()
+  }, [])
 
   const openDatePicker = (mode = 'date') => {
     setShowDatePicker(true)
@@ -33,6 +41,27 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
 
   const submitForm = async (data) => {
     console.log(data)
+  }
+
+  const filterTaxonList = (query) => {
+    if (query.length <= 2) {
+      return []
+    }
+    let filteredTaxaList = (
+      taxaList.filter((el, index, array) => {
+        return el.canonicalName.toLowerCase().includes(query.toLowerCase()) &&
+          !(el.id in observedTaxaList)
+      })
+    )
+    if (filteredTaxaList.length > 3) {
+      filteredTaxaList = filteredTaxaList.splice(0, 3)
+    }
+    return filteredTaxaList
+  }
+
+  const addTaxon = (taxon: Taxon) => {
+    setTaxonQuery('')
+    setObservedTaxaList({ ...observedTaxaList, [taxon.id]: taxon })
   }
 
   const checkObservedTaxon = (taxon) => {
@@ -170,26 +199,49 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                 { takingPicture ? <View style={{ height: 450 }}><Camera/></View> : null }
               </View>
               {/* Sampling Method */}
-              <View style={{ height: 55 * listObservedTaxa.length }}>
+              <View>
                 <Text style={ styles.REQUIRED_LABEL }>Observed Taxa</Text>
-                { listObservedTaxa.map(taxa =>
-                  <TouchableOpacity key={taxa.id} style={{ flexDirection: 'row', alignItems: "center", backgroundColor: "white", marginBottom: 5 }} onPress={() => checkObservedTaxon(taxa)}>
-                    <CheckBox
-                      disabled={false}
-                      value={ selectedObservedTaxa.includes(taxa.id) }
-                      onValueChange={(newValue) => checkObservedTaxon(taxa)}
-                    />
-                    <Text>{taxa.value}</Text>
-                    <TextInput
-                      keyboardType={"numeric"}
-                      editable={ selectedObservedTaxa.includes(taxa.id) }
-                      style={ styles.TEXT_INPUT_TAXA }
-                      value={'0'}
-                    />
-                  </TouchableOpacity>
-                )}
+                <View style={styles.AUTOCOMPLETE_CONTAINER}>
+                  <Autocomplete
+                    data={filterTaxonList(taxonQuery)}
+                    value={taxonQuery}
+                    onChangeText={setTaxonQuery}
+                    flatListProps={{
+                      vertical: true,
+                      keyExtractor: (taxon: Taxon) => '' + taxon.id,
+                      // eslint-disable-next-line react/display-name
+                      renderItem: (taxon: any) => {
+                        taxon = taxon.item
+                        return <TouchableOpacity style={ styles.AUTOCOMPLETE_LIST } onPress={() => addTaxon(taxon)}>
+                          <Text style={ styles.AUTOCOMPLETE_LIST_TEXT }>{ taxon.canonicalName }</Text>
+                        </TouchableOpacity>
+                      }
+                    }}
+                  />
+                </View>
+                <View style={{ marginTop: 50, marginBottom: 20 }}>
+                  { Object.keys(observedTaxaList).map((taxaId, index) =>
+                    <TouchableOpacity key={taxaId}
+                      style={ styles.OBSERVED_TAXA_LIST }
+                      onPress={() => checkObservedTaxon(observedTaxaList[taxaId])}>
+                      <CheckBox
+                        disabled={false}
+                        value={ selectedObservedTaxa.includes(observedTaxaList[taxaId].id) }
+                        onValueChange={(newValue) => checkObservedTaxon(
+                          observedTaxaList[taxaId])}
+                      />
+                      <Text>{observedTaxaList[taxaId].canonicalName}</Text>
+                      <TextInput
+                        keyboardType={"numeric"}
+                        editable={ selectedObservedTaxa.includes(taxaId) }
+                        style={ styles.TEXT_INPUT_TAXA }
+                        value={'0'}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-              <View style={{ height: 200 }}>
+              <View style={{ marginBottom: 150 }}>
                 <Button
                   title="Submit"
                   buttonStyle={{ width: "100%", backgroundColor: "rgb(241, 137, 3)" }}
