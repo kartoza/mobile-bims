@@ -5,7 +5,7 @@ import { ApiConfig, DEFAULT_API_CONFIG } from "./api-config"
 import * as Types from "./api.types"
 import { load } from "../../utils/storage"
 import Well from "../../models/site/well"
-import { loadTerms } from "../../models/site/term.store"
+import { loadChoices } from "../../models/site/term.store"
 import { LIMIT } from "@env"
 import { securedUrl } from "../../utils/url"
 import Site from "../../models/site/site"
@@ -284,7 +284,7 @@ export class Api {
    */
   async putWell(well: Well): Promise<Types.GetWellResult> {
     // make the api call
-    const terms = await loadTerms()
+    const terms = await loadChoices()
     const postData = this.parseWell(well, terms)
     const url = `/groundwater/api/well/minimized/${well.pk}/edit`
     const response: ApiResponse<any> = await this.apisauce.put(
@@ -311,7 +311,7 @@ export class Api {
    */
   async postWell(well: Well): Promise<Types.GetWellResult> {
     // make the api call
-    const terms = await loadTerms()
+    const terms = await loadChoices()
     const postData = this.parseWell(well, terms)
     const url = `/groundwater/api/well/minimized/create`
     const response: ApiResponse<any> = await this.apisauce.post(

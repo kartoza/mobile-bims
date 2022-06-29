@@ -8,7 +8,7 @@ import { Formik } from 'formik'
 import { styles } from "../form-screen/styles"
 import { getSiteByField, saveWellByField } from "../../models/site/site.store"
 import Well, { MeasurementType } from "../../models/site/well"
-import { loadTerms } from "../../models/site/term.store"
+import { loadChoices } from "../../models/site/term.store"
 import { MeasurementChart } from "../../components/measurement-chart/measurement-chart"
 import { FormInput } from "../../components/form-input/form-input"
 import { styles as mapStyles } from "../../screens/map-screen/styles"

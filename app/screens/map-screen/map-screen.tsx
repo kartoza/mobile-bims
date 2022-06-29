@@ -22,7 +22,7 @@ import {
   removeWellsByField,
   createNewSite, clearTemporaryNewSites,
 } from "../../models/site/site.store"
-import { saveTerms } from "../../models/site/term.store"
+import { saveChoices } from "../../models/site/term.store"
 import Well from "../../models/site/well"
 import { WellStatusBadge } from "../../components/well/well-status-badge"
 import { OverlayMenu } from "../map-screen/overlay-menu"
@@ -87,7 +87,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       )
       if (apiResult.kind === "ok") {
         _sites = apiResult.sites
-        await saveTerms(apiResult.terms)
       }
       await saveSites(_sites)
     }
@@ -352,7 +351,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       return
     }
     markerDeselected()
+    setSyncProgress(0)
     setIsSyncing(true)
+    setSyncMessage('Downloading taxa list')
+    delay(500).then(() => {
+      setIsSyncing(false)
+    })
     // let currentUnsyncedData = unsyncedData
     // if (currentUnsyncedData.length > 0) {
     //   currentUnsyncedData = await pushUnsynced()
@@ -366,23 +370,25 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     //   await getSites()
     //   setSyncProgress(0)
     // }
-    setIsSyncing(false)
   }
 
   useEffect(() => {
+    let isMounted = true
     ;(async () => {
-      const uuid = await load("uuid")
-      if (!uuid) {
+      const token = await load("token")
+      if (!token) {
         props.navigation.pop()
       }
-      // await getSites()
-      delay(500).then(() => requestLocation())
+      if (isMounted) {
+        delay(500).then(() => requestLocation())
+      }
     })()
     return function cleanup() {
       if (SUBS) {
         SUBS.unsubscribe()
         SUBS = null
       }
+      isMounted = false
     }
   }, [])
 

@@ -12,7 +12,7 @@ import { styles } from "../form-screen/styles"
 import { TouchableWithoutFeedback } from "react-native-gesture-handler"
 import { delay } from "../../utils/delay"
 import { feetToMeters } from "../../utils/convert"
-import { loadTerms } from "../../models/site/term.store"
+import { loadChoices } from "../../models/site/term.store"
 import { MeasurementType } from "../../models/site/well"
 
 LogBox.ignoreLogs([
@@ -87,7 +87,7 @@ export const MeasurementFormScreen: React.FunctionComponent<MeasurementFormScree
 
   useEffect(() => {
     ;(async () => {
-      const terms = await loadTerms()
+      const terms = await loadChoices()
       let measurementTerm = ""
       let measurementTitle = ""
       if (route.params.measurementType === MeasurementType.LevelMeasurements) {
