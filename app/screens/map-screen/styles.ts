@@ -114,6 +114,11 @@ const MID_BOTTOM_BUTTON: ViewStyle = {
   borderColor: "#3ca290"
 }
 
+const SASS_BUTTON: ViewStyle = {
+  backgroundColor: "#aaa600",
+  borderColor: "#aaa600"
+}
+
 export const styles = StyleSheet.create({
   ACTIVITY_INDICATOR,
   ACTIVITY_INDICATOR_WRAPPER,
@@ -124,6 +129,7 @@ export const styles = StyleSheet.create({
   MAP,
   MAP_VIEW_CONTAINER,
   MID_BOTTOM_BUTTON,
+  SASS_BUTTON,
   MID_BOTTOM_CONTAINER,
   MID_BOTTOM_CONTENTS,
   MID_BOTTOM_SUB_TEXT,

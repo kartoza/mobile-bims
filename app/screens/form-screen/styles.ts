@@ -68,6 +68,20 @@ const TEXT_INPUT_STYLE: ViewStyle = {
   color: "black"
 }
 
+const TEXT_INPUT_TAXA: TextStyle = {
+  borderWidth: 1,
+  borderColor: "#BDBDBD",
+  height: "80%",
+  fontSize: 10,
+  marginLeft: "auto",
+  marginRight: 10,
+  borderRadius: 4,
+  paddingTop: 0,
+  paddingBottom: 0,
+  width: 50,
+  textAlign: "center"
+}
+
 const PICKER_INPUT_STYLE: ViewStyle = {
   transform: [{ scaleX: 0.90 }, { scaleY: 0.90 }],
   left: -25,
@@ -137,6 +151,7 @@ export const styles = StyleSheet.create({
   REQUIRED_LABEL,
   SUBMIT_BUTTON,
   TEXT_INPUT_STYLE,
+  TEXT_INPUT_TAXA,
   chart: {
     flex: 1,
     marginBottom: 10,

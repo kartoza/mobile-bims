@@ -6,9 +6,9 @@ import { Button, Header } from 'react-native-elements'
 import { View, ScrollView, Text, Alert, ActivityIndicator, Keyboard } from 'react-native'
 import { Formik } from 'formik'
 import { styles } from "../form-screen/styles"
-import { getWellByField, saveWellByField } from "../../models/site/site.store"
+import { getSiteByField, saveWellByField } from "../../models/site/site.store"
 import Well, { MeasurementType } from "../../models/site/well"
-import { loadTerms } from "../../models/site/term.store"
+import { loadChoices } from "../../models/site/term.store"
 import { MeasurementChart } from "../../components/measurement-chart/measurement-chart"
 import { FormInput } from "../../components/form-input/form-input"
 import { styles as mapStyles } from "../../screens/map-screen/styles"
@@ -26,7 +26,7 @@ export interface FormScreenProps {
 
 export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
   const { route, navigation } = props
-  const [wellData, setWellData] = useState({} as any)
+  const [siteData, setSiteData] = useState({} as any)
   const [measurementData, setMeasurementData] = useState({} as any)
   const [updatedWellData, setUpdatedWellData] = useState({} as Well)
   const [updated, setUpdated] = useState(false)
@@ -64,29 +64,23 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
     return false
   }
 
-  const loadWellData = async () => {
-    const _wellData = await getWellByField("pk", route.params.wellPk)
-    if (!_wellData) {
-      goToMapScreen()
-    }
-    if (_wellData.newData && typeof _wellData.id === "undefined") {
-      setEditRecordTitle("ADD A LOCATION SITE")
-      setUpdated(true)
-    } else {
-      setEditRecordTitle("Edit Record")
-    }
-    setWellData(_wellData)
-    setMeasurementData({
-      level_measurements: _wellData.level_measurements,
-      yield_measurements: _wellData.yield_measurements,
-      quality_measurements: _wellData.quality_measurements,
-      level_measurements_unsynced_exist: getUnsyncedMeasurement(_wellData.level_measurements),
-      yield_measurements_unsynced_exist: getUnsyncedMeasurement(_wellData.yield_measurements),
-      quality_measurements_unsynced_exist: getUnsyncedMeasurement(_wellData.quality_measurements),
-    })
-    setUpdatedWellData(new Well(Object.assign({}, _wellData)))
-    const _terms = await loadTerms()
-    setTerms(_terms)
+  const loadSiteData = async () => {
+    setEditRecordTitle("ADD A LOCATION SITE")
+    const _siteData = await getSiteByField("pk", route.params.wellPk)
+    console.log(_siteData)
+    // if (!_wellData) {
+    //   goToMapScreen()
+    // }
+    // if (_wellData.newData && typeof _wellData.id === "undefined") {
+    //   setEditRecordTitle("ADD A LOCATION SITE")
+    //   setUpdated(true)
+    // } else {
+    //   setEditRecordTitle("Edit Record")
+    // }
+    setSiteData(_siteData)
+    // setUpdatedWellData(new Well(Object.assign({}, _wellData)))
+    // const _terms = await loadTerms()
+    // setTerms(_terms)
     setLoading(false)
   }
 
@@ -106,43 +100,9 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
     })
   }
 
-  const goToMeasurementFormScreen = React.useMemo(() => (measurementType, selectedParameter?, selectedUnit?) => props.navigation.navigate("measurementForm", {
-    wellId: wellData.pk || '',
-    measurementType: measurementType,
-    selectedParameter: selectedParameter,
-    selectedUnit: selectedUnit,
-    onGoBack: async (_measurementData) => {
-      setUpdated(true)
-      await updatedWellData.addMeasurementData(measurementType, _measurementData)
-      updateMeasurementData(measurementType, updatedWellData)
-      setUpdatedWellData({ ...updatedWellData })
-    }
-  }), [
-    props.navigation,
-    wellData,
-    updatedWellData,
-    updateMeasurementData
-  ])
-
-  const goToMeasurementListScreen = React.useMemo(() => (measurementType) => props.navigation.navigate("measurementList", {
-    measurementType: measurementType,
-    wellPk: wellData.pk,
-    wellData: updatedWellData,
-    onGoBack: async (_measurementData, measurementIndex) => {
-      setUpdated(true)
-      if (!_measurementData) {
-        updatedWellData[measurementType].splice(measurementIndex, 1)
-      } else {
-        updatedWellData[measurementType][measurementIndex] = _measurementData
-      }
-      updateMeasurementData(measurementType, updatedWellData)
-      setUpdatedWellData({ ...updatedWellData })
-    }
-  }), [updatedWellData, props.navigation, updateMeasurementData, wellData])
-
   useEffect(() => {
     ;(async () => {
-      await loadWellData()
+      await loadSiteData()
     })()
   }, [])
 
@@ -285,8 +245,8 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
     await Geolocation.getCurrentPosition(
       async (position) => {
         if (updatedWellData.latitude !== position.coords.latitude || updatedWellData.longitude !== position.coords.longitude) {
-          setWellData({
-            ...wellData,
+          setSiteData({
+            ...siteData,
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           })
@@ -324,7 +284,7 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
         leftComponent={{ icon: "chevron-left", size: 35, color: "#fff", onPress: () => goToMapScreen() }}
         centerComponent={{ text: editMode ? editRecordTitle : "View Record", style: { fontSize: 18, color: "#fff", fontWeight: "bold" } }}
         containerStyle={ styles.HEADER_CONTAINER }
-        rightComponent={ wellData.editable && !editMode ? { icon: "mode-edit", size: 35, color: "#fff", onPress: () => editRecord() } : {}}
+        rightComponent={ siteData.editable && !editMode ? { icon: "mode-edit", size: 35, color: "#fff", onPress: () => editRecord() } : {}}
       />
       { updated && terms.units ? <View style={[mapStyles.BOTTOM_VIEW, { zIndex: 99 }]}>
         <Button
@@ -337,8 +297,8 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
         <ActivityIndicator animating color="rgb(241, 137, 3)" size='large' />
       </View> : null }
       <ScrollView style = { styles.CONTAINER }>
-        <WellStatusBadge well={wellData}></WellStatusBadge>
-        { wellData.last_update ? <Text style={ styles.LAST_UPDATE_TEXT }>Last update : { wellData.last_update }</Text> : null }
+        <WellStatusBadge well={siteData}></WellStatusBadge>
+        { siteData.last_update ? <Text style={ styles.LAST_UPDATE_TEXT }>Last update : { siteData.last_update }</Text> : null }
         {/* <Text style={ styles.FORM_HEADER }>GENERAL INFORMATION</Text> */}
         <Formik
           initialValues={{ original_id: '-', status: '-', feature_type: '-', purpose: '-', description: '-' }}
@@ -350,13 +310,13 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
                 height: 200,
                 marginTop: 35,
               }}>
-                { wellData.latitude && wellData.longitude
+                { siteData.latitude && siteData.longitude
                   ? <MapView
                     pitchEnabled={editMode} rotateEnabled={editMode} zoomEnabled={editMode} scrollEnabled={editMode}
                     ref={mapViewRef}
                     initialRegion={{
-                      latitude: parseFloat(wellData.latitude),
-                      longitude: parseFloat(wellData.longitude),
+                      latitude: parseFloat(siteData.latitude),
+                      longitude: parseFloat(siteData.longitude),
                       latitudeDelta: 0.02,
                       longitudeDelta: 0.02,
                     }}
@@ -370,8 +330,8 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
                       if (!editMode) return false
                       const coordinate = e.nativeEvent.coordinate
                       setUpdated(true)
-                      setWellData({
-                        ...wellData,
+                      setSiteData({
+                        ...siteData,
                         ...{
                           latitude: coordinate.latitude,
                           longitude: coordinate.longitude,
@@ -386,34 +346,34 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
                       })
                     }}>
                     <Marker
-                      key={wellData.pk}
+                      key={siteData.pk}
                       coordinate={{
-                        latitude: parseFloat(wellData.latitude),
-                        longitude: parseFloat(wellData.longitude),
+                        latitude: parseFloat(siteData.latitude),
+                        longitude: parseFloat(siteData.longitude),
                       }}
-                      title={wellData.id}
+                      title={siteData.id}
                     />
                   </MapView> : null }
               </View>
-              <FormInput editable={ wellData.newData ? editMode : false } errorMessage={ latitudeError }
+              <FormInput editable={ siteData.newData ? editMode : false } errorMessage={ latitudeError }
                 checkValue={ (val) => {
                   if (val < -90 || val > 90) {
                     return "Please enter value comprised between -90 and 90"
                   }
                   return ""
                 }}
-                key="latitude" value={ wellData.latitude } numeric required title="Latitude" onChange={ val => formOnChange(parseFloat(val), "latitude")}></FormInput>
-              <FormInput editable={ wellData.newData ? editMode : false } errorMessage={ longitudeError }
+                key="latitude" value={ siteData.latitude } numeric required title="Latitude" onChange={ val => formOnChange(parseFloat(val), "latitude")}></FormInput>
+              <FormInput editable={ siteData.newData ? editMode : false } errorMessage={ longitudeError }
                 checkValue={ (val) => {
                   if (val < -180 || val > 180) {
                     return "Please enter value comprised between -180 and 180"
                   }
                   return ""
                 }}
-                key="longitude" value={ wellData.longitude } numeric required title="Longitude" onChange={ val => formOnChange(parseFloat(val), "longitude")}></FormInput>
+                key="longitude" value={ siteData.longitude } numeric required title="Longitude" onChange={ val => formOnChange(parseFloat(val), "longitude")}></FormInput>
 
               <FormInput editable={editMode} errorMessage={organizationError} key="riverName"
-                value={wellData.riverName} required
+                value={siteData.riverName} required
                 onChange={val => formOnChange(val, "riverName")} title="River Name">
               </FormInput>
               <Button
@@ -423,7 +383,7 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
               <FormInput
                 editable={ editMode }
                 key="original_id"
-                value={ wellData.id }
+                value={ siteData.id }
                 title="Site Code"
                 required
                 errorMessage={ originalIdError }
@@ -440,9 +400,9 @@ export const FormScreen: React.FunctionComponent<FormScreenProps> = props => {
                 Secondary catchment code, 1st four letters of river name, 1st five letters of location.
                 E.g. X2CROC-VELOR (Crocodile River @ Veloren Vallei Nature Reserve)
               </Text>
-              <FormInput editable={ false } errorMessage={ nameError } key="geomorphological_zone" maxLength={20} required value={ wellData.name } title="Geomorphological Zone" onChange={ val => formOnChange(val, "name")}></FormInput>
+              <FormInput editable={ false } errorMessage={ nameError } key="geomorphological_zone" maxLength={20} required value={ siteData.name } title="Geomorphological Zone" onChange={ val => formOnChange(val, "name")}></FormInput>
 
-              <FormInput editable={ editMode } key="description" maxLength={1000} value={ wellData.description } title="Site Description" multiline onChange={ val => formOnChange(val, "description")}></FormInput>
+              <FormInput editable={ editMode } key="description" maxLength={1000} value={ siteData.description } title="Site Description" multiline onChange={ val => formOnChange(val, "description")}></FormInput>
             </View>
           )}
         </Formik>

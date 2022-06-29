@@ -1,9 +1,9 @@
 import { load, save } from "../../utils/storage"
 
-export const saveTerms = async (terms) => {
-  await save("terms", terms)
+export const saveChoices = async (choices) => {
+  await save("choices", choices)
 }
 
-export const loadTerms = async () => {
-  return await load("terms") || {}
+export const loadChoices = async () => {
+  return await load("choices") || {}
 }

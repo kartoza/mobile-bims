@@ -35,7 +35,7 @@ export const LoginScreenPage: React.FunctionComponent<LoginScreenProps> = props 
   const [spinnerVisibility, setSpinnerVisibility] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const loginUrl = securedUrl(`${API_URL}/login`)
+  const loginUrl = securedUrl(`${API_URL}/mobile/api-token-auth/`)
 
   const goToMapScreen = React.useMemo(() => () => props.navigation.navigate("map"), [props.navigation])
 
@@ -55,12 +55,12 @@ export const LoginScreenPage: React.FunctionComponent<LoginScreenProps> = props 
       formData
     ).then(async response => {
       const responseData = response.data
+      setSpinnerVisibility(false)
       if (responseData) {
-        await save('uuid', responseData.token)
-        await save('user', responseData.user)
+        await save('token', responseData.token)
+        await save('user', username)
         goToMapScreen()
       }
-      setSpinnerVisibility(false)
     }).catch(error => {
       console.log(error)
       Alert.alert(
@@ -79,6 +79,7 @@ export const LoginScreenPage: React.FunctionComponent<LoginScreenProps> = props 
       <LoginScreen
         spinnerEnable
         spinnerVisibility={ spinnerVisibility }
+        usernamePlaceholder={'Email'}
         usernameOnChangeText={(_username) => setUsername(_username)}
         passwordOnChangeText={(_password) => setPassword(_password)}
         source={ defaultImage }
@@ -87,12 +88,7 @@ export const LoginScreenPage: React.FunctionComponent<LoginScreenProps> = props 
         onPressLogin={() => {
           setSpinnerVisibility(true)
           setTimeout(async () => {
-            // login().then(r => console.log(r))
-            await save('user', {
-              username: 'test'
-            })
-            await save('uuid', 'uuid-test')
-            goToMapScreen()
+            await login()
           }, 500)
         }}
         signupText={''}>
