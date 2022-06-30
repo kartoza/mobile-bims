@@ -28,6 +28,7 @@ import { WellStatusBadge } from "../../components/well/well-status-badge"
 import { OverlayMenu } from "../map-screen/overlay-menu"
 import { load } from "../../utils/storage"
 import { loadTaxonGroups, saveTaxa, saveTaxonGroups } from "../../models/taxon/taxon.store"
+import { saveOptions } from "../../models/options/option.store"
 
 const mapViewRef = createRef()
 let SUBS = null
@@ -375,10 +376,21 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         }
         setSyncProgress((i + 1) / taxonGroups.length)
       }
+
+      // Options data
+      setSyncMessage('Downloading Options')
+      setSyncProgress(0)
+      for (let i = 0; i < taxonGroups.length; i++) {
+        const taxonGroup = taxonGroups[i]
+        const apiResult = await api.getOptions(taxonGroup.id)
+        if (apiResult.kind === "ok") {
+          await saveOptions(apiResult.options, taxonGroup.id)
+        }
+        setSyncProgress((i + 1) / taxonGroups.length)
+      }
     }
-    delay(500).then(() => {
-      setIsSyncing(false)
-    })
+
+    setIsSyncing(false)
 
     // TODO
     // let currentUnsyncedData = unsyncedData

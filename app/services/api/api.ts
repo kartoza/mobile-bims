@@ -11,6 +11,7 @@ import { securedUrl } from "../../utils/url"
 import Site from "../../models/site/site"
 import { GetSitesResult, GetTaxonGroupResult } from "./api.types"
 import Taxon, { TaxonGroup } from "../../models/taxon/taxon"
+import Option from "../../models/options/option"
 
 /**
  * Manages all requests to the API.
@@ -175,6 +176,31 @@ export class Api {
       const rawData = response.data
       const resultSites: Site[] = rawData.map((raw) => new Site({}).parse(raw))
       return { kind: "ok", sites: resultSites, terms: rawData.terms }
+    } catch {
+      return { kind: "bad-data" }
+    }
+  }
+
+  /**
+   * Get all options
+   */
+  async getOptions(moduleId: number): Promise<Types.GetOptionsResult> {
+    const response: ApiResponse<any> = await this.apisauce.get(
+      `/mobile/choices/?module=${moduleId}`
+    )
+    if (!response.ok) {
+      const problem = getGeneralApiProblem(response)
+      if (problem) return problem
+    }
+    try {
+      const rawData = response.data
+      const parsedData = []
+      Object.keys(rawData).forEach((key, index) => {
+        rawData[key].map(optionData => {
+          parsedData.push(new Option({}).parse(optionData, key, moduleId))
+        })
+      })
+      return { kind: "ok", options: parsedData }
     } catch {
       return { kind: "bad-data" }
     }

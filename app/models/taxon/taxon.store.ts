@@ -1,5 +1,4 @@
 import { load, save } from "../../utils/storage"
-import Site from "../site/site"
 import Taxon, { TaxonGroup } from "./taxon"
 
 const _TAXON_GROUPS_KEY = "taxonGroups"
