@@ -13,13 +13,21 @@ import { Picker } from "@react-native-picker/picker"
 import { Camera } from "../../components/camera/camera"
 import Autocomplete from "react-native-autocomplete-input"
 import { loadTaxonGroups, loadTaxa } from "../../models/taxon/taxon.store"
+import { loadOptions } from "../../models/options/option.store"
 import Taxon from "../../models/taxon/taxon"
 
 export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = props => {
   const [date, setDate] = useState(new Date())
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [mode, setMode] = useState('date')
-  const [broadBiotope, setBroadBiotope] = useState('not_specified')
+  const [broadBiotope, setBroadBiotope] = useState('')
+  const [specificBiotope, setSpecificBiotope] = useState('')
+  const [substratum, setSubstratum] = useState('')
+  const [samplingMethod, setSamplingMethod] = useState('')
+  const [broadBiotopeOptions, setBroadBiotopeOptions] = useState([])
+  const [specificBiotopeOptions, setSpecificBiotopeOptions] = useState([])
+  const [substratumOptions, setSubstratumOptions] = useState([])
+  const [samplingMethodOptions, setSamplingMethodOptions] = useState([])
   const [selectedObservedTaxa, setSelectedObservedTaxa] = useState([])
   const [takingPicture, setTakingPicture] = useState(false)
   const [taxonQuery, setTaxonQuery] = useState('')
@@ -29,6 +37,18 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
     ;(async () => {
+      const _taxonGroups = await loadTaxonGroups()
+      if (_taxonGroups.length > 0) {
+        const _options = await loadOptions(_taxonGroups[0].id)
+        const _broadBiotopeOptions = _options.filter(_option => _option.key === 'broad_biotope')
+        setBroadBiotopeOptions(_broadBiotopeOptions)
+        const _specificBiotopeOptions = _options.filter(_option => _option.key === 'specific_biotope')
+        setSpecificBiotopeOptions(_specificBiotopeOptions)
+        const _substratumOptions = _options.filter(_option => _option.key === 'substratum_biotope')
+        setSubstratumOptions(_substratumOptions)
+        const _samplingMethodOptions = _options.filter(_option => _option.key === 'sampling_method')
+        setSamplingMethodOptions(_samplingMethodOptions)
+      }
       const _taxaList = await loadTaxa()
       setTaxaList(_taxaList)
     })()
@@ -139,49 +159,65 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                   selectedValue={ broadBiotope }
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
-                    setBroadBiotope(itemValue + '')
+                    setBroadBiotope(itemValue)
                   }}>
-                  <Picker.Item key="not_specified" label="Not specified" value="not_specified" />
-                  <Picker.Item key="mixed" label="Mixed" value="mixed" />
+                  <Picker.Item key="not_specified" label="Not specified" value="" />
+                  { broadBiotopeOptions.map(broadBiotopeOption => (
+                    <Picker.Item key={broadBiotopeOption.id}
+                      label={broadBiotopeOption.name}
+                      value={broadBiotopeOption.id} />
+                  ))}
                 </Picker>
               </View>
               {/* Specific biotope */}
               <Text style={ styles.LABEL }>Specific Biotope</Text>
               <View style={ styles.TEXT_INPUT_STYLE }>
                 <Picker
-                  selectedValue={ broadBiotope }
+                  selectedValue={ specificBiotope }
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
-                    setBroadBiotope(itemValue + '')
+                    setSpecificBiotope(itemValue)
                   }}>
-                  <Picker.Item key="not_specified" label="Not specified" value="not_specified" />
-                  <Picker.Item key="mixed" label="Mixed" value="mixed" />
+                  <Picker.Item key="not_specified" label="Not specified" value="" />
+                  { specificBiotopeOptions.map(option => (
+                    <Picker.Item key={option.id}
+                      label={option.name}
+                      value={option.id} />
+                  ))}
                 </Picker>
               </View>
               {/* Substratum */}
               <Text style={ styles.LABEL }>Substratum</Text>
               <View style={ styles.TEXT_INPUT_STYLE }>
                 <Picker
-                  selectedValue={ broadBiotope }
+                  selectedValue={ substratum }
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
-                    setBroadBiotope(itemValue + '')
+                    setSubstratum(itemValue)
                   }}>
-                  <Picker.Item key="not_specified" label="Not specified" value="not_specified" />
-                  <Picker.Item key="mixed" label="Mixed" value="mixed" />
+                  <Picker.Item key="not_specified" label="Not specified" value="" />
+                  { substratumOptions.map(option => (
+                    <Picker.Item key={option.id}
+                      label={option.name}
+                      value={option.id} />
+                  ))}
                 </Picker>
               </View>
               {/* Sampling Method */}
               <Text style={ styles.LABEL }>Sampling Method</Text>
               <View style={ styles.TEXT_INPUT_STYLE }>
                 <Picker
-                  selectedValue={ broadBiotope }
+                  selectedValue={ samplingMethod }
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
-                    setBroadBiotope(itemValue + '')
+                    setSamplingMethod(itemValue)
                   }}>
-                  <Picker.Item key="not_specified" label="Not specified" value="not_specified" />
-                  <Picker.Item key="mixed" label="Mixed" value="mixed" />
+                  <Picker.Item key="not_specified" label="Not specified" value="" />
+                  { samplingMethodOptions.map(option => (
+                    <Picker.Item key={option.id}
+                      label={option.name}
+                      value={option.id} />
+                  ))}
                 </Picker>
               </View>
               {/* Capture Image */}

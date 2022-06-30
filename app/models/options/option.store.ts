@@ -5,7 +5,7 @@ const _OPTIONS = 'options'
 
 const _getKey = (moduleId: number) => _OPTIONS + moduleId
 
-export const getOptions = async (moduleId: number) => {
+export const loadOptions = async (moduleId: number) => {
   const options = await load(_getKey(moduleId))
   if (!options) {
     return []
