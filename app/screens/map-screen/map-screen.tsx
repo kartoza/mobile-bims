@@ -3,7 +3,7 @@ import { NativeStackNavigationProp } from "react-native-screens/native-stack"
 import { ParamListBase, useFocusEffect } from "@react-navigation/native"
 import { SearchBar, Button, Icon, Badge, Overlay } from 'react-native-elements'
 import { PERMISSIONS, request } from "react-native-permissions"
-import { View, Text, ActivityIndicator, Modal, Platform, Alert } from "react-native"
+import { View, Text, ActivityIndicator, Modal, Platform, Alert, TouchableOpacity } from "react-native"
 import Geolocation from 'react-native-geolocation-service'
 import MapView, { Marker, WMSTile } from "react-native-maps"
 import { styles } from "../map-screen/styles"
@@ -14,15 +14,11 @@ import NetInfo from "@react-native-community/netinfo"
 import * as Progress from 'react-native-progress'
 import { Api } from "../../services/api/api"
 import {
-  clearTemporaryNewWells,
-  createNewWell,
-  getWellsByField,
   loadSites,
   saveSites,
   removeWellsByField,
   createNewSite, clearTemporaryNewSites,
 } from "../../models/site/site.store"
-import { saveChoices } from "../../models/site/term.store"
 import Well from "../../models/site/well"
 import { WellStatusBadge } from "../../components/well/well-status-badge"
 import { OverlayMenu } from "../map-screen/overlay-menu"
@@ -55,6 +51,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [longitude, setLongitude] = useState(null)
   const [overlayVisible, setOverlayVisible] = useState(false)
   const [selectedMarker, setSelectedMarker] = useState(null)
+  const [taxonGroups, setTaxonGroups] = useState([])
+  const [showBiodiversityModule, setShowBiodiversityModule] = useState(false)
 
   const drawMarkers = (data) => {
     const _markers = []
@@ -142,6 +140,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const markerDeselected = () => {
     setIsViewRecord(false)
     setSelectedMarker(null)
+    setShowBiodiversityModule(false)
   }
 
   const mapSelected = async (e) => {
@@ -216,15 +215,20 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     refreshMap
   ])
 
-  const addOccurrenceRecord = React.useMemo(() => () => props.navigation.navigate(
+  const addSiteVisit = React.useMemo(() => (moduleId: number) => props.navigation.navigate(
     "occurrenceForm", {
       sitePk: selectedSite.pk,
+      modulePk: moduleId,
       onBackToMap: () => refreshMap()
     }), [
     props.navigation,
     selectedSite,
     refreshMap
   ])
+
+  const addRecordClicked = () => {
+    setShowBiodiversityModule(true)
+  }
 
   const deleteRecord = async (wellPk) => {
     await Alert.alert(
@@ -412,6 +416,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     let isMounted = true
     ;(async () => {
       const token = await load("token")
+      const taxonGroups = await loadTaxonGroups()
+      setTaxonGroups(taxonGroups)
       if (!token) {
         props.navigation.pop()
       }
@@ -534,7 +540,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   buttonStyle={ styles.MID_BOTTOM_BUTTON }
                   titleStyle={{ color: "#ffffff" }}
                   containerStyle={{ width: "40%" }}
-                  onPress={ () => { addOccurrenceRecord() }}
+                  onPress={ () => { addRecordClicked() }}
                 />
                 <Button
                   title="Add SASS"
@@ -543,7 +549,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   buttonStyle={ styles.SASS_BUTTON }
                   titleStyle={{ color: "#ffffff" }}
                   containerStyle={{ width: "40%", marginLeft: 10 }}
-                  onPress={ () => { addOccurrenceRecord() }}
+                  onPress={ () => { addRecordClicked() }}
                 />
                 { selectedSite.newData ? <Button
                   title="Delete"
@@ -558,6 +564,30 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             </View>
           </View>
         ) : <View></View>}
+
+      { showBiodiversityModule ? (
+        <View style={styles.BOTTOM_CONTAINER}>
+          <View style={ styles.MODULE_TEXT_CONTAINER }>
+            <Text style={ styles.MODULE_TEXT }>
+              Select Biodiversity Module</Text>
+          </View>
+          <View style={ styles.MODULE_BUTTONS_CONTAINER }>
+            { taxonGroups.map(taxonGroup => (
+              <View style={ styles.MODULE_BUTTONS } key={taxonGroup.id}>
+                <Button
+                  title={taxonGroup.name}
+                  type="outline"
+                  raised
+                  buttonStyle={ styles.MID_BOTTOM_BUTTON }
+                  titleStyle={{ color: "#ffffff" }}
+                  containerStyle={{ width: "100%" }}
+                  onPress={() => addSiteVisit(taxonGroup.id)}
+                />
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null }
 
       { isAddSite
         ? (

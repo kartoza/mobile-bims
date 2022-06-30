@@ -17,9 +17,10 @@ import { loadOptions } from "../../models/options/option.store"
 import Taxon from "../../models/taxon/taxon"
 
 export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = props => {
+  const { route } = props
+  const { modulePk, sitePk } = route.params
   const [date, setDate] = useState(new Date())
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [mode, setMode] = useState('date')
   const [broadBiotope, setBroadBiotope] = useState('')
   const [specificBiotope, setSpecificBiotope] = useState('')
   const [substratum, setSubstratum] = useState('')
@@ -38,8 +39,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
     LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
     ;(async () => {
       const _taxonGroups = await loadTaxonGroups()
-      if (_taxonGroups.length > 0) {
-        const _options = await loadOptions(_taxonGroups[0].id)
+      const taxonGroup = _taxonGroups.find(_taxonGroup => _taxonGroup.id === modulePk)
+      if (taxonGroup) {
+        const _options = await loadOptions(taxonGroup.id)
         const _broadBiotopeOptions = _options.filter(_option => _option.key === 'broad_biotope')
         setBroadBiotopeOptions(_broadBiotopeOptions)
         const _specificBiotopeOptions = _options.filter(_option => _option.key === 'specific_biotope')
@@ -56,7 +58,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
 
   const openDatePicker = (mode = 'date') => {
     setShowDatePicker(true)
-    setMode(mode)
   }
 
   const submitForm = async (data) => {
@@ -135,7 +136,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                 <DateTimePicker
                   testID="dateTimePicker"
                   value={date}
-                  mode={mode}
                   is24Hour={true}
                   display="default"
                   onChange={ (e, selectedDate) => {
@@ -147,9 +147,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
               <Text style={ styles.REQUIRED_LABEL }>Owner</Text>
               <TextInput
                 key='owner'
+                editable={false}
                 onChangeText={ handleChange('owner') }
                 onBlur={ handleBlur('owner') }
-                style={ styles.TEXT_INPUT_STYLE }
+                style={ styles.UNEDITABLE_TEXT_INPUT_STYLE }
                 value={ values.owner }
               />
               {/* Broad biotope */}

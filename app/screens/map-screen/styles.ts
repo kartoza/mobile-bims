@@ -89,6 +89,19 @@ const MID_BOTTOM_CONTAINER: ViewStyle = {
   flexDirection: "row-reverse",
 }
 
+const BOTTOM_CONTAINER: ViewStyle = {
+  alignItems: "center",
+  alignContent: "center",
+  bottom: (Platform.OS === "ios") ? 100 : 0,
+  paddingBottom: (Platform.OS === "ios") ? 20 : 10,
+  width: "100%",
+  position: "absolute",
+  justifyContent: "center",
+  flexDirection: "column",
+  backgroundColor: '#ffffff',
+  zIndex: 99
+}
+
 const MID_BOTTOM_CONTENTS: ViewStyle = {
   alignItems: "center",
   alignContent: "center",
@@ -119,9 +132,38 @@ const SASS_BUTTON: ViewStyle = {
   borderColor: "#aaa600"
 }
 
+const MODULE_TEXT_CONTAINER: ViewStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  backgroundColor: '#ffffff',
+  paddingTop: 5
+}
+
+const MODULE_TEXT: TextStyle = {
+  textAlign: 'center',
+  padding: 10,
+  fontWeight: 'bold',
+  color: '#525351',
+  fontSize: 15
+}
+
+const MODULE_BUTTONS_CONTAINER: ViewStyle = {
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  padding: 10,
+  backgroundColor: '#ffffff',
+  flexWrap: 'wrap'
+}
+
+const MODULE_BUTTONS: ViewStyle = {
+  width: "45%",
+  marginBottom: 8
+}
+
 export const styles = StyleSheet.create({
   ACTIVITY_INDICATOR,
   ACTIVITY_INDICATOR_WRAPPER,
+  BOTTOM_CONTAINER,
   BOTTOM_VIEW,
   CONTAINER,
   LOCATE_ME_BUTTON,
@@ -129,13 +171,17 @@ export const styles = StyleSheet.create({
   MAP,
   MAP_VIEW_CONTAINER,
   MID_BOTTOM_BUTTON,
-  SASS_BUTTON,
   MID_BOTTOM_CONTAINER,
   MID_BOTTOM_CONTENTS,
   MID_BOTTOM_SUB_TEXT,
   MID_BOTTOM_TEXT,
   MODAL_BACKGROUND,
   MODAL_TEXT,
+  MODULE_BUTTONS,
+  MODULE_BUTTONS_CONTAINER,
+  MODULE_TEXT,
+  MODULE_TEXT_CONTAINER,
+  SASS_BUTTON,
   SEARCH_BAR_CONTAINER,
   SYNC_BADGE,
   SYNC_BUTTON,

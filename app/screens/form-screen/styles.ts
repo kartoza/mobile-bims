@@ -59,13 +59,18 @@ const CHART_LABEL: TextStyle = {
   marginBottom: 15
 }
 
-const TEXT_INPUT_STYLE: ViewStyle = {
+const TEXT_INPUT_STYLE: TextStyle = {
   minHeight: 40,
   backgroundColor: "#ffffff",
   borderRadius: 5,
+  color: '#000000',
   marginTop: 5,
   paddingLeft: 10,
-  color: "black"
+}
+
+const UNEDITABLE_TEXT_INPUT_STYLE: TextStyle = {
+  ...TEXT_INPUT_STYLE,
+  backgroundColor: "#e1e1e1",
 }
 
 const TEXT_INPUT_TAXA: TextStyle = {
@@ -186,6 +191,7 @@ export const styles = StyleSheet.create({
   SUBMIT_BUTTON,
   TEXT_INPUT_STYLE,
   TEXT_INPUT_TAXA,
+  UNEDITABLE_TEXT_INPUT_STYLE,
   chart: {
     flex: 1,
     marginBottom: 10,
