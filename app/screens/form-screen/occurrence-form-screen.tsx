@@ -34,6 +34,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
   const [taxonQuery, setTaxonQuery] = useState('')
   const [taxaList, setTaxaList] = useState([])
   const [observedTaxaList, setObservedTaxaList] = useState([])
+  const [observedTaxaValues, setObservedTaxaValues] = useState({})
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
@@ -111,7 +112,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
         centerComponent={{ text: 'Add Record', style: { fontSize: 18, color: "#fff", fontWeight: "bold" } }}
         containerStyle={ styles.HEADER_CONTAINER }
       />
-      <ScrollView style = { styles.CONTAINER }>
+      <ScrollView style = { styles.CONTAINER } keyboardShouldPersistTaps='handled'>
         <Formik
           initialValues={{
             methodology: "",
@@ -241,10 +242,13 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                 <View style={styles.AUTOCOMPLETE_CONTAINER}>
                   <Autocomplete
                     data={filterTaxonList(taxonQuery)}
+                    placeholder={'Find species here'}
                     value={taxonQuery}
                     onChangeText={setTaxonQuery}
                     flatListProps={{
                       vertical: true,
+                      keyboardShouldPersistTabs: 'handled',
+                      nestedScrollEnabled: true,
                       keyExtractor: (taxon: Taxon) => '' + taxon.id,
                       // eslint-disable-next-line react/display-name
                       renderItem: (taxon: any) => {
@@ -270,9 +274,13 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                       <Text>{observedTaxaList[taxaId].canonicalName}</Text>
                       <TextInput
                         keyboardType={"numeric"}
-                        editable={ selectedObservedTaxa.includes(taxaId) }
+                        editable={ selectedObservedTaxa.includes(observedTaxaList[taxaId].id) }
                         style={ styles.TEXT_INPUT_TAXA }
-                        value={'0'}
+                        value={ observedTaxaValues[taxaId] }
+                        onChangeText={(newValue) => {
+                          observedTaxaValues[taxaId] = newValue
+                          setObservedTaxaValues(observedTaxaValues)
+                        }}
                       />
                     </TouchableOpacity>
                   )}

@@ -83,7 +83,7 @@ const TEXT_INPUT_TAXA: TextStyle = {
   borderRadius: 4,
   paddingTop: 0,
   paddingBottom: 0,
-  width: 50,
+  width: 60,
   textAlign: "center"
 }
 
