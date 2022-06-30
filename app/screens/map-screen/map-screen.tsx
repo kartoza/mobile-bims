@@ -376,7 +376,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         const taxonGroup = taxonGroups[i]
         const apiResult = await api.getTaxa(taxonGroup.id + "")
         if (apiResult.kind === "ok") {
-          await saveTaxa(apiResult.taxa)
+          await saveTaxa(apiResult.taxa, taxonGroup.id)
         }
         setSyncProgress((i + 1) / taxonGroups.length)
       }

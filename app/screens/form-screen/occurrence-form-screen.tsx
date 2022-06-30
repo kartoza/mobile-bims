@@ -51,7 +51,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
         const _samplingMethodOptions = _options.filter(_option => _option.key === 'sampling_method')
         setSamplingMethodOptions(_samplingMethodOptions)
       }
-      const _taxaList = await loadTaxa()
+      const _taxaList = await loadTaxa(modulePk)
       setTaxaList(_taxaList)
     })()
   }, [])
