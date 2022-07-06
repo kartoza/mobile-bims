@@ -25,6 +25,7 @@ import { OverlayMenu } from "../map-screen/overlay-menu"
 import { load } from "../../utils/storage"
 import { loadTaxonGroups, saveTaxa, saveTaxonGroups } from "../../models/taxon/taxon.store"
 import { saveOptions } from "../../models/options/option.store"
+import { getSiteVisitsByField } from "../../models/site_visit/site_visit.store"
 
 const mapViewRef = createRef()
 let SUBS = null
@@ -100,26 +101,23 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     }
   }
 
+  const getUnsyncedData = async () => {
+    const _unsyncedSiteVisits = await getSiteVisitsByField("synced", false) || []
+    setUnsyncedData(_unsyncedSiteVisits)
+  }
+
   useFocusEffect(
     React.useCallback(() => {
-      const getUnsyncedData = async () => {
-        const _unsyncedData = await getWellsByField('synced', false) || []
-        setUnsyncedData(_unsyncedData)
-      }
       const reloadMap = async () => {
         // await getUnsyncedData()
         await getSites(latitude, longitude)
         setSearch("")
       }
       // reloadMap()
+      getUnsyncedData()
       setOverlayVisible(false)
     }, [])
   )
-
-  const refreshMap = useCallback(async () => {
-    setMarkers([])
-    // await getSites()
-  }, [])
 
   const onRegionChange = async (region) => {
     // setCurrentRegion(region)
@@ -142,6 +140,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setSelectedMarker(null)
     setShowBiodiversityModule(false)
   }
+
+  const refreshMap = useCallback(async () => {
+    // setMarkers([])
+    markerDeselected()
+    await getUnsyncedData()
+    // await getSites()
+  }, [])
 
   const mapSelected = async (e) => {
     if (isAddSite) {
@@ -206,18 +211,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     }
   }
 
-  const viewRecord = React.useMemo(() => () => props.navigation.navigate("form", {
-    wellPk: selectedSite.pk,
-    onBackToMap: () => refreshMap()
-  }), [
-    props.navigation,
-    selectedSite,
-    refreshMap
-  ])
-
   const addSiteVisit = React.useMemo(() => (moduleId: number) => props.navigation.navigate(
     "occurrenceForm", {
-      sitePk: selectedSite.pk,
+      sitePk: selectedSite.id,
       modulePk: moduleId,
       onBackToMap: () => refreshMap()
     }), [
@@ -259,7 +255,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const addNewSite = async () => {
     const newSite = await createNewSite(newSiteMarker.coordinate.latitude, newSiteMarker.coordinate.longitude)
     props.navigation.navigate("form", {
-      wellPk: newSite.pk,
+      wellPk: newSite.id,
       editMode: true,
       onBackToMap: () => refreshMap()
     })

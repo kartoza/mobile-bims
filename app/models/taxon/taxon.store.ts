@@ -12,6 +12,23 @@ export const saveTaxonGroups = async (taxonGroups) => {
   await save(_TAXON_GROUPS_KEY, taxonGroups)
 }
 
+export const getTaxonGroupByField = async (field: string, value: any): Promise<TaxonGroup> => {
+  const taxonGroups = await load(_TAXON_GROUPS_KEY)
+  let taxonGroup = null
+  if (taxonGroups) {
+    for (const index in taxonGroups) {
+      const _taxonGroup = taxonGroups[index]
+      if (_taxonGroup[field] === value) {
+        taxonGroup = _taxonGroup
+      }
+    }
+  }
+  if (taxonGroup) {
+    return new TaxonGroup(taxonGroup)
+  }
+  return taxonGroup
+}
+
 export const loadTaxonGroups = async () => {
   const taxonGroups = await load(_TAXON_GROUPS_KEY)
   if (!taxonGroups) {

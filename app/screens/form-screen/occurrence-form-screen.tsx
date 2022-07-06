@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/camelcase */
-import React, { useState, useEffect, createRef } from "react"
+import React, { useState, useEffect } from "react"
 import { FormScreenProps } from "./form-screen"
-import { View, ScrollView, Text, TextInput, Platform, TouchableOpacity, LogBox, Image } from "react-native"
+import { View, ScrollView, Text, TextInput, Platform, TouchableOpacity, LogBox, Image, Alert } from "react-native"
 import CheckBox from '@react-native-community/checkbox'
 import { styles } from "./styles"
 import { Button, Header } from "react-native-elements"
@@ -12,11 +12,16 @@ import DateTimePicker from "@react-native-community/datetimepicker"
 import { Picker } from "@react-native-picker/picker"
 import { Camera } from "../../components/camera/camera"
 import Autocomplete from "react-native-autocomplete-input"
-import { loadTaxonGroups, loadTaxa } from "../../models/taxon/taxon.store"
+import { loadTaxonGroups, loadTaxa, getTaxonGroupByField } from "../../models/taxon/taxon.store"
 import { loadOptions } from "../../models/options/option.store"
 import Taxon from "../../models/taxon/taxon"
+import { load } from "../../utils/storage"
+import SiteVisit from "../../models/site_visit/site_visit"
+import { getSiteByField } from "../../models/site/site.store"
+import { saveSiteVisitByField, allSiteVisits } from "../../models/site_visit/site_visit.store"
 
 export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = props => {
+  // @ts-ignore
   const { route } = props
   const { modulePk, sitePk } = route.params
   const [date, setDate] = useState(new Date())
@@ -36,6 +41,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
   const [taxaList, setTaxaList] = useState([])
   const [observedTaxaList, setObservedTaxaList] = useState([])
   const [observedTaxaValues, setObservedTaxaValues] = useState({})
+  const [username, setUsername] = useState('')
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested'])
@@ -55,6 +61,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
       }
       const _taxaList = await loadTaxa(modulePk)
       setTaxaList(_taxaList)
+      setUsername(await load('user'))
     })()
   }, [])
 
@@ -63,7 +70,38 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
   }
 
   const submitForm = async (data) => {
-    console.log(data)
+    if (Object.keys(observedTaxaValues).length === 0) {
+      Alert.alert(
+        "Error",
+        "You must at least add one collection data\n",
+        [
+          {
+            text: "OK",
+          },
+        ],
+      )
+      return
+    }
+    const site = await getSiteByField('id', sitePk)
+    const taxonGroup = await getTaxonGroupByField('id', parseInt(modulePk))
+    const allSiteVisitsData = await allSiteVisits()
+    const siteVisitData = {
+      id: allSiteVisitsData.length + 1,
+      site: site,
+      taxonGroup: taxonGroup,
+      date: date,
+      siteImage: siteImageData,
+      observedTaxa: observedTaxaValues,
+      owner: username,
+      newData: true,
+      synced: false
+    }
+    const siteVisit = new SiteVisit(siteVisitData)
+    await saveSiteVisitByField('id', siteVisit.id, siteVisit)
+    if (route.params.onBackToMap) {
+      route.params.onBackToMap()
+    }
+    props.navigation.navigate("map")
   }
 
   const filterTaxonList = (query) => {
@@ -121,9 +159,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
       <ScrollView style = { styles.CONTAINER } keyboardShouldPersistTaps='handled'>
         <Formik
           initialValues={{
-            methodology: "",
-            value: "",
-            owner: "kartoza_admin"
+            broadBiotope: "",
+            specificBiotope: "",
+            samplingMethod: "",
+            substratum: ""
           }}
           onSubmit={submitForm}
         >
@@ -158,7 +197,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                 onChangeText={ handleChange('owner') }
                 onBlur={ handleBlur('owner') }
                 style={ styles.UNEDITABLE_TEXT_INPUT_STYLE }
-                value={ values.owner }
+                value={ username }
               />
               {/* Broad biotope */}
               <Text style={ styles.LABEL }>Broad Biotope</Text>
@@ -168,6 +207,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
                     setBroadBiotope(itemValue)
+                    values.broadBiotope = itemValue
                   }}>
                   <Picker.Item key="not_specified" label="Not specified" value="" />
                   { broadBiotopeOptions.map(broadBiotopeOption => (
@@ -185,6 +225,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
                     setSpecificBiotope(itemValue)
+                    values.specificBiotope = itemValue
                   }}>
                   <Picker.Item key="not_specified" label="Not specified" value="" />
                   { specificBiotopeOptions.map(option => (
@@ -202,6 +243,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
                     setSubstratum(itemValue)
+                    values.substratum = itemValue;
                   }}>
                   <Picker.Item key="not_specified" label="Not specified" value="" />
                   { substratumOptions.map(option => (
@@ -219,6 +261,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                   style={ styles.PICKER_INPUT_STYLE }
                   onValueChange={(itemValue, itemIndex) => {
                     setSamplingMethod(itemValue)
+                    values.samplingMethod = itemValue
                   }}>
                   <Picker.Item key="not_specified" label="Not specified" value="" />
                   { samplingMethodOptions.map(option => (
@@ -284,9 +327,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                         editable={ selectedObservedTaxa.includes(observedTaxaList[taxaId].id) }
                         style={ styles.TEXT_INPUT_TAXA }
                         value={ observedTaxaValues[taxaId] }
-                        onChangeText={(newValue) => {
-                          observedTaxaValues[taxaId] = newValue
-                          setObservedTaxaValues(observedTaxaValues)
+                        onChange={(e) => {
+                          setObservedTaxaValues({ ...observedTaxaValues, [taxaId]: e.nativeEvent.text })
                         }}
                       />
                     </TouchableOpacity>
@@ -297,7 +339,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                 <Button
                   title="Submit"
                   buttonStyle={{ width: "100%", backgroundColor: "rgb(241, 137, 3)" }}
-                  onPress={() => console.log('SUBMIT')}
+                  onPress={() => handleSubmit()}
                 />
               </View>
             </View>
