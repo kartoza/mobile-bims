@@ -43,10 +43,9 @@ export function Camera(props: any) {
   // const [tackingPic, setTackingPic] = useState(false)
 
   const takePicture = async function(camera) {
-    const options = { quality: 0.5, base64: true }
+    const options = { quality: 0.5, base64: true, doNotSave: true }
     const data = await camera.takePictureAsync(options)
-    //  eslint-disable-next-line
-    console.log(data.uri);
+    props.pictureTaken(data)
   }
 
   return (
