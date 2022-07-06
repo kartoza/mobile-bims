@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import React, { useState, useEffect, createRef } from "react"
 import { FormScreenProps } from "./form-screen"
-import { View, ScrollView, Text, TextInput, Platform, TouchableOpacity, LogBox } from "react-native"
+import { View, ScrollView, Text, TextInput, Platform, TouchableOpacity, LogBox, Image } from "react-native"
 import CheckBox from '@react-native-community/checkbox'
 import { styles } from "./styles"
 import { Button, Header } from "react-native-elements"
@@ -31,6 +31,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
   const [samplingMethodOptions, setSamplingMethodOptions] = useState([])
   const [selectedObservedTaxa, setSelectedObservedTaxa] = useState([])
   const [takingPicture, setTakingPicture] = useState(false)
+  const [siteImageData, setSiteImageData] = useState(null)
   const [taxonQuery, setTaxonQuery] = useState('')
   const [taxaList, setTaxaList] = useState([])
   const [observedTaxaList, setObservedTaxaList] = useState([])
@@ -95,6 +96,11 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
       newSelectedObservedTaxon.push(taxon.id)
     }
     setSelectedObservedTaxa(newSelectedObservedTaxon)
+  }
+
+  const pictureTaken = (pictureData) => {
+    setTakingPicture(false)
+    setSiteImageData(pictureData.base64)
   }
 
   const onChange = (event, selectedDate, setFieldValue) => {
@@ -234,7 +240,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
                     setTakingPicture(!takingPicture)
                   }}
                 />
-                { takingPicture ? <View style={{ height: 450 }}><Camera/></View> : null }
+                { takingPicture ? <View style={{ height: 450 }}><Camera pictureTaken={pictureTaken}/></View> : null }
+                { siteImageData ? <Image source={{ uri: `data:image/jpeg;base64,${siteImageData}` }} style={{ height: 450 }}/> : null }
               </View>
               {/* Sampling Method */}
               <View>
