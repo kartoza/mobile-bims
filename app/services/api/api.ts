@@ -12,6 +12,8 @@ import Site from "../../models/site/site"
 import { GetSitesResult, GetTaxonGroupResult } from "./api.types"
 import Taxon, { TaxonGroup } from "../../models/taxon/taxon"
 import Option from "../../models/options/option"
+import SiteVisit from "../../models/site_visit/site_visit"
+import { doc } from "prettier"
 
 /**
  * Manages all requests to the API.
@@ -230,126 +232,39 @@ export class Api {
   }
 
   /**
-   * Parse well data to post data
+   * Parse site visit data to post data
    */
-  parseWell(well: Well, terms: any): {} {
+  parseSiteVisit(siteVisit: SiteVisit): {} {
     const postData = {
-      general_information: {},
-      level_measurement: [],
-      quality_measurement: [],
-      yield_measurement: [],
-      well_metadata: {},
-      geology: {},
-      drilling: {},
-      hydrogeology: {}
+      date: siteVisit.date.split('T')[0],
+      owner: siteVisit.owner,
+      record_type: 'mobile',
+      abundance_type: 'number',
+      biotope: siteVisit.biotope,
+      specific_biotope: siteVisit.specificBiotope,
+      substratum: siteVisit.substratum,
+      sampling_method: siteVisit.samplingMethod,
+      'site-id': siteVisit.site.id,
+      'taxa-id-list': '',
     }
-    const parseMeasurementData = (measurementType, postType) => {
-      well[measurementType].forEach(measurementData => {
-        postData[postType].push({
-          id: measurementData.id,
-          time: measurementData.datetime,
-          parameter: measurementData.parameter,
-          methodology: measurementData.methodology,
-          value_value: measurementData.value,
-          value_unit: measurementData.unit
-        })
-      })
-    }
-    const getTermId = (termValue, termKey) => {
-      let id = ""
-      // if value undefined, then return empty
-      if (typeof termValue === "undefined") {
-        return ""
+    if (Object.keys(siteVisit.observedTaxa).length > 0) {
+      const taxaIdList = []
+      for (const taxonId of Object.keys(siteVisit.observedTaxa)) {
+        taxaIdList.push(taxonId)
+        postData[`${taxonId}-observed`] = "True"
+        postData[`${taxonId}-abundance`] = siteVisit.observedTaxa[taxonId]
       }
-      terms[termKey].forEach(_term => {
-        if (_term[Object.keys(_term)[0]] === termValue) {
-          id = Object.keys(_term)[0]
-          return false
-        }
-        return true
-      })
-      return id
+      postData['taxa-id-list'] = taxaIdList.join(',')
     }
-    const getUnitValue = (value, unitValue, unitKey) => {
-      if (value && !unitValue) {
-        if (terms[unitKey]) {
-          return terms[unitKey][0]
-        }
-        return ""
-      }
-      if (typeof unitValue !== "undefined") {
-        return unitValue
-      } else {
-        return ""
-      }
-    }
-    postData.general_information = {
-      original_id: well.id,
-      name: well.name || "",
-      feature_type: getTermId(well.feature_type, 'termfeaturetype') || "",
-      purpose: getTermId(well.purpose, 'termwellpurpose') || "",
-      status: getTermId(well.status, 'termwellstatus') || "",
-      description: well.description || "",
-      latitude: well.latitude,
-      longitude: well.longitude,
-      ground_surface_elevation_value: well.ground_surface_elevation || "",
-      ground_surface_elevation_unit: "m",
-      top_borehole_elevation_value: well.top_borehole_elevation || "",
-      top_borehole_elevation_unit: "m",
-      country: well.country || "",
-      address: well.address || ""
-    }
-    postData.well_metadata = {
-      organisation: getTermId(well.organisation, 'organisation') || ""
-    }
-    postData.drilling = {
-      year_of_drilling: well.construction_year || "",
-      drilling_method: getTermId(well.excavation_method, 'termdrillingmethod') || "",
-      driller: well.contractor || "",
-      cause_of_failure: well.cause_of_failure || "",
-      successful: well.successful || ""
-    }
-    postData.geology = {
-      total_depth_value: well.total_depth || "",
-      total_depth_unit: "m",
-      reference_elevation: getTermId(well.total_depth_reference_elevation, 'termreferenceelevationtype') || ""
-    }
-    postData.hydrogeology = {
-      aquifer_name: well.aquifer_name || "",
-      aquifer_material: well.aquifer_material || "",
-      aquifer_type: getTermId(well.aquifer_type, "termaquifertype") || "",
-      aquifer_thickness: well.aquifer_thickness || "",
-      confinement: getTermId(well.confinement, "termconfinement") || "",
-      pumping_test: {
-        porosity: well.porosity || "",
-        hydraulic_conductivity_value: well.hydraulic_conductivity || "",
-        hydraulic_conductivity_unit: getUnitValue(well.hydraulic_conductivity, well.hydraulic_conductivity_unit, well.hydraulic_conductivity_unit_key),
-        transmissivity_value: well.transmissivity || "",
-        transmissivity_unit: getUnitValue(well.transmissivity, well.transmissivity_unit, well.transmissivity_unit_key),
-        specific_storage_value: well.specific_storage || "",
-        specific_storage_unit: getUnitValue(well.specific_storage, well.specific_storage_unit, well.specific_storage_unit_key),
-        specific_yield: well.specific_yield || "",
-        storativity_value: well.yield || "",
-        storativity_unit: getUnitValue(well.yield, well.yield_unit, well.yield_unit_key),
-        specific_capacity_value: well.specific_capacity || "",
-        specific_capacity_unit: getUnitValue(well.specific_capacity, well.specific_capacity_unit, well.specific_capacity_unit_key),
-        test_type: well.test_type || ""
-      }
-    }
-
-    parseMeasurementData('level_measurements', 'level_measurement')
-    parseMeasurementData('yield_measurements', 'yield_measurement')
-    parseMeasurementData('quality_measurements', 'quality_measurement')
     return postData
   }
 
   /**
    * Update a single well
    */
-  async putWell(well: Well): Promise<Types.GetWellResult> {
+  async putWell(siteVisit: SiteVisit): Promise<Types.GetSiteVisitResult> {
     // make the api call
-    const terms = await loadChoices()
-    const postData = this.parseWell(well, terms)
+    const postData = this.parseSiteVisit(siteVisit)
     const url = `/groundwater/api/well/minimized/${well.pk}/edit`
     const response: ApiResponse<any> = await this.apisauce.put(
       url,
@@ -371,27 +286,23 @@ export class Api {
   }
 
   /**
-   * Post a single well
+   * Post a site visit
    */
-  async postWell(well: Well): Promise<Types.GetWellResult> {
+  async postSiteVisit(siteVisit: SiteVisit): Promise<Types.PostSiteVisitResult> {
     // make the api call
-    const terms = await loadChoices()
-    const postData = this.parseWell(well, terms)
-    const url = `/groundwater/api/well/minimized/create`
+    const postData = this.parseSiteVisit(siteVisit)
+    const url = `/mobile/add-site-visit/`
     const response: ApiResponse<any> = await this.apisauce.post(
       url,
       postData
     )
-
     // the typical ways to die when calling an api
     if (!response.ok) {
       const problem = getGeneralApiProblem(response)
       if (problem) return problem
     }
-
-    // transform the data into the format we are expecting
     try {
-      return { kind: "ok", well: new Well({}).convertFromMinimizedData(response.data) }
+      return { kind: "ok", siteVisitId: response.data.survey_id }
     } catch {
       return { kind: "bad-data" }
     }

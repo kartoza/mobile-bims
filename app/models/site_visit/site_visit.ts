@@ -7,7 +7,11 @@ export default class SiteVisit {
   taxonGroup: TaxonGroup
   observedTaxa: any
   samplingMethod: string
+  biotope: string
   specificBiotope: string
+  substratum: string
+  date: string
+  owner: string
   siteImage: any
   synced: boolean
   newData?: boolean
@@ -15,14 +19,22 @@ export default class SiteVisit {
   parse = (data) => {
     this.id = data.id
     this.site = data.site
+    this.date = data.date
     this.taxonGroup = data.taxonGroup
     this.observedTaxa = data.observedTaxa
     this.samplingMethod = data.samplingMethod
+    this.biotope = data.biotope
     this.specificBiotope = data.specificBiotope
+    this.substratum = data.substratum
     this.siteImage = data.siteImage
     this.newData = data.newData
     this.synced = data.synced
+    this.owner = data.owner
     return this
+  }
+
+  convertFromResponseData = (data) => {
+    return new SiteVisit(data)
   }
 
   constructor(siteVisit: any) {
