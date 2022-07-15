@@ -244,6 +244,7 @@ export class Api {
       specific_biotope: siteVisit.specificBiotope,
       substratum: siteVisit.substratum,
       sampling_method: siteVisit.samplingMethod,
+      site_image: siteVisit.siteImage,
       'site-id': siteVisit.site.id,
       'taxa-id-list': '',
     }

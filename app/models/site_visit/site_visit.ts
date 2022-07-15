@@ -33,10 +33,6 @@ export default class SiteVisit {
     return this
   }
 
-  convertFromResponseData = (data) => {
-    return new SiteVisit(data)
-  }
-
   constructor(siteVisit: any) {
     if (siteVisit) {
       for (const key in siteVisit) {
