@@ -6,6 +6,8 @@ import { Button, Overlay } from 'react-native-elements'
 import { load, save } from '../../utils/storage'
 import { ParamListBase } from "@react-navigation/native"
 import { NativeStackNavigationProp } from "react-native-screens/native-stack"
+import { saveSiteVisits } from "../../models/site_visit/site_visit.store"
+import { saveSites } from "../../models/site/site.store"
 
 export interface OverlayMenuProps {
   visible: boolean,
@@ -39,9 +41,10 @@ export function OverlayMenu(props: OverlayMenuProps) {
         {
           text: 'Yes',
           onPress: async () => {
-            await save('uuid', '')
-            await save('wells', [])
-            await save('terms', [])
+            await save('token', '')
+            await save('user', '')
+            await saveSiteVisits([])
+            await saveSites([])
             goToLoginScreen()
           }
         }

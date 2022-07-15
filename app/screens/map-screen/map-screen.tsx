@@ -8,7 +8,11 @@ import Geolocation from 'react-native-geolocation-service'
 import MapView, { Marker, WMSTile } from "react-native-maps"
 import { styles } from "../map-screen/styles"
 import { TouchableWithoutFeedback } from "react-native-gesture-handler"
-import { getUnsynced, syncPullData, pushUnsyncedWells } from "../../models/sync/sync"
+import {
+  getUnsynced,
+  syncPullData,
+  pushUnsyncedSiteVisit,
+} from "../../models/sync/sync"
 import { delay } from "../../utils/delay"
 import NetInfo from "@react-native-community/netinfo"
 import * as Progress from 'react-native-progress'
@@ -329,7 +333,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     let syncResult = true
     for (let i = 0; i < _unsyncedData.length; i++) {
       setSyncMessage(`${i + 1} records of ${unsyncedData.length} are synced`)
-      syncResult = await pushUnsyncedWells([_unsyncedData[i]])
+      syncResult = await pushUnsyncedSiteVisit(_unsyncedData[i])
       if (!syncResult) {
         showError("One of the data can't be synchronized")
         return unsyncedData
@@ -390,10 +394,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       }
     }
 
-    setIsSyncing(false)
+    let currentUnsyncedData = unsyncedData
+    if (currentUnsyncedData.length > 0) {
+      currentUnsyncedData = await pushUnsynced()
+    }
 
-    // TODO
-    // let currentUnsyncedData = unsyncedData
+    setSyncMessage('')
+    setIsSyncing(false)
     // if (currentUnsyncedData.length > 0) {
     //   currentUnsyncedData = await pushUnsynced()
     // }

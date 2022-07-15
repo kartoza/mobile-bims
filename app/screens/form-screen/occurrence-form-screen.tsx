@@ -92,6 +92,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<FormScreenProps> = pr
       date: date,
       siteImage: siteImageData,
       observedTaxa: observedTaxaValues,
+      samplingMethod: samplingMethod,
+      specificBiotope: specificBiotope,
+      substratum: substratum,
+      biotope: broadBiotope,
       owner: username,
       newData: true,
       synced: false

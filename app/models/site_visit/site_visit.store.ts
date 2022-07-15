@@ -39,7 +39,7 @@ export const saveSiteVisitByField = async (
     for (const index in siteVisits) {
       const _siteVisit = siteVisits[index]
       if (_siteVisit[queryField] === queryFieldValue) {
-        _siteVisit[index] = siteVisit
+        siteVisits[index] = siteVisit
         update = true
         break
       }

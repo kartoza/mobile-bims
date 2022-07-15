@@ -8,6 +8,8 @@ import { Api } from "../../services/api/api"
 import { saveSites, loadSites, getWellsByField, saveWellByField } from "../site/site.store"
 import { API_URL } from "@env"
 import { securedUrl } from "../../utils/url"
+import SiteVisit from "../site_visit/site_visit"
+import { allSiteVisits, getSiteVisitsByField, saveSiteVisitByField } from "../site_visit/site_visit.store"
 
 export interface SyncData {
   id?: string | number,
@@ -125,34 +127,24 @@ export const pushUnsyncedData = async (unsyncedData: SyncData) => {
 }
 
 /**
- * Push updated wells to remote server
+ * Push updated site visit to remote server
  */
-export const pushUnsyncedWells = async (wells: Well[] = []) => {
-  if (wells.length === 0) {
-    wells = await getWellsByField("synced", false)
-  }
+export const pushUnsyncedSiteVisit = async (siteVisit: SiteVisit) => {
   const api = new Api()
   await api.setup()
-  let status = true
-  for (const well of wells) {
-    const wellPk = well.pk
-    let apiResult = {} as any
-    if (well.newData) {
-      well.pk = ""
-      apiResult = await api.postWell(well)
-    } else {
-      apiResult = await api.putWell(well)
-    }
-    if (apiResult.kind === "ok") {
-      await saveWellByField('pk', wellPk, apiResult.well)
-      status = true
-      return true
-    } else {
-      status = false
-      return false
-    }
+  const oldSiteVisitId = siteVisit.id
+  let apiResult = {} as any
+  if (siteVisit.newData) {
+    apiResult = await api.postSiteVisit(siteVisit)
   }
-  return status
+  if (apiResult.kind === "ok") {
+    siteVisit.id = apiResult.siteVisitId
+    siteVisit.synced = true
+    await saveSiteVisitByField('id', oldSiteVisitId, siteVisit)
+    return true
+  } else {
+    return false
+  }
 }
 
 export const mergeWithSynced = async (wells: Well[]) => {
