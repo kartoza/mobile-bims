@@ -7,6 +7,7 @@ import {SitesApi} from '../../services/api/sites-api';
 import {saveSiteByField} from '../site/site.store';
 
 export interface SyncData {
+  identifier: string;
   id?: string | number;
   data?: any;
   url?: string;
