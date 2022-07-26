@@ -2,6 +2,7 @@ import {GeneralApiProblem} from './api-problem';
 import Site from '../../models/site/site';
 import Taxon, {TaxonGroup} from '../../models/taxon/taxon';
 import Option from '../../models/options/option';
+import SourceReference from "../../models/source-reference/source-reference";
 // import Option from '../../models/options/option';
 
 export interface User {
@@ -19,6 +20,9 @@ export type GetTaxonGroupResult =
   | GeneralApiProblem;
 export type GetOptionsResult =
   | {kind: 'ok'; options: Option[]}
+  | GeneralApiProblem;
+export type GetSourceReferencesResult =
+  | {kind: 'ok'; sourceReferences: SourceReference[]}
   | GeneralApiProblem;
 export type PostSiteVisitResult =
   | {kind: 'ok'; siteVisitId: string}
