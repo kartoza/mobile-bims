@@ -4,11 +4,13 @@
  *
  * You'll likely spend most of your time in this file.
  */
-import React from "react"
+import React from 'react';
 
-import { createNativeStackNavigator } from "react-native-screens/native-stack"
-import { MapScreen, FormScreen, LoginScreenPage, MeasurementFormScreen, MeasurementListScreen } from "../screens"
-import { OccurrenceFormScreen } from "../screens/form-screen/occurrence-form-screen"
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {LoginScreenPage} from '../screens/login-screen';
+import {MapScreen} from '../screens/map-screen/map-screen';
+import {OccurrenceFormScreen} from '../screens/form-screen/occurrence-form-screen';
+import {SiteFormScreen} from '../screens/form-screen/site-form-screen';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -23,33 +25,29 @@ import { OccurrenceFormScreen } from "../screens/form-screen/occurrence-form-scr
  *   https://reactnavigation.org/docs/typescript#type-checking-the-navigator
  */
 export type PrimaryParamList = {
-  map: undefined
-  form: undefined
-  login: undefined
-  occurrenceForm: undefined
-  measurementForm: undefined
-  measurementList: undefined
-}
+  map: undefined;
+  form: undefined;
+  login: undefined;
+  occurrenceForm: undefined;
+  siteForm: undefined;
+  measurementList: undefined;
+};
 
 // Documentation: https://github.com/software-mansion/react-native-screens/tree/master/native-stack
-const Stack = createNativeStackNavigator<PrimaryParamList>()
+const Stack = createNativeStackNavigator<any>();
 
 export function PrimaryNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        gestureEnabled: true,
-      }}
-    >
+      }}>
       <Stack.Screen name="login" component={LoginScreenPage} />
       <Stack.Screen name="map" component={MapScreen} />
-      <Stack.Screen name="form" component={FormScreen} />
-      <Stack.Screen name="occurrenceForm" component={OccurrenceFormScreen} />
-      <Stack.Screen name="measurementForm" component={MeasurementFormScreen} />
-      <Stack.Screen name="measurementList" component={MeasurementListScreen} />
+      <Stack.Screen name="OccurrenceForm" component={OccurrenceFormScreen} />
+      <Stack.Screen name="siteForm" component={SiteFormScreen} />
     </Stack.Navigator>
-  )
+  );
 }
 
 /**
@@ -61,5 +59,5 @@ export function PrimaryNavigator() {
  *
  * `canExit` is used in ./app/app.tsx in the `useBackButtonHandler` hook.
  */
-const exitRoutes = ["map"]
-export const canExit = (routeName: string) => exitRoutes.includes(routeName)
+const exitRoutes = ['map'];
+export const canExit = (routeName: string) => exitRoutes.includes(routeName);

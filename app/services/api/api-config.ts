@@ -1,6 +1,4 @@
-// @ts-ignore
-import { API_URL } from "@env"
-import { securedUrl } from "../../utils/url"
+import Config from 'react-native-config';
 
 /**
  * The options used to configure the API.
@@ -9,18 +7,18 @@ export interface ApiConfig {
   /**
    * The URL of the api.
    */
-  url: string
+  url: string;
 
   /**
    * Milliseconds before we timeout the request.
    */
-  timeout: number
+  timeout: number;
 }
 
 /**
  * The default configuration for the app.
  */
 export const DEFAULT_API_CONFIG: ApiConfig = {
-  url: 'http://192.168.50.197:63302',
+  url: Config.API_URL,
   timeout: 10000,
-}
+};

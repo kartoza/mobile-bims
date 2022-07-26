@@ -1,12 +1,11 @@
-
-import { TextStyle, ViewStyle, Platform, StyleSheet } from 'react-native'
+import {TextStyle, ViewStyle, Platform, StyleSheet} from 'react-native';
 
 const CONTAINER: ViewStyle = {
-  height: "100%",
+  height: '100%',
   backgroundColor: 'rgb(248, 248, 248)',
   paddingLeft: 20,
-  paddingRight: 20
-}
+  paddingRight: 20,
+};
 
 const FORM_HEADER: TextStyle = {
   color: '#005198',
@@ -16,7 +15,7 @@ const FORM_HEADER: TextStyle = {
   backgroundColor: 'rgb(236, 236, 236)',
   padding: 5,
   marginTop: 10,
-}
+};
 
 const FORM_SUB_HEADER: TextStyle = {
   color: '#000000',
@@ -24,101 +23,101 @@ const FORM_SUB_HEADER: TextStyle = {
   marginBottom: -10,
   fontWeight: 'bold',
   textAlign: 'center',
-}
+};
 
 const CHART_CONTAINER: ViewStyle = {
   marginTop: 10,
-  height: 500
-}
+  height: 500,
+};
 
 const EMPTY_CHART_CONTAINER: ViewStyle = {
   height: 70,
-  marginTop: 10
-}
+  marginTop: 10,
+};
 
 const LABEL: TextStyle = {
   color: '#000000',
   fontSize: 13,
   marginTop: 10,
-  paddingBottom: 2
-}
+  paddingBottom: 2,
+};
 
 const LABEL_IMPORTANT: TextStyle = {
   ...LABEL,
-  fontWeight: 'bold'
-}
+  fontWeight: 'bold',
+};
 
 const REQUIRED_LABEL: TextStyle = {
   ...LABEL,
-  fontWeight: 'bold'
-}
+  fontWeight: 'bold',
+};
 
 const CHART_LABEL: TextStyle = {
   ...LABEL,
   marginTop: 0,
-  marginBottom: 15
-}
+  marginBottom: 15,
+};
 
 const TEXT_INPUT_STYLE: TextStyle = {
   minHeight: 40,
-  backgroundColor: "#ffffff",
+  backgroundColor: '#ffffff',
   borderRadius: 5,
   color: '#000000',
   marginTop: 5,
   paddingLeft: 10,
-}
+};
 
 const UNEDITABLE_TEXT_INPUT_STYLE: TextStyle = {
   ...TEXT_INPUT_STYLE,
-  backgroundColor: "#e1e1e1",
-}
+  backgroundColor: '#e1e1e1',
+};
 
 const TEXT_INPUT_TAXA: TextStyle = {
   borderWidth: 1,
-  borderColor: "#BDBDBD",
-  height: "80%",
+  borderColor: '#BDBDBD',
+  height: '80%',
   fontSize: 10,
-  marginLeft: "auto",
+  marginLeft: 'auto',
   marginRight: 10,
   borderRadius: 4,
   paddingTop: 0,
   paddingBottom: 0,
   width: 60,
-  textAlign: "center"
-}
+  textAlign: 'center',
+};
 
 const PICKER_INPUT_STYLE: ViewStyle = {
-  transform: [{ scaleX: 0.90 }, { scaleY: 0.90 }],
+  transform: [{scaleX: 0.9}, {scaleY: 0.9}],
   left: -25,
-}
+};
 
 const PICKER_SM_INPUT_STYLE: ViewStyle = {
   // transform: [{ scaleX: 0.70 }, { scaleY: 0.70 }],
   // left: 0,
-}
+};
 
 const MULTIPLE_INPUT_STYLE: ViewStyle = {
   ...TEXT_INPUT_STYLE,
   flex: 1,
-  flexDirection: "row"
-}
+  flexDirection: 'row',
+};
 
 const HEADER_CONTAINER: ViewStyle = {
-  backgroundColor: "#005198",
-  height: 100,
-  marginTop: (Platform.OS === "ios") ? -25 : 0
-}
+  backgroundColor: '#005198',
+  height: 120,
+  marginTop: Platform.OS === 'ios' ? -25 : 0,
+};
 
 const SUBMIT_BUTTON: ViewStyle = {
-  marginTop: 10
-}
+  marginTop: 10,
+};
 
 const LAST_UPDATE_TEXT: TextStyle = {
   marginTop: 10,
   fontSize: 12,
   textAlign: 'right',
-  fontStyle: 'italic'
-}
+  fontStyle: 'italic',
+};
 
 const LOADING: ViewStyle = {
   position: 'absolute',
@@ -129,13 +128,13 @@ const LOADING: ViewStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   zIndex: 999999,
-}
+};
 
 const ERROR_INPUT: TextStyle = {
-  color: "red",
+  color: 'red',
   fontSize: 12,
-  paddingLeft: 3
-}
+  paddingLeft: 3,
+};
 
 const AUTOCOMPLETE_CONTAINER: ViewStyle = {
   flex: 1,
@@ -143,29 +142,29 @@ const AUTOCOMPLETE_CONTAINER: ViewStyle = {
   position: 'absolute',
   right: 0,
   top: 35,
-  zIndex: 1
-}
+  zIndex: 1,
+};
 
 const AUTOCOMPLETE_LIST: ViewStyle = {
   backgroundColor: 'white',
   padding: 5,
   borderBottomWidth: 0.2,
-  borderBottomColor: 'rgba(0,0,0,0.21)'
-}
+  borderBottomColor: 'rgba(0,0,0,0.21)',
+};
 
 const AUTOCOMPLETE_LIST_TEXT: TextStyle = {
   color: 'black',
   fontSize: 14,
   margin: 2,
-  backgroundColor: 'white'
-}
+  backgroundColor: 'white',
+};
 
 const OBSERVED_TAXA_LIST: ViewStyle = {
   flexDirection: 'row',
-  alignItems: "center",
-  backgroundColor: "white",
-  marginBottom: 5
-}
+  alignItems: 'center',
+  backgroundColor: 'white',
+  marginBottom: 5,
+};
 
 export const styles = StyleSheet.create({
   AUTOCOMPLETE_CONTAINER,
@@ -196,6 +195,6 @@ export const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 10,
     marginTop: 10,
-    minHeight: 150
-  }
-})
+    minHeight: 150,
+  },
+});
