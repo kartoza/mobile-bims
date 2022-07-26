@@ -1,32 +1,34 @@
-/* eslint-disable react-native/no-color-literals */
 /* eslint-disable react-native/no-inline-styles */
-import React, { useEffect, useState } from 'react'
-import { View, Text, Alert } from "react-native"
-import { Button, Overlay } from 'react-native-elements'
-import { load, save } from '../../utils/storage'
-import { ParamListBase } from "@react-navigation/native"
-import { NativeStackNavigationProp } from "react-native-screens/native-stack"
-import { saveSiteVisits } from "../../models/site_visit/site_visit.store"
-import { saveSites } from "../../models/site/site.store"
+import React, {useEffect, useState} from 'react';
+import {View, Alert} from 'react-native';
+import {Button, Overlay} from '@rneui/themed';
+import {load, save} from '../../utils/storage';
+import {ParamListBase} from '@react-navigation/native';
+import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
+import {saveSiteVisits} from '../../models/site_visit/site_visit.store';
+import {saveSites} from '../../models/site/site.store';
 
 export interface OverlayMenuProps {
-  visible: boolean,
-  navigation: NativeStackNavigationProp<ParamListBase>
+  visible: boolean;
+  navigation: NativeStackNavigationProp<ParamListBase>;
 }
 
 export function OverlayMenu(props: OverlayMenuProps) {
-  const [overlayVisible, setOverlayVisible] = useState(false)
-  const [user, setUser] = useState({})
+  const [overlayVisible, setOverlayVisible] = useState(false);
+  const [user, setUser] = useState({});
 
   useEffect(() => {
-    ;(async () => {
-      setOverlayVisible(props.visible)
-      const userData = await load("user")
-      setUser(userData)
-    })()
-  }, [props.visible])
+    (async () => {
+      setOverlayVisible(props.visible);
+      const userData = await load('user');
+      setUser(userData);
+    })();
+  }, [props.visible]);
 
-  const goToLoginScreen = React.useMemo(() => () => props.navigation.navigate("login"), [props.navigation])
+  const goToLoginScreen = React.useMemo(
+    () => () => props.navigation.navigate('login'),
+    [props.navigation],
+  );
 
   const logout = () => {
     Alert.alert(
@@ -36,34 +38,38 @@ export function OverlayMenu(props: OverlayMenuProps) {
         {
           text: 'Cancel',
           onPress: () => setOverlayVisible(false),
-          style: 'cancel'
+          style: 'cancel',
         },
         {
           text: 'Yes',
           onPress: async () => {
-            await save('token', '')
-            await save('user', '')
-            await saveSiteVisits([])
-            await saveSites([])
-            goToLoginScreen()
-          }
-        }
+            await save('token', '');
+            await save('user', '');
+            await saveSiteVisits([]);
+            await saveSites([]);
+            goToLoginScreen();
+          },
+        },
       ],
-      { cancelable: false }
-    )
-  }
+      {cancelable: false},
+    );
+  };
 
   return (
-    <Overlay isVisible={ overlayVisible } onBackdropPress={ () => setOverlayVisible(false) }>
-      <View style={{ width: 300, padding: 20 }}>
+    <Overlay
+      isVisible={overlayVisible}
+      onBackdropPress={() => setOverlayVisible(false)}>
+      <View style={{width: 300, padding: 20}}>
         <Button
           title="Log out"
           raised
-          titleStyle={{ color: "#ffffff" }}
-          containerStyle={{ width: "100%" }}
-          onPress={ () => { logout() }}
+          titleStyle={{color: '#ffffff'}}
+          containerStyle={{width: '100%'}}
+          onPress={() => {
+            logout();
+          }}
         />
       </View>
     </Overlay>
-  )
+  );
 }

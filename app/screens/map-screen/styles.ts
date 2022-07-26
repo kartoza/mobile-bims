@@ -1,164 +1,172 @@
-import { StyleSheet, ViewStyle, Platform, TextStyle, Dimensions } from "react-native"
+import {
+  StyleSheet,
+  ViewStyle,
+  Platform,
+  TextStyle,
+  Dimensions,
+} from 'react-native';
 
 const ACTIVITY_INDICATOR: ViewStyle = {
   top: 10,
-}
+};
 const ACTIVITY_INDICATOR_WRAPPER: ViewStyle = {
-  alignItems: "center",
-  backgroundColor: "#FFFFFF",
+  alignItems: 'center',
+  backgroundColor: '#FFFFFF',
   borderRadius: 10,
-  display: "flex",
+  display: 'flex',
   height: 140,
-  justifyContent: "space-around",
+  justifyContent: 'space-around',
   width: 140,
-}
+};
 const BOTTOM_VIEW: ViewStyle = {
-  alignItems: "center",
-  backgroundColor: "white",
+  alignItems: 'center',
+  backgroundColor: 'white',
   bottom: 0,
-  flexDirection: "row-reverse",
-  height: (Platform.OS === "ios") ? 80 : 60,
-  justifyContent: "center",
-  paddingBottom: (Platform.OS === "ios") ? 20 : 0,
-  position: "absolute",
-  width: "100%",
-}
+  flexDirection: 'row-reverse',
+  height: Platform.OS === 'ios' ? 80 : 60,
+  justifyContent: 'center',
+  paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+  position: 'absolute',
+  width: '100%',
+};
 const CONTAINER: ViewStyle = {
-  height: "100%",
-}
+  height: '100%',
+};
 const SEARCH_BAR_CONTAINER: ViewStyle = {
   height: 65,
-  flexDirection: "row"
-}
+  flexDirection: 'row',
+};
 const MAP_VIEW_CONTAINER: ViewStyle = {
-  height: Dimensions.get('window').height - ((Platform.OS === "ios") ? 100 : 60) - 65,
-}
+  height:
+    Dimensions.get('window').height - (Platform.OS === 'ios' ? 100 : 60) - 65,
+};
 const MAP: ViewStyle = {
-  height: "100%",
+  height: '100%',
   marginVertical: 0,
-}
+};
 const MODAL_TEXT: TextStyle = {
   fontSize: 14,
-  textAlign: "center"
-}
+  textAlign: 'center',
+};
 const MODAL_BACKGROUND: ViewStyle = {
-  alignItems: "center",
-  backgroundColor: "#00000040",
+  alignItems: 'center',
+  backgroundColor: '#00000040',
   flex: 1,
-  flexDirection: "column",
-  justifyContent: "space-around"
-}
+  flexDirection: 'column',
+  justifyContent: 'space-around',
+};
 const LOCATE_ME_BUTTON: ViewStyle = {
   borderColor: '#3ca290',
-  backgroundColor: "#3ca290",
-  width: "50%",
+  backgroundColor: '#3ca290',
+  width: '50%',
   marginBottom: 20,
-  height: "100%"
-}
+  height: '100%',
+};
 const LOCATE_ME_CONTAINER: ViewStyle = {
-  width: "30%",
-  alignItems: "center"
-}
+  width: '30%',
+  alignItems: 'center',
+};
 const USER_BUTTON: ViewStyle = {
   marginRight: -20,
-  backgroundColor: "#ffffff"
-}
+  backgroundColor: '#ffffff',
+};
 const USER_BUTTON_CONTAINER: ViewStyle = {
-  width: "30%"
-}
+  width: '30%',
+};
 const SYNC_BUTTON: ViewStyle = {
-  marginLeft: -10, backgroundColor: "#ffffff"
-}
+  marginLeft: -10,
+  backgroundColor: '#ffffff',
+};
 const SYNC_BUTTON_CONTAINER: ViewStyle = {
-  width: "30%"
-}
+  width: '30%',
+};
 const SYNC_BADGE: ViewStyle = {
   position: 'absolute',
-  right: "20%",
-  top: 5
-}
+  right: '20%',
+  top: 5,
+};
 
 const MID_BOTTOM_CONTAINER: ViewStyle = {
-  alignItems: "center",
-  alignContent: "center",
-  bottom: (Platform.OS === "ios") ? 100 : 80,
-  paddingBottom: (Platform.OS === "ios") ? 20 : 0,
-  width: "100%",
-  position: "absolute",
-  justifyContent: "center",
-  flexDirection: "row-reverse",
-}
+  alignItems: 'center',
+  alignContent: 'center',
+  bottom: Platform.OS === 'ios' ? 100 : 80,
+  paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+  width: '100%',
+  position: 'absolute',
+  justifyContent: 'center',
+  flexDirection: 'row-reverse',
+};
 
 const BOTTOM_CONTAINER: ViewStyle = {
-  alignItems: "center",
-  alignContent: "center",
-  bottom: (Platform.OS === "ios") ? 100 : 0,
-  paddingBottom: (Platform.OS === "ios") ? 20 : 10,
-  width: "100%",
-  position: "absolute",
-  justifyContent: "center",
-  flexDirection: "column",
+  alignItems: 'center',
+  alignContent: 'center',
+  bottom: Platform.OS === 'ios' ? 100 : 0,
+  paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+  width: '100%',
+  position: 'absolute',
+  justifyContent: 'center',
+  flexDirection: 'column',
   backgroundColor: '#ffffff',
-  zIndex: 99
-}
+  zIndex: 99,
+};
 
 const MID_BOTTOM_CONTENTS: ViewStyle = {
-  alignItems: "center",
-  alignContent: "center",
-  backgroundColor: "white",
+  alignItems: 'center',
+  alignContent: 'center',
+  backgroundColor: 'white',
   height: 120,
-  width: "80%",
-  borderRadius: 5
-}
+  width: '80%',
+  borderRadius: 5,
+};
 
 const MID_BOTTOM_TEXT: TextStyle = {
   padding: 18,
-  fontWeight: "bold",
-  color: "rgb(74, 74, 74)"
-}
+  fontWeight: 'bold',
+  color: 'rgb(74, 74, 74)',
+};
 
 const MID_BOTTOM_SUB_TEXT: TextStyle = {
   fontSize: 12,
-  color: "rgb(74, 74, 74)"
-}
+  color: 'rgb(74, 74, 74)',
+};
 
 const MID_BOTTOM_BUTTON: ViewStyle = {
-  backgroundColor: "#3ca290",
-  borderColor: "#3ca290"
-}
+  backgroundColor: '#3ca290',
+  borderColor: '#3ca290',
+};
 
 const SASS_BUTTON: ViewStyle = {
-  backgroundColor: "#aaa600",
-  borderColor: "#aaa600"
-}
+  backgroundColor: '#aaa600',
+  borderColor: '#aaa600',
+};
 
 const MODULE_TEXT_CONTAINER: ViewStyle = {
   display: 'flex',
   justifyContent: 'center',
   backgroundColor: '#ffffff',
-  paddingTop: 5
-}
+  paddingTop: 5,
+};
 
 const MODULE_TEXT: TextStyle = {
   textAlign: 'center',
   padding: 10,
   fontWeight: 'bold',
   color: '#525351',
-  fontSize: 15
-}
+  fontSize: 15,
+};
 
 const MODULE_BUTTONS_CONTAINER: ViewStyle = {
   flexDirection: 'row',
   justifyContent: 'space-around',
   padding: 10,
   backgroundColor: '#ffffff',
-  flexWrap: 'wrap'
-}
+  flexWrap: 'wrap',
+};
 
 const MODULE_BUTTONS: ViewStyle = {
-  width: "45%",
-  marginBottom: 8
-}
+  width: '45%',
+  marginBottom: 8,
+};
 
 export const styles = StyleSheet.create({
   ACTIVITY_INDICATOR,
@@ -187,5 +195,5 @@ export const styles = StyleSheet.create({
   SYNC_BUTTON,
   SYNC_BUTTON_CONTAINER,
   USER_BUTTON,
-  USER_BUTTON_CONTAINER
-})
+  USER_BUTTON_CONTAINER,
+});
