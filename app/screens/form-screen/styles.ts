@@ -87,8 +87,9 @@ const TEXT_INPUT_TAXA: TextStyle = {
 };
 
 const PICKER_INPUT_STYLE: ViewStyle = {
-  transform: [{scaleX: 0.9}, {scaleY: 0.9}],
-  left: -25,
+  transform: [{scaleX: 0.8}, {scaleY: 0.9}],
+  left: -45,
+  width: '120%',
 };
 
 const PICKER_SM_INPUT_STYLE: ViewStyle = {

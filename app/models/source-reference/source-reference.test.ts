@@ -51,4 +51,7 @@ it('saves source references', async () => {
   expect(sourceReferencesFromStorage[1].localId).toBe(
     sourceReferenceResults[1].id,
   );
+  expect(sourceReferencesFromStorage[1].referenceType).toBe(
+    sourceReferenceResults[1].reference_type,
+  );
 });

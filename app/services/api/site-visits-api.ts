@@ -23,6 +23,7 @@ export class SiteVisitsApi extends Api {
       specific_biotope: siteVisit.specificBiotope,
       substratum: siteVisit.substratum,
       sampling_method: siteVisit.samplingMethod,
+      source_reference_id: siteVisit.sourceReferenceId,
       site_image: siteVisit.siteImage,
       'site-id': site.id,
       'taxa-id-list': '',

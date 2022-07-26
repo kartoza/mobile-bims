@@ -10,6 +10,7 @@ export default class SiteVisit {
   biotope?: string;
   specificBiotope?: string;
   substratum?: string;
+  sourceReferenceId?: string;
   date!: string;
   owner!: string;
   siteImage: any;

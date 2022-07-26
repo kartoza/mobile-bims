@@ -38,6 +38,8 @@ import {
   allSiteVisits,
 } from '../../models/site_visit/site_visit.store';
 import Option from '../../models/options/option';
+import SourceReference from "../../models/source-reference/source-reference";
+import {loadSourceReferences} from "../../models/source-reference/source-reference.store";
 
 export interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -55,6 +57,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [specificBiotope, setSpecificBiotope] = useState('');
   const [substratum, setSubstratum] = useState('');
   const [samplingMethod, setSamplingMethod] = useState('');
+  const [sourceReference, setSourceReference] = useState('');
+  const [sourceReferenceOptions, setSourceReferenceOptions] = useState<
+    SourceReference[]
+  >([]);
   const [broadBiotopeOptions, setBroadBiotopeOptions] = useState<Option[]>([]);
   const [specificBiotopeOptions, setSpecificBiotopeOptions] = useState<
     Option[]
@@ -101,6 +107,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       const _taxaList = await loadTaxa(modulePk);
       setTaxaList(_taxaList);
       setUsername(await load('user'));
+      const _sourceReferenceList = await loadSourceReferences();
+      setSourceReferenceOptions(_sourceReferenceList);
     })();
   }, [modulePk]);
 
@@ -129,6 +137,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       observedTaxa: observedTaxaValues,
       samplingMethod: samplingMethod,
       specificBiotope: specificBiotope,
+      sourceReferenceId: sourceReference,
       substratum: substratum,
       biotope: broadBiotope,
       owner: username,
@@ -214,6 +223,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
             specificBiotope: '',
             samplingMethod: '',
             substratum: '',
+            sourceReference: '',
           }}
           onSubmit={submitForm}>
           {({
@@ -346,6 +356,31 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     <Picker.Item
                       key={option.id}
                       label={option.name}
+                      value={option.id}
+                    />
+                  ))}
+                </Picker>
+              </View>
+              {/* Source References */}
+              <Text style={styles.LABEL}>Source Reference</Text>
+              <View style={styles.TEXT_INPUT_STYLE}>
+                <Picker
+                  selectedValue={sourceReference}
+                  numberOfLines={4}
+                  style={styles.PICKER_INPUT_STYLE}
+                  onValueChange={itemValue => {
+                    setSourceReference(itemValue);
+                    values.sourceReference = itemValue;
+                  }}>
+                  <Picker.Item
+                    key="not_specified"
+                    label="Not specified"
+                    value=""
+                  />
+                  {sourceReferenceOptions.map(option => (
+                    <Picker.Item
+                      key={option.id}
+                      label={option.label()}
                       value={option.id}
                     />
                   ))}
