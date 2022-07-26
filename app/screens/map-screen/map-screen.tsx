@@ -39,6 +39,8 @@ import {
 import {OptionsApi} from '../../services/api/options-api';
 import {saveOptions} from '../../models/options/option.store';
 import {getSiteVisitsByField} from '../../models/site_visit/site_visit.store';
+import {SourceReferenceApi} from '../../services/api/source-reference-api';
+import {saveSourceReferences} from '../../models/source-reference/source-reference.store';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -362,10 +364,18 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       currentUnsyncedData = await pushUnsynced();
     }
 
-    setSyncMessage('');
-    setIsSyncing(false);
+    setSyncMessage('Downloading Source References');
+    const sourceReferenceApi = new SourceReferenceApi();
+    await sourceReferenceApi.setup();
+    const sourceReferenceApiResult =
+      await sourceReferenceApi.getSourceReferences();
+    if (sourceReferenceApiResult.kind === 'ok') {
+      await saveSourceReferences(sourceReferenceApiResult.sourceReferences);
+    }
+    setSyncProgress(1);
 
     setSyncMessage('Downloading Taxa List');
+    setSyncProgress(0);
     const api = new TaxaApi();
     await api.setup();
     let storedTaxonGroups = await loadTaxonGroups();
