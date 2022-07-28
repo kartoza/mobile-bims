@@ -69,3 +69,5 @@ buck-out/
 app/config/env.*.js
 !env.js
 android/app
+.env.development
+.env.production
