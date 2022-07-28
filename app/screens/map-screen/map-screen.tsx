@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
-import MapView, {Marker} from 'react-native-maps';
+import MapView, {Details, Marker, Region} from 'react-native-maps';
 import {styles} from './styles';
 import {postLocationSite, pushUnsyncedSiteVisit} from '../../models/sync/sync';
 import {delay} from '../../utils/delay';
@@ -142,10 +142,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     }, [getSites, latitude, longitude]),
   );
 
-  // const onRegionChange = async region => {
-  //   setCurrentRegion(region)
-  //   console.log('Region changed', region)
-  // };
+  const onRegionChange = (region: Region, details: Details) => {
+    // console.log(region, details);
+  };
 
   const markerSelected = (marker: React.SetStateAction<any>) => {
     if (isAddSite) {
@@ -237,16 +236,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         params: {
           sitePk: selectedSite.id,
           modulePk: moduleId,
+          onBackToMap: () => refreshMap(),
         },
         merge: true,
       });
-      // props.navigation.navigate('occurrenceForm', {
-      //   sitePk: selectedSite.id,
-      //   modulePk: moduleId,
-      //   onBackToMap: () => refreshMap(),
-      // });
     },
-    [props.navigation, selectedSite],
+    [props.navigation, refreshMap, selectedSite.id],
   );
 
   const addRecordClicked = () => {
@@ -504,7 +499,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         <MapView
           // @ts-ignore
           ref={mapViewRef}
-          // onRegionChange={null}
+          onRegionChange={onRegionChange}
           followsUserLocation
           style={styles.MAP}
           loadingEnabled={true}
