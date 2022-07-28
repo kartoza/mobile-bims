@@ -455,7 +455,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
       <View style={styles.SEARCH_BAR_CONTAINER}>
         <SearchBar
-          placeholder="Search"
+          placeholder="Search Sites"
           lightTheme
           round
           onChangeText={updateSearch}
@@ -464,6 +464,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           value={search}
           showLoading={isLoading}
           containerStyle={{width: '85%'}}
+          clearIcon={
+            <Icon
+              style={!search ? {display: 'none'} : {}}
+              name="times"
+              type="font-awesome"
+              size={20}
+              color="rgb(138, 151, 161)"
+              onPress={() => setSearch('')}
+            />
+          }
           searchIcon={
             <Icon
               name="search"
@@ -611,9 +621,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 buttonStyle={styles.SASS_BUTTON}
                 titleStyle={{color: '#ffffff'}}
                 containerStyle={{width: '40%', marginLeft: 10}}
-                onPress={() => {
-                  addRecordClicked();
-                }}
+                onPress={() => {}}
               />
               {selectedSite.newData ? (
                 <Button
