@@ -68,4 +68,6 @@ buck-out/
 # Configurations
 app/config/env.*.js
 !env.js
-android/app
+android/app/build
+.env.development
+.env.production

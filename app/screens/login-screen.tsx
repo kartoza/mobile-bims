@@ -9,6 +9,7 @@ import {load, save} from '../utils/storage';
 import {styles} from "./form-screen/styles";
 import {Button} from "@rneui/themed";
 import {Wallpaper} from "../components/wallpaper/wallpaper";
+import axios from "axios";
 
 const logo = require('../components/logo/fbis_v2_logo.png');
 
@@ -58,10 +59,13 @@ export const LoginScreenPage: React.FunctionComponent<
     formData.append('username', username);
     formData.append('password', password);
     setLoading(true);
-    Axios.post(loginUrl, {
-      username: username,
-      password: password,
-    })
+    const axiosClient = axios.create();
+    axiosClient.defaults.timeout = 5000;
+    axiosClient
+      .post(loginUrl, {
+        username: username,
+        password: password,
+      })
       .then(async response => {
         const responseData = response.data;
         setLoading(false);
@@ -72,9 +76,14 @@ export const LoginScreenPage: React.FunctionComponent<
         }
       })
       .catch(error => {
-        console.log(error);
+        const errorMessage = '' + error;
+        console.log(errorMessage);
         setLoading(false);
-        Alert.alert('Login Failed', 'Invalid username or password');
+        if (errorMessage.includes('timeout')) {
+          Alert.alert('Request Timeout', "The server can't be reached");
+        } else {
+          Alert.alert('Login Failed', 'Invalid username or password');
+        }
       });
   };
 

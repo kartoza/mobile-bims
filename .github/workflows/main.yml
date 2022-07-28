@@ -2,7 +2,7 @@
 
 name: Install dependencies and run tests
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -16,7 +16,7 @@ on:
 jobs:
   install-and-test:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
@@ -29,17 +29,19 @@ jobs:
   build-android:
     needs: install-and-test
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - uses: actions/checkout@v2
       - name: Install npm dependencies
         run: |
           npm install
       - name: Build Android Release
         run: |
+          cp .env.production.template .env.production &&
           cd android && ./gradlew assembleRelease
         env:
           API_URL: ${{ secrets.API_URL }}
           LIMIT: ${{ secrets.LIMIT }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
