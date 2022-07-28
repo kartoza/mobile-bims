@@ -382,14 +382,14 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       }
     }
     await setTaxonGroups(storedTaxonGroups);
-    if (taxonGroups) {
-      for (let i = 0; i < taxonGroups.length; i++) {
-        const taxonGroup = taxonGroups[i];
+    if (storedTaxonGroups) {
+      for (let i = 0; i < storedTaxonGroups.length; i++) {
+        const taxonGroup = storedTaxonGroups[i];
         const apiResult = await api.getTaxa(taxonGroup.id + '');
         if (apiResult.kind === 'ok') {
           await saveTaxa(apiResult.taxa, taxonGroup.id);
         }
-        setSyncProgress((i + 1) / taxonGroups.length);
+        setSyncProgress((i + 1) / storedTaxonGroups.length);
       }
 
       // Options data
@@ -397,13 +397,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       setSyncProgress(0);
       const optionsApi = new OptionsApi();
       await optionsApi.setup();
-      for (let i = 0; i < taxonGroups.length; i++) {
-        const taxonGroup = taxonGroups[i];
+      for (let i = 0; i < storedTaxonGroups.length; i++) {
+        const taxonGroup = storedTaxonGroups[i];
         const apiResult = await optionsApi.getOptions(taxonGroup.id);
         if (apiResult.kind === 'ok') {
           await saveOptions(apiResult.options, taxonGroup.id);
         }
-        setSyncProgress((i + 1) / taxonGroups.length);
+        setSyncProgress((i + 1) / storedTaxonGroups.length);
       }
     }
     setSyncMessage('');
