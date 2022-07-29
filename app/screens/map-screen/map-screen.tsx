@@ -359,7 +359,21 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       currentUnsyncedData = await pushUnsynced();
     }
 
+    if (latitude && longitude) {
+      setSyncMessage('Downloading Nearest Sites');
+      setSyncProgress(0);
+      const sitesApi = new SitesApi();
+      await sitesApi.setup();
+      const apiResult = await sitesApi.getSites(latitude, longitude);
+      if (apiResult.kind === 'ok') {
+        await saveSites(apiResult.sites);
+        setSites(apiResult.sites);
+      }
+      setSyncProgress(1);
+    }
+
     setSyncMessage('Downloading Source References');
+    setSyncProgress(1);
     const sourceReferenceApi = new SourceReferenceApi();
     await sourceReferenceApi.setup();
     const sourceReferenceApiResult =
