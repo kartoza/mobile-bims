@@ -20,6 +20,7 @@ export const saveSiteByField = async (
   queryFieldValue: any,
   site: Site,
 ) => {
+  console.log('save', site, queryField, queryFieldValue);
   let sites = await load(SITE_STORAGE_KEY);
   let update = false;
   if (sites) {
@@ -81,7 +82,7 @@ export const createNewSite = async (
   latitude: number,
   longitude: number,
 ): Promise<Site> => {
-  const newSites = await getSitesByField('synced', true);
+  const newSites = await getSitesByField('synced', false);
   let newId = -1;
   if (newSites.length > 0) {
     newSites.sort((a, b) => a.id - b.id);
@@ -93,6 +94,7 @@ export const createNewSite = async (
     longitude: longitude,
     newData: true,
     datetime: Math.floor(Date.now() / 1000),
+    synced: false,
   });
   const allSites = await loadSites();
   allSites.push(newSite);

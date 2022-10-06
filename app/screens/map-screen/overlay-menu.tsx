@@ -11,6 +11,7 @@ import {saveSites} from '../../models/site/site.store';
 export interface OverlayMenuProps {
   visible: boolean;
   navigation: NativeStackNavigationProp<ParamListBase>;
+  refreshMap: Function;
 }
 
 export function OverlayMenu(props: OverlayMenuProps) {
@@ -29,6 +30,14 @@ export function OverlayMenu(props: OverlayMenuProps) {
     () => () => props.navigation.navigate('login'),
     [props.navigation],
   );
+
+  const clearData = async () => {
+    await saveSiteVisits([]);
+    await saveSites([]);
+    setOverlayVisible(false);
+    props.refreshMap();
+    return;
+  };
 
   const logout = () => {
     Alert.alert(
@@ -60,6 +69,15 @@ export function OverlayMenu(props: OverlayMenuProps) {
       isVisible={overlayVisible}
       onBackdropPress={() => setOverlayVisible(false)}>
       <View style={{width: 300, padding: 20}}>
+        <Button
+          title="Clear Data"
+          raised
+          titleStyle={{color: '#ffffff'}}
+          containerStyle={{width: '100%', marginBottom: 20}}
+          onPress={() => {
+            return clearData();
+          }}
+        />
         <Button
           title="Log out"
           raised

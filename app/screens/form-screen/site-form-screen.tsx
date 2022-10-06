@@ -41,8 +41,8 @@ export const SiteFormScreen: React.FunctionComponent<
   const goToMapScreen = React.useMemo(
     () =>
       (siteId: Number | null = null) => {
+        props.navigation.pop();
         route.params.onBackToMap(siteId);
-        return props.navigation.pop();
       },
     [props.navigation, route.params],
   );
