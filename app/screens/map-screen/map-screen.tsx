@@ -705,7 +705,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       {isAddSite ? (
         <View style={styles.MID_BOTTOM_CONTAINER}>
           <View style={styles.MID_BOTTOM_CONTENTS}>
-            <Text style={styles.MID_BOTTOM_TEXT}>Add new location site</Text>
+            <Text style={styles.MID_BOTTOM_TEXT}>Add Site</Text>
             <View style={{flexDirection: 'row'}}>
               <Button
                 title="Cancel"
