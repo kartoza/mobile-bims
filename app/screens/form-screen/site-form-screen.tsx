@@ -41,8 +41,8 @@ export const SiteFormScreen: React.FunctionComponent<
   const goToMapScreen = React.useMemo(
     () =>
       (siteId: Number | null = null) => {
+        props.navigation.pop();
         route.params.onBackToMap(siteId);
-        return props.navigation.pop();
       },
     [props.navigation, route.params],
   );
@@ -89,7 +89,7 @@ export const SiteFormScreen: React.FunctionComponent<
           onPress: () => goToMapScreen(),
         }}
         centerComponent={{
-          text: 'ADD A LOCATION SITE',
+          text: 'ADD SITE',
           style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
         }}
         containerStyle={styles.HEADER_CONTAINER}
@@ -109,6 +109,7 @@ export const SiteFormScreen: React.FunctionComponent<
                     rotateEnabled={editMode}
                     zoomEnabled={editMode}
                     scrollEnabled={editMode}
+                    mapType={'satellite'}
                     // @ts-ignore
                     ref={mapViewRef}
                     initialRegion={{

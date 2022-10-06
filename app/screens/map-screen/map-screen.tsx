@@ -94,7 +94,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   const getSites = useCallback(
     async (_latitude?: Number | undefined, _longitude?: Number | undefined) => {
-      await clearTemporaryNewSites();
       let _sites = await loadSites();
       if (_sites.length === 0) {
         const userLatitude = _latitude || latitude;
@@ -135,6 +134,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   useFocusEffect(
     React.useCallback(() => {
       const reloadMap = async () => {
+        await clearTemporaryNewSites();
         await getUnsyncedData();
         await getSites(latitude, longitude);
         setSearch('');
@@ -176,6 +176,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const refreshMap = useCallback(async () => {
     // setMarkers([])
     markerDeselected();
+    await clearTemporaryNewSites();
     await getUnsyncedData();
     await getSites();
   }, [getSites]);
@@ -259,9 +260,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       siteId: newSite.id,
       editMode: true,
       onBackToMap: async (newSiteId: Number | null = null) => {
-        await refreshMap();
+        const _sites = await loadSites();
         if (newSiteId) {
-          for (const site of sites) {
+          for (const site of _sites) {
             if (site.id === newSiteId) {
               setSelectedSite(site);
               addRecordClicked();
@@ -478,7 +479,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   // @ts-ignore
   return (
     <View style={styles.CONTAINER}>
-      <OverlayMenu visible={overlayVisible} navigation={props.navigation} />
+      <OverlayMenu
+        visible={overlayVisible}
+        navigation={props.navigation}
+        refreshMap={refreshMap}
+      />
 
       <View style={styles.SEARCH_BAR_CONTAINER}>
         <SearchBar
@@ -705,7 +710,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       {isAddSite ? (
         <View style={styles.MID_BOTTOM_CONTAINER}>
           <View style={styles.MID_BOTTOM_CONTENTS}>
-            <Text style={styles.MID_BOTTOM_TEXT}>Add new location site</Text>
+            <Text style={styles.MID_BOTTOM_TEXT}>Add Site</Text>
             <View style={{flexDirection: 'row'}}>
               <Button
                 title="Cancel"

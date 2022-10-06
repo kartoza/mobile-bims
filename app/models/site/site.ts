@@ -7,7 +7,7 @@ export default class Site {
   longitude?: number = 0;
   datetime?: any;
   synced: boolean | undefined;
-  newData?: boolean;
+  newData?: boolean; // temporary data
   description?: string;
 
   constructor(data: {
@@ -22,9 +22,10 @@ export default class Site {
     datetime: any;
     newData: boolean;
     description?: string;
+    synced: boolean;
   }) {
     if (this.newData && typeof this.synced === 'undefined') {
-      this.synced = true;
+      this.synced = false;
     }
     this.name = data.name;
     this.id = data.id;
@@ -49,6 +50,9 @@ export default class Site {
     }
     if (typeof data.newData !== 'undefined') {
       this.newData = data.newData;
+    }
+    if (typeof data.synced !== 'undefined') {
+      this.synced = data.synced;
     }
     if (data.description) {
       this.description = data.description;
