@@ -20,7 +20,6 @@ export const saveSiteByField = async (
   queryFieldValue: any,
   site: Site,
 ) => {
-  console.log('save', site, queryField, queryFieldValue);
   let sites = await load(SITE_STORAGE_KEY);
   let update = false;
   if (sites) {
