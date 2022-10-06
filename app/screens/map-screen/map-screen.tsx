@@ -41,6 +41,7 @@ import {saveOptions} from '../../models/options/option.store';
 import {getSiteVisitsByField} from '../../models/site_visit/site_visit.store';
 import {SourceReferenceApi} from '../../services/api/source-reference-api';
 import {saveSourceReferences} from '../../models/source-reference/source-reference.store';
+import Site from "../../models/site/site";
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -61,6 +62,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [isViewRecord, setIsViewRecord] = useState(false);
   const [isAddSite, setIsAddSite] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>({});
+  const [newCreatedSite, setNewCreatedSite] = useState<any>(null);
   const [unsyncedData, setUnsyncedData] = useState<any[any]>([]);
   const [syncProgress, setSyncProgress] = useState(0);
   const [latitude, setLatitude] = useState<Number | undefined>(undefined);
@@ -256,7 +258,18 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     props.navigation.navigate('siteForm', {
       siteId: newSite.id,
       editMode: true,
-      onBackToMap: () => refreshMap(),
+      onBackToMap: async (newSiteId: Number | null = null) => {
+        await refreshMap();
+        if (newSiteId) {
+          for (const site of sites) {
+            if (site.id === newSiteId) {
+              setSelectedSite(site);
+              addRecordClicked();
+            }
+          }
+        }
+        return;
+      },
     });
   };
 
@@ -661,6 +674,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       {showBiodiversityModule ? (
         <View style={styles.BOTTOM_CONTAINER}>
           <View style={styles.MODULE_TEXT_CONTAINER}>
+            <Text style={styles.MODULE_TEXT}>
+              Add Record to{' '}
+              {selectedSite.siteCode !== '-'
+                ? selectedSite.siteCode
+                : selectedSite.description}{' '}
+            </Text>
             <Text style={styles.MODULE_TEXT}>Select Biodiversity Module</Text>
           </View>
           <View style={styles.MODULE_BUTTONS_CONTAINER}>
