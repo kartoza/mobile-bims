@@ -109,6 +109,7 @@ export const SiteFormScreen: React.FunctionComponent<
                     rotateEnabled={editMode}
                     zoomEnabled={editMode}
                     scrollEnabled={editMode}
+                    mapType={'satellite'}
                     // @ts-ignore
                     ref={mapViewRef}
                     initialRegion={{
