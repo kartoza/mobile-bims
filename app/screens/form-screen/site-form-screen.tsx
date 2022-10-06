@@ -39,8 +39,12 @@ export const SiteFormScreen: React.FunctionComponent<
   }, [route.params.siteId]);
 
   const goToMapScreen = React.useMemo(
-    () => () => props.navigation.pop(),
-    [props.navigation],
+    () =>
+      (siteId: Number | null = null) => {
+        route.params.onBackToMap(siteId);
+        return props.navigation.pop();
+      },
+    [props.navigation, route.params],
   );
 
   useEffect(() => {
@@ -71,7 +75,7 @@ export const SiteFormScreen: React.FunctionComponent<
     updatedSiteData.synced = false;
     await setUpdatedSiteData(updatedSiteData);
     await saveSiteByField('id', updatedSiteData.id, updatedSiteData);
-    goToMapScreen();
+    goToMapScreen(updatedSiteData.id);
   };
 
   return (
