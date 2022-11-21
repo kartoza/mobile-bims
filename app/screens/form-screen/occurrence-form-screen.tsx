@@ -38,8 +38,8 @@ import {
   allSiteVisits,
 } from '../../models/site_visit/site_visit.store';
 import Option from '../../models/options/option';
-import SourceReference from "../../models/source-reference/source-reference";
-import {loadSourceReferences} from "../../models/source-reference/source-reference.store";
+import SourceReference from '../../models/source-reference/source-reference';
+import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
 
 export interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
