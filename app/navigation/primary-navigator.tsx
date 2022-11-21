@@ -11,6 +11,7 @@ import {LoginScreenPage} from '../screens/login-screen';
 import {MapScreen} from '../screens/map-screen/map-screen';
 import {OccurrenceFormScreen} from '../screens/form-screen/occurrence-form-screen';
 import {SiteFormScreen} from '../screens/form-screen/site-form-screen';
+import {SassFormScreen} from '../screens/form-screen/sass-form-screen';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -29,6 +30,7 @@ export type PrimaryParamList = {
   form: undefined;
   login: undefined;
   occurrenceForm: undefined;
+  SASSForm: undefined;
   siteForm: undefined;
   measurementList: undefined;
 };
@@ -45,6 +47,7 @@ export function PrimaryNavigator() {
       <Stack.Screen name="login" component={LoginScreenPage} />
       <Stack.Screen name="map" component={MapScreen} />
       <Stack.Screen name="OccurrenceForm" component={OccurrenceFormScreen} />
+      <Stack.Screen name="SASSForm" component={SassFormScreen} />
       <Stack.Screen name="siteForm" component={SiteFormScreen} />
     </Stack.Navigator>
   );

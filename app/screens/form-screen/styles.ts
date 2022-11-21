@@ -7,6 +7,29 @@ const CONTAINER: ViewStyle = {
   paddingRight: 20,
 };
 
+const BIOTOPE_SAMPLED_CONTAINER: ViewStyle = {
+  marginBottom: 150,
+  backgroundColor: 'white',
+  paddingLeft: 20,
+  borderRadius: 5,
+  paddingBottom: 10,
+};
+
+const BIOTOPE_CONTAINER: ViewStyle = {
+  display: 'flex',
+  flexDirection: 'row',
+};
+
+const BIOTOPE_RADIO_LABEL: TextStyle = {
+  marginTop: 7,
+  fontWeight: 'bold',
+};
+
+const BIOTOPE_RADIO_LABEL_2: TextStyle = {
+  ...BIOTOPE_RADIO_LABEL,
+  marginLeft: 12,
+};
+
 const FORM_HEADER: TextStyle = {
   color: '#005198',
   fontWeight: 'bold',
@@ -171,6 +194,10 @@ export const styles = StyleSheet.create({
   AUTOCOMPLETE_CONTAINER,
   AUTOCOMPLETE_LIST,
   AUTOCOMPLETE_LIST_TEXT,
+  BIOTOPE_CONTAINER,
+  BIOTOPE_RADIO_LABEL,
+  BIOTOPE_RADIO_LABEL_2,
+  BIOTOPE_SAMPLED_CONTAINER,
   CHART_CONTAINER,
   CHART_LABEL,
   CONTAINER,

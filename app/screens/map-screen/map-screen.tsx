@@ -247,6 +247,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     [props.navigation, refreshMap, selectedSite.id],
   );
 
+  const addSassClicked = () => {
+    props.navigation.navigate('SASSForm', {});
+  };
+
   const addRecordClicked = () => {
     setShowBiodiversityModule(true);
   };
@@ -653,7 +657,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 buttonStyle={styles.SASS_BUTTON}
                 titleStyle={{color: '#ffffff'}}
                 containerStyle={{width: '40%', marginLeft: 10}}
-                onPress={() => {}}
+                onPress={() => addSassClicked()}
               />
               {selectedSite.newData ? (
                 <Button
