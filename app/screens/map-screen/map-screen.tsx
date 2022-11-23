@@ -42,6 +42,8 @@ import {getSiteVisitsByField} from '../../models/site_visit/site_visit.store';
 import {SourceReferenceApi} from '../../services/api/source-reference-api';
 import {saveSourceReferences} from '../../models/source-reference/source-reference.store';
 import Site from "../../models/site/site";
+import {SassApi} from "../../services/api/sass-api";
+import {saveSassTaxa} from "../../models/sass/sass.store";
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -438,7 +440,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         setSyncProgress((i + 1) / storedTaxonGroups.length);
       }
     }
+
+    setSyncMessage('Fetching SASS Taxa');
+    setSyncProgress(0);
+    const sassApi = new SassApi();
+    await sassApi.setup();
+    const sassTaxaList = await sassApi.getSassTaxa();
+    await saveSassTaxa(sassTaxaList);
+    setSyncProgress(1);
     setSyncMessage('');
+
     setIsSyncing(false);
   };
 

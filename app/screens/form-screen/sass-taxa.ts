@@ -1,0 +1,20 @@
+export const SassTaxa = {
+  ANNELIDA: ['OLIGOCHAETA', 'HIRUDINEA'],
+  CRUSTACEA: ['AMPHIPODA', 'POTAMONAUTIDAE'],
+  EPHEMEROPTERA: [
+    'BAETIDAE 1 SP',
+    'BAETIDAE 2 SP',
+    'BAETIDAE > 2 SP',
+    'CAENIDAE',
+    'EPHEMERIDAE',
+    'HEPTAGENIIDAE',
+    'LEPTOPHLEBIIDAE',
+    'OLIGONEURIDAE',
+    'POLYMITARCYIDAE',
+    'PROSOPISTOMATIDAE',
+    'TELOGANODIDAE',
+    'TRICORYTHIDAE',
+  ],
+};
+
+export type SassTaxaKey = keyof typeof SassTaxa;

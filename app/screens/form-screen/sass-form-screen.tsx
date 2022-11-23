@@ -1,13 +1,15 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
-import {Platform, ScrollView, Text, TextInput, View} from 'react-native';
+import {ScrollView, Text, View} from 'react-native';
 import {styles} from './styles';
 import {Header} from '@rneui/themed';
-import {Field, Formik} from 'formik';
+import {Formik} from 'formik';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {List, RadioButton} from 'react-native-paper';
 import {BiotopeName, BiotopeObjectKey, FormInitialValues} from './sass-form';
+import {SassTaxaForm} from '../../components/sass/sass-taxa-form';
+import {loadSassTaxa} from '../../models/sass/sass.store';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -53,14 +55,19 @@ function BiotopeRadioButtons(props: BiotopeRadioButtonsInterface) {
   );
 }
 
-function SassTaxaForm() {
-  return <View></View>
-}
-
 export const SassFormScreen: React.FunctionComponent<
   FormScreenProps
 > = props => {
   const {route} = props;
+  const [sassTaxaFormOpen, setSassTaxaFormOpen] = useState<any>({});
+  const [sassTaxa, setSassTaxa] = useState<any>([]);
+
+  useEffect(() => {
+    (async () => {
+      const sassTaxaList = await loadSassTaxa();
+      setSassTaxa(sassTaxaList);
+    })();
+  }, []);
 
   return (
     <View>
@@ -89,7 +96,7 @@ export const SassFormScreen: React.FunctionComponent<
             setFieldValue,
             values,
           }) => (
-            <View style={{ height: '100%' }}>
+            <View style={{height: '100%'}}>
               <DatetimePicker
                 onDateChange={(datetime: Date) => (values.date = datetime)}
               />
@@ -118,7 +125,71 @@ export const SassFormScreen: React.FunctionComponent<
                   </View>
                 </List.Accordion>
               </List.Section>
-              <SassTaxaForm />
+              <Text style={styles.REQUIRED_LABEL}>Taxa</Text>
+              <View
+                style={{
+                  paddingBottom: 10,
+                  marginBottom: 125,
+                  backgroundColor: '#FFFFFF',
+                }}>
+                {Object.keys(sassTaxa).map((sassTaxaParent: string) => {
+                  type SassTaxaKey = keyof typeof sassTaxa;
+                  const objKey = sassTaxaParent as SassTaxaKey;
+                  if (sassTaxaFormOpen[sassTaxaParent] === 'undefined') {
+                    setSassTaxaFormOpen((formOpen: any) => ({
+                      ...formOpen,
+                      [sassTaxaParent]: false,
+                    }));
+                  }
+                  return (
+                    <View
+                      key={sassTaxaParent}
+                      style={{backgroundColor: '#FFFFFF', marginTop: 5}}>
+                      <Text
+                        style={{
+                          width: '100%',
+                          height: 40,
+                          fontSize: 15,
+                          fontWeight: 'bold',
+                          padding: 10,
+                          borderWidth: 1,
+                          borderColor: '#c4c4c4',
+                          borderRadius: 3,
+                          backgroundColor: sassTaxaFormOpen[sassTaxaParent]
+                            ? '#eefff1'
+                            : '#f1f1f1',
+                        }}
+                        onPress={() =>
+                          setSassTaxaFormOpen((formOpen: any) => ({
+                            ...formOpen,
+                            [sassTaxaParent]: !sassTaxaFormOpen[sassTaxaParent],
+                          }))
+                        }>
+                        {sassTaxaParent}
+                      </Text>
+                      {sassTaxaFormOpen[sassTaxaParent] ? (
+                        <View
+                          style={{
+                            padding: 10,
+                            paddingTop: 5,
+                          }}>
+                          {sassTaxa[objKey].map((sassTaxon: string) => (
+                            <View key={sassTaxon}>
+                              <Text
+                                style={{
+                                  fontWeight: 'bold',
+                                  marginBottom: 5,
+                                  marginTop: 10,
+                                }}>{sassTaxon}</Text>
+                              <SassTaxaForm />
+                            </View>
+                          ))}
+                        </View>
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           )}
         </Formik>
