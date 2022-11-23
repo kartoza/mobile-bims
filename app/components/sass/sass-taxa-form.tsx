@@ -72,7 +72,11 @@ function SASSPicker(props: SASSPickerInterface) {
   );
 }
 
-export function SassTaxaForm() {
+interface SassTaxaFormInterface {
+  onValueChange?: (newValue: any) => void;
+};
+
+export function SassTaxaForm(prop: SassTaxaFormInterface) {
   const [taxaValues, setTaxaValues] = useState<any>({});
   const [siteRanking, setSiteRanking] = useState<string>('');
   const updateTaxaValues = (type: string, value: string) => {
@@ -94,6 +98,9 @@ export function SassTaxaForm() {
         }
       }
     });
+    if (prop.onValueChange) {
+      prop.onValueChange({...taxaValues, site: highest});
+    }
     setSiteRanking(highest);
   }, [taxaValues]);
 

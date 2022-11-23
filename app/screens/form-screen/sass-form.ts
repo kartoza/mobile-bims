@@ -21,10 +21,11 @@ export interface SassFormValues {
   gr: string;
   sa: string;
   smc: string;
+  sassTaxa?: any
 }
 
 export const FormInitialValues: SassFormValues = {
-  date: null,
+  date: new Date(),
   sic: '',
   sooc: '',
   be: '',
@@ -34,6 +35,7 @@ export const FormInitialValues: SassFormValues = {
   gr: '',
   sa: '',
   smc: '',
+  sassTaxa: {},
 };
 
 export type BiotopeObjectKey = keyof typeof BiotopeName;
