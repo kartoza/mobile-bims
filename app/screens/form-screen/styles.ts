@@ -8,7 +8,7 @@ const CONTAINER: ViewStyle = {
 };
 
 const BIOTOPE_SAMPLED_CONTAINER: ViewStyle = {
-  marginBottom: 150,
+  marginBottom: 10,
   backgroundColor: 'white',
   paddingLeft: 20,
   borderRadius: 5,
@@ -190,6 +190,21 @@ const OBSERVED_TAXA_LIST: ViewStyle = {
   marginBottom: 5,
 };
 
+const SASS_TAXA_FORM: ViewStyle = {
+  height: 60,
+  backgroundColor: '#ffffff',
+  display: 'flex',
+  flexDirection: 'row',
+};
+
+const SASS_TAXA_DROPDOWN: ViewStyle = {
+  maxWidth: '33.33%',
+  borderWidth: 1,
+  borderRadius: 5,
+  borderColor: '#cccccc',
+  width: '33.33%',
+};
+
 export const styles = StyleSheet.create({
   AUTOCOMPLETE_CONTAINER,
   AUTOCOMPLETE_LIST,
@@ -215,6 +230,8 @@ export const styles = StyleSheet.create({
   PICKER_INPUT_STYLE,
   PICKER_SM_INPUT_STYLE,
   REQUIRED_LABEL,
+  SASS_TAXA_DROPDOWN,
+  SASS_TAXA_FORM,
   SUBMIT_BUTTON,
   TEXT_INPUT_STYLE,
   TEXT_INPUT_TAXA,

@@ -7,6 +7,7 @@ import {ParamListBase} from '@react-navigation/native';
 import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {saveSiteVisits} from '../../models/site_visit/site_visit.store';
 import {saveSites} from '../../models/site/site.store';
+import {saveSassSiteVisits} from '../../models/sass/sass.store';
 
 export interface OverlayMenuProps {
   visible: boolean;
@@ -34,6 +35,7 @@ export function OverlayMenu(props: OverlayMenuProps) {
   const clearData = async () => {
     await saveSiteVisits([]);
     await saveSites([]);
+    await saveSassSiteVisits([]);
     setOverlayVisible(false);
     props.refreshMap();
     return;

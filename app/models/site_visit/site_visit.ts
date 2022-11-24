@@ -2,7 +2,7 @@ import Site from '../site/site';
 import {TaxonGroup} from '../taxon/taxon';
 
 export default class SiteVisit {
-  id!: number;
+  id?: number;
   site!: Site;
   taxonGroup!: TaxonGroup;
   observedTaxa: any;
