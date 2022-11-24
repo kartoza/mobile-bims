@@ -16,7 +16,7 @@ import {
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {Details, Marker, Region} from 'react-native-maps';
 import {styles} from './styles';
-import {postLocationSite, pushUnsyncedSiteVisit} from '../../models/sync/sync';
+import {postLocationSite, pushUnsyncedSassSiteVisit, pushUnsyncedSiteVisit} from '../../models/sync/sync';
 import {delay} from '../../utils/delay';
 import NetInfo from '@react-native-community/netinfo';
 import * as Progress from 'react-native-progress';
@@ -43,7 +43,7 @@ import {SourceReferenceApi} from '../../services/api/source-reference-api';
 import {saveSourceReferences} from '../../models/source-reference/source-reference.store';
 import Site from "../../models/site/site";
 import {SassApi} from "../../services/api/sass-api";
-import {saveSassTaxa} from "../../models/sass/sass.store";
+import {getSassSiteVisitByField, saveSassTaxa} from "../../models/sass/sass.store";
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -125,10 +125,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const getUnsyncedData = async () => {
     const unsyncedSiteVisits =
       (await getSiteVisitsByField('synced', false)) || [];
+    const unsyncedSassSiteVisits =
+      (await getSassSiteVisitByField('synced', false)) || [];
     const unsyncedSites = (await getSitesByField('synced', false)) || [];
     const allUnsyncedData = [];
     allUnsyncedData.push(...unsyncedSites);
     allUnsyncedData.push(...unsyncedSiteVisits);
+    allUnsyncedData.push(...unsyncedSassSiteVisits);
     setUnsyncedData(allUnsyncedData);
     return allUnsyncedData;
   };
@@ -250,7 +253,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   );
 
   const addSassClicked = () => {
-    props.navigation.navigate('SASSForm', {});
+    props.navigation.navigate({
+      name: 'SASSForm',
+      params: {
+        sitePk: selectedSite.id,
+      },
+    });
   };
 
   const addRecordClicked = () => {
@@ -346,8 +354,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       // Check if unsynced data is site visit or location site
       if (_unsyncedData[i].latitude) {
         syncResult = await postLocationSite(_unsyncedData[i]);
-      } else {
+      } else if (_unsyncedData[i].taxonGroup) {
         syncResult = await pushUnsyncedSiteVisit(_unsyncedData[i]);
+      } else {
+        syncResult = await pushUnsyncedSassSiteVisit(_unsyncedData[i]);
       }
       if (!syncResult) {
         showError("One of the data can't be synchronized");

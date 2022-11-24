@@ -9,13 +9,17 @@ import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {List, RadioButton} from 'react-native-paper';
 import {BiotopeName, BiotopeObjectKey, FormInitialValues} from './sass-form';
 import {SassTaxaForm} from '../../components/sass/sass-taxa-form';
-import {loadSassTaxa} from '../../models/sass/sass.store';
-import {load} from "../../utils/storage";
-import {Camera} from "../../components/camera/camera";
-import {Picker} from "@react-native-picker/picker";
-import SourceReference from "../../models/source-reference/source-reference";
-import {loadSourceReferences} from "../../models/source-reference/source-reference.store";
-import {string} from "mobx-state-tree/dist/types/primitives";
+import {
+  allSassSiteVisits,
+  loadSassTaxa,
+  saveSassSiteVisit,
+} from '../../models/sass/sass.store';
+import {load} from '../../utils/storage';
+import {Camera} from '../../components/camera/camera';
+import {Picker} from '@react-native-picker/picker';
+import SourceReference from '../../models/source-reference/source-reference';
+import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
+import SassSiteVisit from '../../models/sass/sass_site_visit';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -64,9 +68,11 @@ function BiotopeRadioButtons(props: BiotopeRadioButtonsInterface) {
 export const SassFormScreen: React.FunctionComponent<
   FormScreenProps
 > = props => {
+  // @ts-ignore
   const {route} = props;
+  const {sitePk} = route.params;
   const [sassTaxaFormOpen, setSassTaxaFormOpen] = useState<any>({});
-  const [sassTaxa, setSassTaxa] = useState<any>([]);
+  const [sassTaxa, setSassTaxa] = useState<any>({});
   const [username, setUsername] = useState('');
   const [takingPicture, setTakingPicture] = useState(false);
   const [siteImageData, setSiteImageData] = useState<string>('');
@@ -78,7 +84,9 @@ export const SassFormScreen: React.FunctionComponent<
   useEffect(() => {
     (async () => {
       const sassTaxaList = await loadSassTaxa();
-      setSassTaxa(sassTaxaList);
+      if (sassTaxaList) {
+        setSassTaxa(sassTaxaList);
+      }
       setUsername(await load('user'));
       const _sourceReferenceList = await loadSourceReferences();
       setSourceReferenceOptions(_sourceReferenceList);
@@ -99,7 +107,15 @@ export const SassFormScreen: React.FunctionComponent<
   };
 
   const submitForm = async (formData: any) => {
-    console.log(JSON.stringify(formData));
+    const allSiteVisitsData = await allSassSiteVisits();
+    formData.id = allSiteVisitsData.length + 1;
+    formData.siteId = sitePk;
+    formData.siteImage = siteImageData;
+    formData.synced = false;
+    formData.newData = true;
+    const sassSiteVisit = new SassSiteVisit(formData);
+    await saveSassSiteVisit(sassSiteVisit);
+    props.navigation.navigate('map');
   };
 
   return (
@@ -150,10 +166,15 @@ export const SassFormScreen: React.FunctionComponent<
                       return (
                         <BiotopeRadioButtons
                           key={biotopeKey}
-                          value={values[objKey]}
+                          value={values.biotope[biotopeKey]}
                           label={BiotopeName[objKey]}
                           onValueChange={newValue =>
-                            setFieldValue(biotopeKey, newValue)
+                            setFieldValue('biotope', {
+                              ...values.biotope,
+                              ...{
+                                [biotopeKey]: newValue,
+                              },
+                            })
                           }
                         />
                       );
@@ -275,7 +296,9 @@ export const SassFormScreen: React.FunctionComponent<
                                   fontWeight: 'bold',
                                   marginBottom: 5,
                                   marginTop: 10,
-                                }}>{sassTaxon}</Text>
+                                }}>
+                                {sassTaxon}
+                              </Text>
                               <SassTaxaForm
                                 onValueChange={(taxaValue: any) => {
                                   setFieldValue('sassTaxa', {

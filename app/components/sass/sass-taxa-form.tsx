@@ -74,7 +74,7 @@ function SASSPicker(props: SASSPickerInterface) {
 
 interface SassTaxaFormInterface {
   onValueChange?: (newValue: any) => void;
-};
+}
 
 export function SassTaxaForm(prop: SassTaxaFormInterface) {
   const [taxaValues, setTaxaValues] = useState<any>({});
@@ -134,7 +134,16 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
             styles.SASS_TAXA_DROPDOWN,
             {maxWidth: '100%', width: '100%'},
           ]}>
-          <SASSPicker label={'Site'} value={siteRanking} />
+          <SASSPicker
+            label={'Site'}
+            value={siteRanking}
+            onValueChange={newValue => {
+              setSiteRanking(newValue);
+              if (prop.onValueChange) {
+                prop.onValueChange({...taxaValues, site: newValue});
+              }
+            }}
+          />
         </View>
       </View>
     </View>
