@@ -20,6 +20,7 @@ import {Picker} from '@react-native-picker/picker';
 import SourceReference from '../../models/source-reference/source-reference';
 import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
+import AbioticForm from "../../components/abiotic/abiotic-form";
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -321,6 +322,10 @@ export const SassFormScreen: React.FunctionComponent<
                   );
                 })}
               </View>
+
+              {/* Abiotic */}
+              <Text style={styles.REQUIRED_LABEL}>Abiotic</Text>
+              <AbioticForm />
 
               <View style={{marginBottom: 150}}>
                 <Button

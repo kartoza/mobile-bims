@@ -44,6 +44,8 @@ import {saveSourceReferences} from '../../models/source-reference/source-referen
 import Site from "../../models/site/site";
 import {SassApi} from "../../services/api/sass-api";
 import {getSassSiteVisitByField, saveSassTaxa} from "../../models/sass/sass.store";
+import {AbioticApi} from "../../services/api/abiotic-api";
+import {saveAbioticData} from "../../models/abiotic/abiotic.store";
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -457,6 +459,15 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     await sassApi.setup();
     const sassTaxaList = await sassApi.getSassTaxa();
     await saveSassTaxa(sassTaxaList);
+    setSyncProgress(1);
+    setSyncMessage('');
+
+    setSyncMessage('Fetching Abiotic');
+    setSyncProgress(0);
+    const abioticApi = new AbioticApi();
+    await abioticApi.setup();
+    const abioticData = await abioticApi.getAbioticList();
+    await saveAbioticData(abioticData);
     setSyncProgress(1);
     setSyncMessage('');
 

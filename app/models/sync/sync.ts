@@ -5,9 +5,9 @@ import {SiteVisitsApi} from '../../services/api/site-visits-api';
 import Site from '../site/site';
 import {SitesApi} from '../../services/api/sites-api';
 import {saveSiteByField} from '../site/site.store';
-import SassSiteVisit from "../sass/sass_site_visit";
-import {SassApi} from "../../services/api/sass-api";
-import {saveSassSiteVisit} from "../sass/sass.store";
+import SassSiteVisit from '../sass/sass_site_visit';
+import {SassApi} from '../../services/api/sass-api';
+import {saveSassSiteVisit} from '../sass/sass.store';
 
 export interface SyncData {
   identifier: string;

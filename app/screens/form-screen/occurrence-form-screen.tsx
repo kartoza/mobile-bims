@@ -40,6 +40,7 @@ import {
 import Option from '../../models/options/option';
 import SourceReference from '../../models/source-reference/source-reference';
 import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
+import AbioticForm from "../../components/abiotic/abiotic-form";
 
 export interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -474,6 +475,11 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   ))}
                 </View>
               </View>
+
+              {/* Abiotic */}
+              <Text style={styles.REQUIRED_LABEL}>Abiotic</Text>
+              <AbioticForm />
+
               <View style={{marginBottom: 150}}>
                 <Button
                   title="Submit"
