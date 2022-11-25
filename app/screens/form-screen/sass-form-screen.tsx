@@ -339,6 +339,35 @@ export const SassFormScreen: React.FunctionComponent<
                   );
                 })}
               </View>
+
+              <Text style={styles.LABEL}>Other biota</Text>
+              <TextInput
+                multiline={true}
+                style={[
+                  styles.TEXT_INPUT_STYLE,
+                  {height: 100, textAlignVertical: 'top'},
+                ]}
+                onChange={e => {
+                  if (e.nativeEvent.text) {
+                    setFieldValue('otherBiota', e.nativeEvent.text);
+                  }
+                }}
+              />
+
+              <Text style={styles.LABEL}>Comments/Observation</Text>
+              <TextInput
+                multiline={true}
+                style={[
+                  styles.TEXT_INPUT_STYLE,
+                  {height: 100, textAlignVertical: 'top', marginBottom: 10},
+                ]}
+                onChange={e => {
+                  if (e.nativeEvent.text) {
+                    setFieldValue('comments', e.nativeEvent.text);
+                  }
+                }}
+              />
+
               <View style={{marginBottom: 150}}>
                 <Button
                   title="Submit"

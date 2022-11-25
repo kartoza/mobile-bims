@@ -9,6 +9,8 @@ export default class SassSiteVisit {
   abiotic?: any;
   synced?: boolean;
   newData?: boolean;
+  comments?: string;
+  otherBiota?: string;
 
   constructor(sassSiteVisit: any) {
     if (sassSiteVisit) {
