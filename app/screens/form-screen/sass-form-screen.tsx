@@ -86,6 +86,7 @@ export const SassFormScreen: React.FunctionComponent<
     SourceReference[]
   >([]);
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
+  const [biotopeValues, setBiotopeValues] = useState<any>({});
 
   useEffect(() => {
     (async () => {
@@ -117,9 +118,9 @@ export const SassFormScreen: React.FunctionComponent<
       Alert.alert('Error', 'You must at least add one SASS taxa data\n', [
         {
           text: 'OK',
+          onPress: () => setSubmitClicked(false),
         },
       ]);
-      setSubmitClicked(false);
       return;
     }
     const allSiteVisitsData = await allSassSiteVisits();
@@ -129,6 +130,7 @@ export const SassFormScreen: React.FunctionComponent<
     formData.synced = false;
     formData.newData = true;
     formData.sassTaxa = sassTaxaData;
+    formData.biotope = biotopeValues;
     formData.abiotic = abioticData.map(current => {
       if (current.value) {
         return {
@@ -176,36 +178,26 @@ export const SassFormScreen: React.FunctionComponent<
                 }
               />
               <Text style={styles.REQUIRED_LABEL}>Biotopes</Text>
-              <List.Section>
-                <List.Accordion
-                  style={{
-                    borderWidth: 1,
-                    borderRadius: 5,
-                    borderColor: '#c3c3c3',
-                  }}
-                  title={'Biotopes Sampled'}>
-                  <View style={styles.BIOTOPE_SAMPLED_CONTAINER}>
-                    {Object.keys(BiotopeName).map((biotopeKey: string) => {
-                      const objKey = biotopeKey as BiotopeObjectKey;
-                      return (
-                        <BiotopeRadioButtons
-                          key={biotopeKey}
-                          value={values.biotope[biotopeKey]}
-                          label={BiotopeName[objKey]}
-                          onValueChange={newValue =>
-                            setFieldValue('biotope', {
-                              ...values.biotope,
-                              ...{
-                                [biotopeKey]: newValue,
-                              },
-                            })
-                          }
-                        />
-                      );
-                    })}
-                  </View>
-                </List.Accordion>
-              </List.Section>
+              <View style={styles.BIOTOPE_SAMPLED_CONTAINER}>
+                {Object.keys(BiotopeName).map((biotopeKey: string) => {
+                  const objKey = biotopeKey as BiotopeObjectKey;
+                  return (
+                    <BiotopeRadioButtons
+                      key={biotopeKey}
+                      value={biotopeValues[biotopeKey]}
+                      label={BiotopeName[objKey]}
+                      onValueChange={newValue =>
+                        setBiotopeValues({
+                          ...biotopeValues,
+                          ...{
+                            [biotopeKey]: newValue,
+                          },
+                        })
+                      }
+                    />
+                  );
+                })}
+              </View>
               {/* Owner input */}
               <Text style={styles.REQUIRED_LABEL}>Owner</Text>
               <TextInput
@@ -406,7 +398,7 @@ export const SassFormScreen: React.FunctionComponent<
                       (async () => {
                         await submitForm(values);
                       })();
-                    }, 500);
+                    }, 300);
                   }}
                 />
               </View>
