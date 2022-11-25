@@ -25,6 +25,7 @@ export class SiteVisitsApi extends Api {
       sampling_method: siteVisit.samplingMethod,
       source_reference_id: siteVisit.sourceReferenceId,
       site_image: siteVisit.siteImage,
+      abiotic: siteVisit.abiotic,
       'site-id': site.id,
       'taxa-id-list': '',
     };

@@ -20,6 +20,9 @@ import {Picker} from '@react-native-picker/picker';
 import SourceReference from '../../models/source-reference/source-reference';
 import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
+import AbioticForm, {
+  AbioticDataInterface,
+} from '../../components/abiotic/abiotic-form';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -80,6 +83,7 @@ export const SassFormScreen: React.FunctionComponent<
   const [sourceReferenceOptions, setSourceReferenceOptions] = useState<
     SourceReference[]
   >([]);
+  const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -113,6 +117,14 @@ export const SassFormScreen: React.FunctionComponent<
     formData.siteImage = siteImageData;
     formData.synced = false;
     formData.newData = true;
+    formData.abiotic = abioticData.map(current => {
+      if (current.value) {
+        return {
+          id: current.abiotic.id,
+          value: current.value,
+        };
+      }
+    });
     const sassSiteVisit = new SassSiteVisit(formData);
     await saveSassSiteVisit(sassSiteVisit);
     props.navigation.navigate('map');
@@ -242,6 +254,12 @@ export const SassFormScreen: React.FunctionComponent<
                 ) : null}
               </View>
 
+              {/* Abiotic */}
+              <Text style={styles.LABEL}>Abiotic</Text>
+              <AbioticForm
+                onChange={_abioticData => setAbioticData(_abioticData)}
+              />
+
               <Text style={styles.REQUIRED_LABEL}>Taxa</Text>
               <View
                 style={{
@@ -321,7 +339,6 @@ export const SassFormScreen: React.FunctionComponent<
                   );
                 })}
               </View>
-
               <View style={{marginBottom: 150}}>
                 <Button
                   title="Submit"

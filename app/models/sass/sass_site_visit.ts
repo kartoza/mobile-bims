@@ -6,6 +6,7 @@ export default class SassSiteVisit {
   date!: string;
   owner!: string;
   siteImage?: any;
+  abiotic?: any;
   synced?: boolean;
   newData?: boolean;
 

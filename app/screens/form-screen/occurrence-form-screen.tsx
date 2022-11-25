@@ -40,6 +40,8 @@ import {
 import Option from '../../models/options/option';
 import SourceReference from '../../models/source-reference/source-reference';
 import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
+import AbioticForm, {AbioticDataInterface} from "../../components/abiotic/abiotic-form";
+import {DatetimePicker} from "../../components/form-input/datetime-picker";
 
 export interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -52,7 +54,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const {route} = props;
   const {modulePk, sitePk} = route.params;
   const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [broadBiotope, setBroadBiotope] = useState('');
   const [specificBiotope, setSpecificBiotope] = useState('');
   const [substratum, setSubstratum] = useState('');
@@ -77,6 +78,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [observedTaxaList, setObservedTaxaList] = useState<any>([]);
   const [observedTaxaValues, setObservedTaxaValues] = useState<any>({});
   const [username, setUsername] = useState('');
+  const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -112,11 +114,16 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     })();
   }, [modulePk]);
 
-  const openDatePicker = () => {
-    setShowDatePicker(true);
-  };
-
   const submitForm = async () => {
+    const abioticDataPayload = abioticData.map(current => {
+      if (current.value) {
+        return {
+          id: current.abiotic.id,
+          value: current.value,
+        };
+      }
+    });
+
     if (Object.keys(observedTaxaValues).length === 0) {
       Alert.alert('Error', 'You must at least add one collection data\n', [
         {
@@ -141,6 +148,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       substratum: substratum,
       biotope: broadBiotope,
       owner: username,
+      abiotic: abioticDataPayload,
       newData: true,
       synced: false,
     };
@@ -186,20 +194,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     setSiteImageData(pictureData.base64);
   };
 
-  const onChange = (
-    event: DateTimePickerEvent,
-    selectedDate: Date | undefined,
-    setFieldValue: {
-      (field: string, value: any, shouldValidate?: boolean | undefined): void;
-      (arg0: string, arg1: number): void;
-    },
-  ) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(Platform.OS === 'ios');
-    setDate(currentDate);
-    setFieldValue('datetime', Moment(currentDate).unix());
-  };
-
   return (
     <View>
       <Header
@@ -224,6 +218,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
             samplingMethod: '',
             substratum: '',
             sourceReference: '',
+            abiotic: [],
           }}
           onSubmit={submitForm}>
           {({
@@ -235,26 +230,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
           }) => (
             <View>
               {/* Date input */}
-              <Text style={styles.REQUIRED_LABEL}>Date</Text>
-              <TouchableWithoutFeedback onPress={() => openDatePicker()}>
-                <View pointerEvents="none">
-                  <TextInput
-                    value={Moment(date).format('YYYY-MM-DD')}
-                    style={styles.TEXT_INPUT_STYLE}
-                  />
-                </View>
-              </TouchableWithoutFeedback>
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={date}
-                  is24Hour={true}
-                  display="default"
-                  onChange={(e, selectedDate) => {
-                    onChange(e, selectedDate, setFieldValue);
-                  }}
-                />
-              )}
+              <DatetimePicker
+                onDateChange={(datetime: Date) => setDate(datetime)}
+              />
+
               {/* Owner input */}
               <Text style={styles.REQUIRED_LABEL}>Owner</Text>
               <TextInput
@@ -410,6 +389,13 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   />
                 ) : null}
               </View>
+
+              {/* Abiotic */}
+              <Text style={styles.LABEL}>Abiotic</Text>
+              <AbioticForm
+                onChange={_abioticData => setAbioticData(_abioticData)}
+              />
+
               {/* Sampling Method */}
               <View>
                 <Text style={styles.REQUIRED_LABEL}>Observed Taxa</Text>
@@ -474,6 +460,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   ))}
                 </View>
               </View>
+
               <View style={{marginBottom: 150}}>
                 <Button
                   title="Submit"

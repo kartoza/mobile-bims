@@ -9,7 +9,6 @@ export class SassApi extends Api {
    */
   async postSassSiteVisit(sassSiteVisit: SassSiteVisit): Promise<any> {
     const url = '/mobile/add-sass/';
-    console.log('sassSitevisit');
     const response: ApiResponse<any> = await this.apisauce.post(
       url,
       sassSiteVisit,
