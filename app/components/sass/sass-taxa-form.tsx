@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Text, View} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {styles} from '../../screens/form-screen/styles';
+import {TextInput} from "react-native-paper";
 
 interface SASSPickerInterface {
   label?: string;
@@ -138,7 +139,6 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
             label={'Site'}
             value={siteRanking}
             onValueChange={newValue => {
-              console.log('newValue', newValue);
               if (!newValue) {
                 return;
               }

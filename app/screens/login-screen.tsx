@@ -1,15 +1,21 @@
-import Axios from 'axios';
 import Config from 'react-native-config';
 import React, {useState} from 'react';
 import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {ParamListBase, useFocusEffect} from '@react-navigation/native';
-import LoginScreen from 'react-native-login-screen';
-import {Alert, Image, ImageStyle, Text, TextInput, View, ViewStyle} from 'react-native';
+import {
+  Alert,
+  Image,
+  ImageStyle,
+  Text,
+  TextInput,
+  View,
+  ViewStyle,
+} from 'react-native';
 import {load, save} from '../utils/storage';
-import {styles} from "./form-screen/styles";
-import {Button} from "@rneui/themed";
-import {Wallpaper} from "../components/wallpaper/wallpaper";
-import axios from "axios";
+import {styles} from './form-screen/styles';
+import {Button} from '@rneui/themed';
+import {Wallpaper} from '../components/wallpaper/wallpaper';
+import axios from 'axios';
 
 const logo = require('../components/logo/fbis_v2_logo.png');
 
@@ -104,11 +110,13 @@ export const LoginScreenPage: React.FunctionComponent<
           editable={!loading}
           style={styles.TEXT_INPUT_STYLE}
           value={username}
+          autoCapitalize={'none'}
           placeholder={'Username'}
           onChangeText={text => setUsername(text)}></TextInput>
         <Text style={styles.REQUIRED_LABEL}>Password</Text>
         <TextInput
           editable={!loading}
+          autoCapitalize={'none'}
           secureTextEntry={true}
           style={styles.TEXT_INPUT_STYLE}
           value={password}
@@ -122,23 +130,6 @@ export const LoginScreenPage: React.FunctionComponent<
           onPress={() => login()}
         />
       </View>
-      {/*<LoginScreen*/}
-      {/*  emailPlaceholder={'Username'}*/}
-      {/*  onEmailChange={(_username: string) => (username = _username)}*/}
-      {/*  onPasswordChange={(_password: string) => (password = _password)}*/}
-      {/*  logoImageSource={logo}*/}
-      {/*  disableSignup={true}*/}
-      {/*  disableSocialButtons={true}*/}
-      {/*  onLoginPress={() => {*/}
-      {/*    setTimeout(async () => {*/}
-      {/*      await login();*/}
-      {/*    }, 500);*/}
-      {/*  }}*/}
-      {/*  disableDivider={true}*/}
-      {/*  signupText={''}*/}
-      {/*  loginButtonStyle={loginButtonStyle}*/}
-      {/*  onSignupPress={() => {}}*/}
-      {/*/>*/}
     </View>
   );
 };

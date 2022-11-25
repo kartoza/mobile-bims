@@ -111,7 +111,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           await saveSites(_sites);
         }
       }
-      if (_sites) {
+      if (_sites.length > 0) {
         setNewSiteMarker(null);
         setIsAddSite(false);
         setSites(_sites);
@@ -139,6 +139,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   useFocusEffect(
     React.useCallback(() => {
+      console.log(latitude, longitude)
       const reloadMap = async () => {
         await clearTemporaryNewSites();
         await getUnsyncedData();
@@ -180,7 +181,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const refreshMap = useCallback(async () => {
-    // setMarkers([])
+    setMarkers([]);
     markerDeselected();
     await clearTemporaryNewSites();
     await getUnsyncedData();
@@ -202,6 +203,19 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   // @ts-ignore
   const watchLocation = useCallback(async () => {
+    if (mapViewRef && mapViewRef.current && latitude && longitude) {
+      // @ts-ignore
+      mapViewRef.current.animateCamera({
+        center: {
+          latitude: latitude,
+          longitude: longitude,
+        },
+        heading: 0,
+        pitch: 0,
+        zoom: 11,
+      });
+      return
+    }
     await Geolocation.getCurrentPosition(
       (position: {
         coords: {
@@ -236,7 +250,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       },
       {enableHighAccuracy: true, timeout: 1000},
     );
-  }, [getSites, sites.length]);
+  }, [getSites]);
 
   const addSiteVisit = React.useMemo(
     () => (moduleId: number) => {

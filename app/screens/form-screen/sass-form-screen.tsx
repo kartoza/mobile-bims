@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
-import {Image, ScrollView, Text, TextInput, View} from 'react-native';
+import {Alert, Image, ScrollView, Text, TextInput, View} from 'react-native';
 import {styles} from './styles';
 import {Button, Header} from '@rneui/themed';
 import {Formik} from 'formik';
@@ -81,6 +81,7 @@ export const SassFormScreen: React.FunctionComponent<
   const [takingPicture, setTakingPicture] = useState(false);
   const [siteImageData, setSiteImageData] = useState<string>('');
   const [sourceReference, setSourceReference] = useState('');
+  const [submitClicked, setSubmitClicked] = useState(false);
   const [sourceReferenceOptions, setSourceReferenceOptions] = useState<
     SourceReference[]
   >([]);
@@ -104,7 +105,7 @@ export const SassFormScreen: React.FunctionComponent<
         }
       }
     })();
-  }, []);
+  }, [sassTaxaFormOpen]);
 
   const pictureTaken = (pictureData: {base64: string}) => {
     setTakingPicture(false);
@@ -112,6 +113,15 @@ export const SassFormScreen: React.FunctionComponent<
   };
 
   const submitForm = async (formData: any) => {
+    if (Object.keys(sassTaxaData).length === 0) {
+      Alert.alert('Error', 'You must at least add one SASS taxa data\n', [
+        {
+          text: 'OK',
+        },
+      ]);
+      setSubmitClicked(false);
+      return;
+    }
     const allSiteVisitsData = await allSassSiteVisits();
     formData.id = allSiteVisitsData.length + 1;
     formData.siteId = sitePk;
@@ -238,7 +248,7 @@ export const SassFormScreen: React.FunctionComponent<
                   title={takingPicture ? 'Close Camera' : 'Capture Site Image'}
                   type="outline"
                   raised
-                  containerStyle={{width: '100%'}}
+                  containerStyle={{width: '100%', marginBottom: 20}}
                   onPress={() => {
                     setTakingPicture(!takingPicture);
                   }}
@@ -276,19 +286,22 @@ export const SassFormScreen: React.FunctionComponent<
                     <View
                       key={sassTaxaParent}
                       style={{backgroundColor: '#FFFFFF', marginTop: 5}}>
-                      <Text
-                        style={{
-                          width: '100%',
-                          height: 40,
-                          fontSize: 15,
-                          fontWeight: 'bold',
-                          padding: 10,
-                          borderWidth: 1,
-                          borderColor: '#c4c4c4',
-                          borderRadius: 3,
+                      <Button
+                        buttonStyle={{
+                          justifyContent: 'flex-start',
                           backgroundColor: sassTaxaFormOpen[sassTaxaParent]
-                            ? '#eefff1'
-                            : '#f1f1f1',
+                            ? '#79d089'
+                            : '#afb4bb',
+                        }}
+                        titleStyle={{
+                          fontSize: 15,
+                          fontWeight: '100',
+                        }}
+                        style={{
+                          paddingLeft: 0,
+                          justifyContent: 'flex-start',
+                          alignItems: 'flex-start',
+                          width: '100%',
                         }}
                         onPress={() => {
                           setSassTaxaFormOpen((formOpen: any) => ({
@@ -302,7 +315,7 @@ export const SassFormScreen: React.FunctionComponent<
                           }
                         }}>
                         {sassTaxaParent}
-                      </Text>
+                      </Button>
                       {sassTaxaFormOpen[sassTaxaParent] ? (
                         <View
                           style={{
@@ -381,12 +394,20 @@ export const SassFormScreen: React.FunctionComponent<
 
               <View style={{marginBottom: 150}}>
                 <Button
+                  disabled={submitClicked}
                   title="Submit"
                   buttonStyle={{
                     width: '100%',
                     backgroundColor: 'rgb(241, 137, 3)',
                   }}
-                  onPress={() => handleSubmit()}
+                  onPress={() => {
+                    setSubmitClicked(true);
+                    setTimeout(() => {
+                      (async () => {
+                        await submitForm(values);
+                      })();
+                    }, 500);
+                  }}
                 />
               </View>
             </View>
