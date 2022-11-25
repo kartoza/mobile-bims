@@ -56,7 +56,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
       if (abioticOption.id === parseInt(selectedAbiotic)) {
         const newAbioticData = {
           abiotic: abioticOption,
-          value: '0',
+          value: '',
         };
         setAbioticData([...abioticData, newAbioticData]);
       }

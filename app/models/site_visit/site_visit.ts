@@ -8,6 +8,7 @@ export default class SiteVisit {
   observedTaxa: any;
   samplingMethod?: string;
   biotope?: string;
+  abiotic?: any;
   specificBiotope?: string;
   substratum?: string;
   sourceReferenceId?: string;
