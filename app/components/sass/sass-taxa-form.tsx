@@ -138,6 +138,10 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
             label={'Site'}
             value={siteRanking}
             onValueChange={newValue => {
+              console.log('newValue', newValue);
+              if (!newValue) {
+                return;
+              }
               setSiteRanking(newValue);
               if (prop.onValueChange) {
                 prop.onValueChange({...taxaValues, site: newValue});

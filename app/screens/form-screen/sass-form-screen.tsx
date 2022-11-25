@@ -76,6 +76,7 @@ export const SassFormScreen: React.FunctionComponent<
   const {sitePk} = route.params;
   const [sassTaxaFormOpen, setSassTaxaFormOpen] = useState<any>({});
   const [sassTaxa, setSassTaxa] = useState<any>({});
+  const [sassTaxaData, setSassTaxaData] = useState<any>({});
   const [username, setUsername] = useState('');
   const [takingPicture, setTakingPicture] = useState(false);
   const [siteImageData, setSiteImageData] = useState<string>('');
@@ -117,6 +118,7 @@ export const SassFormScreen: React.FunctionComponent<
     formData.siteImage = siteImageData;
     formData.synced = false;
     formData.newData = true;
+    formData.sassTaxa = sassTaxaData;
     formData.abiotic = abioticData.map(current => {
       if (current.value) {
         return {
@@ -319,11 +321,20 @@ export const SassFormScreen: React.FunctionComponent<
                               </Text>
                               <SassTaxaForm
                                 onValueChange={(taxaValue: any) => {
-                                  setFieldValue('sassTaxa', {
-                                    ...values.sassTaxa,
+                                  // Check if empty values
+                                  let empty = true;
+                                  for (const i in taxaValue) {
+                                    if (taxaValue[i]) {
+                                      empty = false;
+                                      break;
+                                    }
+                                  }
+                                  if (empty) return;
+                                  setSassTaxaData({
+                                    ...sassTaxaData,
                                     ...{
                                       [sassTaxaParent]: {
-                                        ...values.sassTaxa[sassTaxaParent],
+                                        ...sassTaxaData[sassTaxaParent],
                                         [sassTaxon]: taxaValue,
                                       },
                                     },
