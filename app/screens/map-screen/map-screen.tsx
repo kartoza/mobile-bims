@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
-  TouchableOpacity,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {Details, Marker, Region} from 'react-native-maps';

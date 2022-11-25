@@ -6,7 +6,7 @@ import {loadAbioticData} from '../../models/abiotic/abiotic.store';
 import {styles} from '../../screens/form-screen/styles';
 import {Picker} from '@react-native-picker/picker';
 
-interface AbioticDataInterface {
+export interface AbioticDataInterface {
   abiotic: Abiotic;
   value: string;
 }
@@ -17,21 +17,39 @@ interface AbioticFormInterface {
 
 export default function AbioticForm(props: AbioticFormInterface) {
   const [abioticOptions, setAbioticOptions] = useState<Abiotic[]>([]);
+  const [abioticOptionList, setAbioticOptionList] = useState<Abiotic[]>([]);
   const [selectedAbiotic, setSelectedAbiotic] = useState<string>('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const abioticList = await loadAbioticData();
-      setAbioticOptions(abioticList);
-    })();
-  }, []);
+    if (abioticOptionList.length > 0) {
+      setAbioticOptions(abioticOptionList);
+    }
+  }, [abioticOptionList]);
+
+  useEffect(() => {
+    if (abioticOptions.length === 0) {
+      (async () => {
+        const abioticList = await loadAbioticData();
+        setAbioticOptionList(abioticList);
+      })();
+    }
+  }, [abioticOptions.length, props]);
 
   useEffect(() => {
     if (props.onChange) {
       props.onChange(abioticData);
     }
-  }, [props, abioticData]);
+    const selectedAbioticOptions = abioticData.map(
+      current => current.abiotic.id,
+    );
+    console.log(selectedAbioticOptions);
+    setAbioticOptions(
+      abioticOptionList.filter(
+        current => selectedAbioticOptions.indexOf(current.id) <= -1,
+      ),
+    );
+  }, [abioticData]);
 
   const addAbiotic = () => {
     abioticOptions.map((abioticOption: Abiotic) => {
@@ -43,10 +61,11 @@ export default function AbioticForm(props: AbioticFormInterface) {
         setAbioticData([...abioticData, newAbioticData]);
       }
     });
-    setAbioticOptions(current =>
-      current.filter(
-        abioticOption => abioticOption.id !== parseInt(selectedAbiotic),
-      ),
+  };
+
+  const deleteAbiotic = (abioticId: number) => {
+    setAbioticData(current =>
+      current.filter(_abioticData => _abioticData.abiotic.id !== abioticId),
     );
   };
 
@@ -69,14 +88,30 @@ export default function AbioticForm(props: AbioticFormInterface) {
           ))}
         </Picker>
       </View>
-      <Button onPress={addAbiotic}>Add Abiotic</Button>
+      <Button
+        onPress={addAbiotic}
+        style={{
+          width: '100%',
+          backgroundColor: '#3ca290',
+        }}
+        labelStyle={{
+          color: '#ffffff',
+        }}>
+        Add Abiotic
+      </Button>
       <View>
         {abioticData.map(abioticSingleData => (
           <TextInput
             key={abioticSingleData.abiotic.id}
-            label={abioticSingleData.abiotic.description}
+            label={`${abioticSingleData.abiotic.description} (${abioticSingleData.abiotic.unit})`}
             keyboardType={'numeric'}
             value={abioticSingleData.value}
+            right={
+              <TextInput.Icon
+                icon="delete"
+                onPress={() => deleteAbiotic(abioticSingleData.abiotic.id)}
+              />
+            }
             onChange={e => {
               setAbioticData(current =>
                 current.map(obj => {
