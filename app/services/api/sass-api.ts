@@ -2,6 +2,7 @@ import {Api} from './api';
 import {ApiResponse} from 'apisauce';
 import {getGeneralApiProblem} from './api-problem';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
+import {getSiteByField} from '../../models/site/site.store';
 
 export class SassApi extends Api {
   /**
@@ -9,6 +10,12 @@ export class SassApi extends Api {
    */
   async postSassSiteVisit(sassSiteVisit: SassSiteVisit): Promise<any> {
     const url = '/mobile/add-sass/';
+    let site = await getSiteByField('localId', sassSiteVisit.siteId);
+    let siteId = sassSiteVisit.siteId;
+    if (site) {
+      siteId = site.id;
+    }
+    sassSiteVisit.siteId = siteId;
     const response: ApiResponse<any> = await this.apisauce.post(
       url,
       sassSiteVisit,
