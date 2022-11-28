@@ -8,7 +8,11 @@ export const loadAbioticData = async () => {
   if (!abioticData) {
     return [];
   }
-  return abioticData.abioticData.map((abiotic: any) => new Abiotic(abiotic));
+  let _abioticData = [];
+  try {
+    _abioticData = abioticData.abioticData;
+  } catch (e) {}
+  return _abioticData.map((abiotic: any) => new Abiotic(abiotic));
 };
 
 export const saveAbioticData = async (abioticData: Abiotic[]) => {
