@@ -2,7 +2,7 @@ import {Api} from './api';
 import {ApiResponse} from 'apisauce';
 import {getGeneralApiProblem} from './api-problem';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
-import {getSiteByField} from "../../models/site/site.store";
+import {getSiteByField} from '../../models/site/site.store';
 
 export class SassApi extends Api {
   /**
