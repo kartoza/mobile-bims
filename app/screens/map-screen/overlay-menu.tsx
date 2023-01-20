@@ -32,6 +32,17 @@ export function OverlayMenu(props: OverlayMenuProps) {
     [props.navigation],
   );
 
+  const goToUnsynced = React.useMemo(
+    () => () => {
+      props.navigation.navigate({
+        name: 'UnsyncedList',
+        params: {},
+        merge: true,
+      });
+    },
+    [props.navigation],
+  );
+
   const clearData = async () => {
     await saveSiteVisits([]);
     await saveSites([]);
@@ -84,9 +95,18 @@ export function OverlayMenu(props: OverlayMenuProps) {
           title="Log out"
           raised
           titleStyle={{color: '#ffffff'}}
-          containerStyle={{width: '100%'}}
+          containerStyle={{width: '100%', marginBottom: 20}}
           onPress={() => {
             logout();
+          }}
+        />
+        <Button
+          title="List Unsynced Data"
+          raised
+          titleStyle={{color: '#ffffff'}}
+          containerStyle={{width: '100%'}}
+          onPress={() => {
+            goToUnsynced();
           }}
         />
       </View>

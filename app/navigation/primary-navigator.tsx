@@ -12,6 +12,7 @@ import {MapScreen} from '../screens/map-screen/map-screen';
 import {OccurrenceFormScreen} from '../screens/form-screen/occurrence-form-screen';
 import {SiteFormScreen} from '../screens/form-screen/site-form-screen';
 import {SassFormScreen} from '../screens/form-screen/sass-form-screen';
+import {UnsyncedScreen} from '../screens/list-screen/unsynced';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -33,6 +34,7 @@ export type PrimaryParamList = {
   SASSForm: undefined;
   siteForm: undefined;
   measurementList: undefined;
+  UnsyncedList: undefined;
 };
 
 // Documentation: https://github.com/software-mansion/react-native-screens/tree/master/native-stack
@@ -49,6 +51,7 @@ export function PrimaryNavigator() {
       <Stack.Screen name="OccurrenceForm" component={OccurrenceFormScreen} />
       <Stack.Screen name="SASSForm" component={SassFormScreen} />
       <Stack.Screen name="siteForm" component={SiteFormScreen} />
+      <Stack.Screen name="UnsyncedList" component={UnsyncedScreen} />
     </Stack.Navigator>
   );
 }

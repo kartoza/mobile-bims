@@ -4,7 +4,6 @@ import {
   ScrollView,
   Text,
   TextInput,
-  Platform,
   TouchableOpacity,
   LogBox,
   Image,
@@ -12,11 +11,6 @@ import {
 } from 'react-native';
 import {Button, Header, CheckBox} from '@rneui/themed';
 import {Formik} from 'formik';
-import Moment from 'moment';
-import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
 import {Picker} from '@react-native-picker/picker';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
@@ -40,8 +34,10 @@ import {
 import Option from '../../models/options/option';
 import SourceReference from '../../models/source-reference/source-reference';
 import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
-import AbioticForm, {AbioticDataInterface} from "../../components/abiotic/abiotic-form";
-import {DatetimePicker} from "../../components/form-input/datetime-picker";
+import AbioticForm, {
+  AbioticDataInterface,
+} from '../../components/abiotic/abiotic-form';
+import {DatetimePicker} from '../../components/form-input/datetime-picker';
 
 export interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -225,6 +221,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
             handleChange,
             handleBlur,
             handleSubmit,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             setFieldValue,
             values,
           }) => (

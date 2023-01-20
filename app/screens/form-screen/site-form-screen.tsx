@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 {
   /* eslint-disable @typescript-eslint/no-unused-vars */
 }
@@ -171,7 +172,7 @@ export const SiteFormScreen: React.FunctionComponent<
               <FormInput
                 editable={true}
                 checkValue={(val: number) => {
-                  if (val < -90 || val > 90) {
+                  if (val < -180 || val > 180) {
                     return 'Please enter value comprised between -90 and 90';
                   }
                   return '';
