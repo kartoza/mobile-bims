@@ -1,14 +1,18 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState, useEffect, useCallback, useRef} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   ScrollView,
+  KeyboardAvoidingView,
   Text,
   TextInput,
   TouchableOpacity,
   LogBox,
   Image,
   Alert,
+  Platform,
+  StyleSheet,
+  Dimensions,
 } from 'react-native';
 import {Button, Header, CheckBox, Dialog} from '@rneui/themed';
 import {Formik} from 'formik';
@@ -40,6 +44,12 @@ import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
+
+const keyboardStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -178,6 +188,14 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     })();
   }, [modulePk, route.params.siteVisitId]);
 
+  const goToPreviousScreen = React.useMemo(
+    () => () => {
+      props.navigation.pop();
+      route.params.onBack();
+    },
+    [props.navigation, route.params],
+  );
+
   const submitForm = async () => {
     const abioticDataPayload = abioticData.map(current => {
       if (current.value) {
@@ -242,17 +260,21 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     };
     const _siteVisit = new SiteVisit(siteVisitData);
     await saveSiteVisitByField('id', _siteVisit.id, _siteVisit);
-    props.navigation.navigate('map');
+    goToPreviousScreen();
   };
 
   const filterTaxonList = (query: string) => {
     if (query.length <= 2) {
       return [];
     }
+    const existingTaxaIds: any[] = [];
+    for (const observedTaxon of observedTaxaList) {
+      existingTaxaIds.push(observedTaxon.taxon.id);
+    }
     let filteredTaxaList = taxaList.filter((el: any) => {
       return (
         el.canonicalName.toLowerCase().includes(query.toLowerCase()) &&
-        !(el.id in observedTaxaList)
+        !existingTaxaIds.includes(el.id)
       );
     });
     if (filteredTaxaList.length > 3) {
@@ -299,7 +321,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   };
 
   return (
-    <View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={keyboardStyles.container}>
       <Header
         placement="center"
         leftComponent={{
@@ -309,7 +333,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
           onPress: () => props.navigation.goBack(),
         }}
         centerComponent={{
-          text: 'Add Record',
+          text: route.params.title ? route.params.title : 'Add Record',
           style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
         }}
         containerStyle={styles.HEADER_CONTAINER}
@@ -534,6 +558,12 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     data={filterTaxonList(taxonQuery)}
                     placeholder={'Find species here'}
                     value={taxonQuery}
+                    onChange={e => {
+                      scrollViewRef?.current?.scrollTo({
+                        y: Dimensions.get('window').height,
+                        animated: true,
+                      });
+                    }}
                     onChangeText={setTaxonQuery}
                     flatListProps={{
                       horizontal: false,
@@ -583,7 +613,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                 </View>
               </View>
 
-              <View style={{marginBottom: 150}}>
+              <View style={{marginBottom: 100}}>
                 <Button
                   title="Submit"
                   buttonStyle={{
@@ -597,6 +627,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
           )}
         </Formik>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };

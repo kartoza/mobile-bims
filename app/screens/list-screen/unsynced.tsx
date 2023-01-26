@@ -165,6 +165,7 @@ export const UnsyncedScreen: React.FunctionComponent<
     if (_type === 'site') {
       props.navigation.navigate('siteForm', {
         siteId: _id,
+        title: 'Edit Site',
         editMode: true,
         onBackToMap: async (newSiteId: Number | null = null) => {
           getUnsyncedData();
@@ -174,6 +175,11 @@ export const UnsyncedScreen: React.FunctionComponent<
     } else if (_type === 'site_visit') {
       props.navigation.navigate('OccurrenceForm', {
         siteVisitId: _id,
+        title: 'Edit Record',
+        onBack: async () => {
+          getUnsyncedData();
+          return;
+        },
       });
     }
   };

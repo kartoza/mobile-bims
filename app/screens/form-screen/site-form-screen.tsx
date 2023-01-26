@@ -90,7 +90,7 @@ export const SiteFormScreen: React.FunctionComponent<
           onPress: () => goToMapScreen(),
         }}
         centerComponent={{
-          text: 'ADD SITE',
+          text: route.params.title ? route.params.title : 'ADD SITE',
           style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
         }}
         containerStyle={styles.HEADER_CONTAINER}
