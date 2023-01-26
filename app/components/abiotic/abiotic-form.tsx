@@ -13,13 +13,35 @@ export interface AbioticDataInterface {
 
 interface AbioticFormInterface {
   onChange?: (abioticData: AbioticDataInterface[]) => void;
+  abioticData?: any[];
 }
 
 export default function AbioticForm(props: AbioticFormInterface) {
   const [abioticOptions, setAbioticOptions] = useState<Abiotic[]>([]);
+  const [existingAbioticData, setExistingAbioticData] = useState<any[]>([]);
   const [abioticOptionList, setAbioticOptionList] = useState<Abiotic[]>([]);
   const [selectedAbiotic, setSelectedAbiotic] = useState<string>('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
+
+  useEffect(() => {
+    if (props.abioticData && abioticData.length === 0) {
+      setExistingAbioticData(props.abioticData);
+      const _existingData = [];
+      for (const abioticOption of abioticOptionList) {
+        for (const _abioticData of props.abioticData) {
+          if (_abioticData.id === abioticOption.id) {
+            _existingData.push({
+              abiotic: abioticOption,
+              value: _abioticData.value,
+            });
+          }
+        }
+      }
+      if (_existingData.length > 0) {
+        setAbioticData(_existingData);
+      }
+    }
+  }, [props]);
 
   useEffect(() => {
     if (abioticOptionList.length > 0) {
@@ -43,13 +65,12 @@ export default function AbioticForm(props: AbioticFormInterface) {
     const selectedAbioticOptions = abioticData.map(
       current => current.abiotic.id,
     );
-    console.log(selectedAbioticOptions);
     setAbioticOptions(
       abioticOptionList.filter(
         current => selectedAbioticOptions.indexOf(current.id) <= -1,
       ),
     );
-  }, [abioticData]);
+  }, [abioticData, abioticOptionList]);
 
   const addAbiotic = () => {
     abioticOptions.map((abioticOption: Abiotic) => {

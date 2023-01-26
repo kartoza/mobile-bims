@@ -6,6 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
+    "upgrade": "react-native upgrade",
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
@@ -26,7 +27,7 @@
     "moment": "^2.29.4",
     "react": "^18.0.0",
     "react-native": "^0.69.1",
-    "react-native-autocomplete-input": "github:dimasciput/react-native-autocomplete-input#18",
+    "react-native-autocomplete-input": "^5.2.0",
     "react-native-camera": "github:dimasciput/react-native-camera#18",
     "react-native-config": "^1.4.6",
     "react-native-geolocation-service": "^5.3.0",

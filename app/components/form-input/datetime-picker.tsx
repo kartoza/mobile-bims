@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Pressable, Text, TextInput, View} from "react-native";
 import {styles} from '../../screens/form-screen/styles';
 import Moment from 'moment';
@@ -6,11 +6,18 @@ import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datet
 
 interface DatetimePickerInterface {
   onDateChange: (currentDate: Date) => void;
+  date?: Date;
 }
 
 export function DatetimePicker(props: DatetimePickerInterface) {
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(props.date ? props.date : new Date());
+
+  useEffect(() => {
+    if (props.date) {
+      setDate(props.date);
+    }
+  }, [props.date]);
 
   const onDateChange = (
     event: DateTimePickerEvent,

@@ -5,17 +5,15 @@ import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {ParamListBase, useFocusEffect} from '@react-navigation/native';
 import {SearchBar, Button, Icon, Badge} from '@rneui/themed';
 import {PERMISSIONS, request} from 'react-native-permissions';
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Modal,
-  Alert,
-} from 'react-native';
+import {View, Text, ActivityIndicator, Modal, Alert} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {Details, Marker, Region} from 'react-native-maps';
 import {styles} from './styles';
-import {postLocationSite, pushUnsyncedSassSiteVisit, pushUnsyncedSiteVisit} from '../../models/sync/sync';
+import {
+  postLocationSite,
+  pushUnsyncedSassSiteVisit,
+  pushUnsyncedSiteVisit,
+} from '../../models/sync/sync';
 import {delay} from '../../utils/delay';
 import NetInfo from '@react-native-community/netinfo';
 import * as Progress from 'react-native-progress';
@@ -40,11 +38,13 @@ import {saveOptions} from '../../models/options/option.store';
 import {getSiteVisitsByField} from '../../models/site_visit/site_visit.store';
 import {SourceReferenceApi} from '../../services/api/source-reference-api';
 import {saveSourceReferences} from '../../models/source-reference/source-reference.store';
-import Site from "../../models/site/site";
-import {SassApi} from "../../services/api/sass-api";
-import {getSassSiteVisitByField, saveSassTaxa} from "../../models/sass/sass.store";
-import {AbioticApi} from "../../services/api/abiotic-api";
-import {saveAbioticData} from "../../models/abiotic/abiotic.store";
+import {SassApi} from '../../services/api/sass-api';
+import {
+  getSassSiteVisitByField,
+  saveSassTaxa,
+} from '../../models/sass/sass.store';
+import {AbioticApi} from '../../services/api/abiotic-api';
+import {saveAbioticData} from '../../models/abiotic/abiotic.store';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -139,7 +139,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   useFocusEffect(
     React.useCallback(() => {
-      console.log(latitude, longitude)
       const reloadMap = async () => {
         await clearTemporaryNewSites();
         await getUnsyncedData();
