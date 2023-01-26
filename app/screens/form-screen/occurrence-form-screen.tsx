@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {
   View,
   ScrollView,
@@ -85,6 +85,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   >([]);
   const [username, setUsername] = useState('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
+  let scrollViewRef = useRef();
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -145,6 +146,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }
         if (_siteVisit.sourceReferenceId) {
           setSourceReference(_siteVisit.sourceReferenceId);
+        }
+        if (_siteVisit.siteImage) {
+          setSiteImageData(_siteVisit.siteImage);
         }
         setDate(new Date(_siteVisit.date));
         setAbioticData(_siteVisit.abiotic);
@@ -315,7 +319,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         overlayStyle={{backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00'}}>
         <Dialog.Loading />
       </Dialog>
-      <ScrollView style={styles.CONTAINER} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={styles.CONTAINER}
+        keyboardShouldPersistTaps="handled"
+        ref={scrollViewRef}>
         <Formik
           initialValues={{
             broadBiotope: '',
@@ -481,19 +488,34 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   raised
                   containerStyle={{width: '100%'}}
                   onPress={() => {
+                    if (!takingPicture) {
+                      scrollViewRef?.current?.scrollTo({
+                        y: 450 + 100,
+                        animated: true,
+                      });
+                    }
                     setTakingPicture(!takingPicture);
                   }}
                 />
                 {takingPicture ? (
-                  <View style={{height: 450}}>
+                  <View style={{height: 450, marginTop: 20, marginBottom: 20}}>
                     <Camera pictureTaken={pictureTaken} />
                   </View>
                 ) : null}
                 {siteImageData ? (
-                  <Image
-                    source={{uri: `data:image/jpeg;base64,${siteImageData}`}}
-                    style={{height: 450}}
-                  />
+                  <View
+                    onLayout={event => console.log(event.nativeEvent.layout)}>
+                    <Image
+                      source={{uri: `data:image/jpeg;base64,${siteImageData}`}}
+                      style={{height: 450}}
+                    />
+                    <Button
+                      type="solid"
+                      title={'Delete Image'}
+                      color="error"
+                      onPress={() => setSiteImageData('')}
+                    />
+                  </View>
                 ) : null}
               </View>
 

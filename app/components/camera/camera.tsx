@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-// import {RNCamera} from 'react-native-camera';
+import {RNCamera} from 'react-native-camera';
 import {TouchableOpacity, View, Text, StyleSheet} from 'react-native';
 
 const styles = StyleSheet.create({
@@ -48,7 +48,38 @@ export function Camera(props: any) {
 
   return (
     <View style={styles.container}>
-      <Text>Camera here</Text>
+      <RNCamera
+        style={styles.preview}
+        type={RNCamera.Constants.Type.back}
+        flashMode={RNCamera.Constants.FlashMode.on}
+        captureAudio={false}
+        androidCameraPermissionOptions={{
+          title: 'Permission to use camera',
+          message: 'We need your permission to use your camera',
+          buttonPositive: 'Ok',
+          buttonNegative: 'Cancel',
+        }}>
+        {/* @ts-ignore */}
+        {({camera, status}) => {
+          if (status !== 'READY') {
+            return <PendingView />;
+          }
+          return (
+            <View
+              style={{
+                flex: 0,
+                flexDirection: 'row',
+                justifyContent: 'center',
+              }}>
+              <TouchableOpacity
+                onPress={() => takePicture(camera)}
+                style={styles.capture}>
+                <Text style={{fontSize: 14}}> Capture Site Image </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        }}
+      </RNCamera>
     </View>
   );
 }

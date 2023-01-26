@@ -6625,7 +6625,7 @@ prompts@^2.0.1, prompts@^2.4.0:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-prop-types@*, prop-types@^15.7.2, prop-types@^15.8.1:
+prop-types@*, prop-types@^15.6.2, prop-types@^15.7.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
@@ -6721,6 +6721,12 @@ react-native-autocomplete-input@^5.2.0:
   integrity sha512-fme1UmYdYbPO8hnxnou5Nis0ZSWYEQiFyLdlyx779VBCDdYOmQVGQaD6JZLIk0P7B5Ulnov/axjEMWDC2iS/yA==
   dependencies:
     deprecated-react-native-prop-types "^2.3.0"
+
+"react-native-camera@github:dimasciput/react-native-camera#18":
+  version "4.2.1"
+  resolved "git+ssh://git@github.com/dimasciput/react-native-camera.git#6453eb69131b1142f03a2d840675140bdf600761"
+  dependencies:
+    prop-types "^15.6.2"
 
 react-native-codegen@^0.69.1:
   version "0.69.1"
@@ -6845,11 +6851,6 @@ react-native-vector-image@^0.3.3:
     svg-to-pdfkit "^0.1.8"
     tempy "^1.0.1"
     yargs "^16.2.0"
-
-react-native-vision-camera@^2.15.2:
-  version "2.15.2"
-  resolved "https://registry.npmjs.org/react-native-vision-camera/-/react-native-vision-camera-2.15.2.tgz"
-  integrity sha512-pkVj0r2nbZaj3+bB9CGPNistCUyoCgS2SmawzugrZs5oMlFWlgZYuJj+6s3Q98xTGgV/8/ST0njohB6soDi0VA==
 
 react-native@*, "react-native@^0.0.0-0 || 0.60 - 0.69 || 1000.0.0", react-native@^0.69.1, "react-native@>= 0.64.3", react-native@>=0.42.0, react-native@>=0.50.0, react-native@>=0.57, react-native@>=0.59, react-native@>=0.63.3:
   version "0.69.1"
