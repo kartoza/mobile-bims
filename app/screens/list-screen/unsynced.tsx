@@ -152,7 +152,6 @@ export const UnsyncedScreen: React.FunctionComponent<
       _unsynced.sort((a, b) => a.created.getTime() - b.created.getTime()),
     );
     setLoading(false);
-    console.log(unsyncedSiteVisits);
   };
 
   useEffect(() => {
@@ -163,7 +162,6 @@ export const UnsyncedScreen: React.FunctionComponent<
     const _unsynced = unsynced.find(
       ({id, type}) => id === _id && type === _type,
     );
-    console.log(_unsynced);
     if (_type === 'site') {
       props.navigation.navigate('siteForm', {
         siteId: _id,
@@ -173,6 +171,10 @@ export const UnsyncedScreen: React.FunctionComponent<
           return;
         },
       });
+    } else if (_type === 'site_visit') {
+      props.navigation.navigate('OccurrenceForm', {
+        siteVisitId: _id,
+      });
     }
   };
 
@@ -180,7 +182,6 @@ export const UnsyncedScreen: React.FunctionComponent<
     const _unsynced = unsynced.find(
       ({id, type}) => id === _id && type === _type,
     );
-    console.log(_unsynced);
   };
 
   return (

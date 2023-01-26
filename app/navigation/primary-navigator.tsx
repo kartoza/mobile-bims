@@ -30,7 +30,7 @@ export type PrimaryParamList = {
   map: undefined;
   form: undefined;
   login: undefined;
-  occurrenceForm: undefined;
+  OccurrenceForm: undefined;
   SASSForm: undefined;
   siteForm: undefined;
   measurementList: undefined;

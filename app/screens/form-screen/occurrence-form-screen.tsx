@@ -1,4 +1,5 @@
-import React, {useState, useEffect} from 'react';
+/* eslint-disable react-native/no-inline-styles */
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   ScrollView,
@@ -9,7 +10,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import {Button, Header, CheckBox} from '@rneui/themed';
+import {Button, Header, CheckBox, Dialog} from '@rneui/themed';
 import {Formik} from 'formik';
 import {Picker} from '@react-native-picker/picker';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -30,6 +31,7 @@ import {getSiteByField} from '../../models/site/site.store';
 import {
   saveSiteVisitByField,
   allSiteVisits,
+  getSiteVisitsByField,
 } from '../../models/site_visit/site_visit.store';
 import Option from '../../models/options/option';
 import SourceReference from '../../models/source-reference/source-reference';
@@ -43,12 +45,20 @@ export interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
 }
 
+interface ObservedTaxonInterface {
+  taxon: Taxon;
+  checked: boolean;
+  value: string;
+}
+
 export const OccurrenceFormScreen: React.FunctionComponent<
   FormScreenProps
 > = props => {
   // @ts-ignore
   const {route} = props;
   const {modulePk, sitePk} = route.params;
+  const [siteVisit, setSiteVisit] = useState<SiteVisit | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [date, setDate] = useState(new Date());
   const [broadBiotope, setBroadBiotope] = useState('');
   const [specificBiotope, setSpecificBiotope] = useState('');
@@ -66,22 +76,34 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [samplingMethodOptions, setSamplingMethodOptions] = useState<Option[]>(
     [],
   );
-  const [selectedObservedTaxa, setSelectedObservedTaxa] = useState<any>([]);
   const [takingPicture, setTakingPicture] = useState(false);
   const [siteImageData, setSiteImageData] = useState<string>('');
   const [taxonQuery, setTaxonQuery] = useState('');
   const [taxaList, setTaxaList] = useState([]);
-  const [observedTaxaList, setObservedTaxaList] = useState<any>([]);
-  const [observedTaxaValues, setObservedTaxaValues] = useState<any>({});
+  const [observedTaxaList, setObservedTaxaList] = useState<
+    ObservedTaxonInterface[]
+  >([]);
   const [username, setUsername] = useState('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
     (async () => {
+      let _modulePK = modulePk;
+      let _siteVisit = null;
+      if (route.params.siteVisitId) {
+        const _siteVisits = await getSiteVisitsByField(
+          'id',
+          route.params.siteVisitId,
+        );
+        if (_siteVisits.length > 0) {
+          _siteVisit = _siteVisits[0];
+          _modulePK = _siteVisit.taxonGroup.id;
+        }
+      }
       const _taxonGroups = await loadTaxonGroups();
       const taxonGroup = _taxonGroups.find(
-        (_taxonGroup: {id: any}) => _taxonGroup.id === modulePk,
+        (_taxonGroup: {id: any}) => _taxonGroup.id === _modulePK,
       );
       if (taxonGroup) {
         const _options = await loadOptions(taxonGroup.id);
@@ -102,23 +124,75 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         );
         setSamplingMethodOptions(_samplingMethodOptions);
       }
-      const _taxaList = await loadTaxa(modulePk);
+      const _taxaList = await loadTaxa(_modulePK);
       setTaxaList(_taxaList);
       setUsername(await load('user'));
       const _sourceReferenceList = await loadSourceReferences();
       setSourceReferenceOptions(_sourceReferenceList);
+
+      if (_siteVisit) {
+        if (_siteVisit.samplingMethod) {
+          setSamplingMethod(_siteVisit.samplingMethod);
+        }
+        if (_siteVisit.specificBiotope) {
+          setSpecificBiotope(_siteVisit.specificBiotope);
+        }
+        if (_siteVisit.substratum) {
+          setSubstratum(_siteVisit.substratum);
+        }
+        if (_siteVisit.biotope) {
+          setBroadBiotope(_siteVisit.biotope);
+        }
+        if (_siteVisit.sourceReferenceId) {
+          setSourceReference(_siteVisit.sourceReferenceId);
+        }
+        setDate(new Date(_siteVisit.date));
+        setAbioticData(_siteVisit.abiotic);
+        const _observedTaxaList: any = [];
+        for (const [taxonId, abundance] of Object.entries(
+          _siteVisit.observedTaxa,
+        )) {
+          let taxon = _taxaList.find((el: any) => {
+            return el.id === parseInt(taxonId, 10);
+          });
+          if (taxon) {
+            _observedTaxaList.push({
+              taxon: taxon,
+              checked: true,
+              value: abundance,
+            });
+          }
+        }
+        setObservedTaxaList(_observedTaxaList);
+        setSiteVisit(_siteVisit);
+        setTimeout(() => {
+          setLoading(false);
+        }, 100);
+      } else {
+        setLoading(false);
+      }
     })();
-  }, [modulePk]);
+  }, [modulePk, route.params.siteVisitId]);
 
   const submitForm = async () => {
     const abioticDataPayload = abioticData.map(current => {
       if (current.value) {
         return {
-          id: current.abiotic.id,
+          id:
+            typeof current.abiotic === 'object'
+              ? current.abiotic.id
+              : current.abiotic,
           value: current.value,
         };
       }
     });
+
+    let observedTaxaValues: any = {};
+    for (const observedTaxon of observedTaxaList) {
+      if (observedTaxon.checked) {
+        observedTaxaValues[observedTaxon.taxon.id + ''] = observedTaxon.value;
+      }
+    }
 
     if (Object.keys(observedTaxaValues).length === 0) {
       Alert.alert('Error', 'You must at least add one collection data\n', [
@@ -128,11 +202,25 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       ]);
       return;
     }
-    const site = await getSiteByField('id', sitePk);
-    const taxonGroup = await getTaxonGroupByField('id', parseInt(modulePk));
+    let _sitePk = sitePk;
+    let _modulePK = modulePk;
+
+    if (siteVisit) {
+      _sitePk = siteVisit.site.id;
+      _modulePK = siteVisit.taxonGroup.id;
+    }
+
+    const site = await getSiteByField('id', _sitePk);
+    const taxonGroup = await getTaxonGroupByField('id', parseInt(_modulePK));
     const allSiteVisitsData = await allSiteVisits();
+
+    let _siteVisitId = allSiteVisitsData.length + 1;
+    if (siteVisit) {
+      _siteVisitId = siteVisit.id;
+    }
+
     const siteVisitData = {
-      id: allSiteVisitsData.length + 1,
+      id: _siteVisitId,
       site: site,
       taxonGroup: taxonGroup,
       date: date,
@@ -148,8 +236,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       newData: true,
       synced: false,
     };
-    const siteVisit = new SiteVisit(siteVisitData);
-    await saveSiteVisitByField('id', siteVisit.id, siteVisit);
+    const _siteVisit = new SiteVisit(siteVisitData);
+    await saveSiteVisitByField('id', _siteVisit.id, _siteVisit);
     props.navigation.navigate('map');
   };
 
@@ -169,20 +257,36 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     return filteredTaxaList;
   };
 
-  const addTaxon = (taxon: Taxon) => {
+  const addTaxon = (_taxon: Taxon) => {
     setTaxonQuery('');
-    setObservedTaxaList({...observedTaxaList, [taxon.id]: taxon});
+    setObservedTaxaList([
+      ...observedTaxaList,
+      {taxon: _taxon, checked: false, value: ''},
+    ]);
   };
 
   const checkObservedTaxon = (taxon: Taxon) => {
-    const newSelectedObservedTaxon = Object.assign([], selectedObservedTaxa);
-    const index = selectedObservedTaxa.indexOf(taxon.id);
-    if (index >= 0) {
-      newSelectedObservedTaxon.splice(index, 1);
-    } else {
-      newSelectedObservedTaxon.push(taxon.id);
-    }
-    setSelectedObservedTaxa(newSelectedObservedTaxon);
+    const updatedObservedTaxa = observedTaxaList.map(
+      (observedTaxon: ObservedTaxonInterface) => {
+        if (observedTaxon.taxon.id === taxon.id) {
+          return {...observedTaxon, checked: !observedTaxon.checked};
+        }
+        return observedTaxon;
+      },
+    );
+    setObservedTaxaList(updatedObservedTaxa);
+  };
+
+  const updateObservedTaxonValue = (taxon: Taxon, value: string) => {
+    const updatedObservedTaxa = observedTaxaList.map(
+      (observedTaxon: ObservedTaxonInterface) => {
+        if (observedTaxon.taxon.id === taxon.id) {
+          return {...observedTaxon, value: value};
+        }
+        return observedTaxon;
+      },
+    );
+    setObservedTaxaList(updatedObservedTaxa);
   };
 
   const pictureTaken = (pictureData: {base64: string}) => {
@@ -206,6 +310,11 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }}
         containerStyle={styles.HEADER_CONTAINER}
       />
+      <Dialog
+        isVisible={loading}
+        overlayStyle={{backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00'}}>
+        <Dialog.Loading />
+      </Dialog>
       <ScrollView style={styles.CONTAINER} keyboardShouldPersistTaps="handled">
         <Formik
           initialValues={{
@@ -228,6 +337,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
             <View>
               {/* Date input */}
               <DatetimePicker
+                date={date}
                 onDateChange={(datetime: Date) => setDate(datetime)}
               />
 
@@ -390,6 +500,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               {/* Abiotic */}
               <Text style={styles.LABEL}>Abiotic</Text>
               <AbioticForm
+                abioticData={abioticData}
                 onChange={_abioticData => setAbioticData(_abioticData)}
               />
 
@@ -422,35 +533,27 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   />
                 </View>
                 <View style={{marginTop: 50, marginBottom: 20}}>
-                  {Object.keys(observedTaxaList).map(taxaId => (
+                  {observedTaxaList.map(observedTaxon => (
                     <TouchableOpacity
-                      key={taxaId}
+                      key={observedTaxon.taxon.id}
                       style={styles.OBSERVED_TAXA_LIST}
-                      onPress={() =>
-                        checkObservedTaxon(observedTaxaList[taxaId])
-                      }>
+                      onPress={() => checkObservedTaxon(observedTaxon.taxon)}>
                       <CheckBox
                         disabled={false}
-                        checked={selectedObservedTaxa.includes(
-                          observedTaxaList[taxaId].id,
-                        )}
-                        onPress={() =>
-                          checkObservedTaxon(observedTaxaList[taxaId])
-                        }
+                        checked={observedTaxon.checked}
+                        onPress={() => checkObservedTaxon(observedTaxon.taxon)}
                       />
-                      <Text>{observedTaxaList[taxaId].canonicalName}</Text>
+                      <Text>{observedTaxon.taxon.canonicalName}</Text>
                       <TextInput
                         keyboardType={'numeric'}
-                        editable={selectedObservedTaxa.includes(
-                          observedTaxaList[taxaId].id,
-                        )}
+                        editable={true}
                         style={styles.TEXT_INPUT_TAXA}
-                        value={observedTaxaValues[taxaId]}
+                        value={observedTaxon.value}
                         onChange={e => {
-                          setObservedTaxaValues({
-                            ...observedTaxaValues,
-                            [taxaId]: e.nativeEvent.text,
-                          });
+                          updateObservedTaxonValue(
+                            observedTaxon.taxon,
+                            e.nativeEvent.text,
+                          );
                         }}
                       />
                     </TouchableOpacity>
