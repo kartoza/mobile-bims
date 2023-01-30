@@ -75,6 +75,7 @@ function SASSPicker(props: SASSPickerInterface) {
 
 interface SassTaxaFormInterface {
   onValueChange?: (newValue: any) => void;
+  initialValue?: any;
 }
 
 export function SassTaxaForm(prop: SassTaxaFormInterface) {
@@ -84,6 +85,12 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
     taxaValues[type] = value;
     setTaxaValues((taxaValue: any) => ({...taxaValue, [type]: value}));
   };
+
+  useEffect(() => {
+    if (prop.initialValue) {
+      setTaxaValues(prop.initialValue);
+    }
+  }, [prop.initialValue]);
 
   useEffect(() => {
     let highest: string = '';
@@ -111,18 +118,21 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
         <View style={styles.SASS_TAXA_DROPDOWN}>
           <SASSPicker
             label={'Stones'}
+            value={taxaValues.stones}
             onValueChange={newValue => updateTaxaValues('stones', newValue)}
           />
         </View>
         <View style={styles.SASS_TAXA_DROPDOWN}>
           <SASSPicker
             label={'Vegetation'}
+            value={taxaValues.vegetation}
             onValueChange={newValue => updateTaxaValues('vegetation', newValue)}
           />
         </View>
         <View style={styles.SASS_TAXA_DROPDOWN}>
           <SASSPicker
             label={'Gravel, sand, mud'}
+            value={taxaValues.gravel_sand_mud}
             onValueChange={newValue =>
               updateTaxaValues('gravel_sand_mud', newValue)
             }
