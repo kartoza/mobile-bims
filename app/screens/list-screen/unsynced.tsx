@@ -9,10 +9,11 @@ import {spacing} from '../../theme/spacing';
 import {palette} from '../../theme/palette';
 import {fontStyles} from '../../theme/font';
 import { getSiteVisitsByField } from '../../models/site_visit/site_visit.store';
-import { getSassSiteVisitByField } from '../../models/sass/sass.store';
+import { getSassSiteVisitByField, removeSassSiteVisitByField } from '../../models/sass/sass.store';
 import { getSitesByField } from '../../models/site/site.store';
 import Site from '../../models/site/site';
 import SiteVisit from '../../models/site_visit/site_visit';
+import SassSiteVisit from '../../models/sass/sass_site_visit';
 
 export interface UnsyncedScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -62,9 +63,6 @@ const ACTION_BUTTON: ViewStyle = {
 };
 
 function UnsyncedItem(props: UnsyncedItemInterface) {
-  useEffect(() => {
-    console.log(props);
-  }, [props]);
 
   return (
     <View style={ITEM_CONTAINER}>
@@ -123,6 +121,15 @@ export const UnsyncedScreen: React.FunctionComponent<
     return 'Location Site : ' + locationSite;
   };
 
+  const parseSassSiteVisitDesc = async (sassSiteVisit: SassSiteVisit) => {
+    const locationSites = await getSitesByField('id', sassSiteVisit.siteId);
+    const locationSite = locationSites[0];
+    const siteCode = locationSite.siteCode
+      ? locationSite.siteCode
+      : locationSite.description;
+    return 'Location Site : ' + siteCode;
+  };
+
   const getUnsyncedData = async () => {
     setLoading(true);
     const _unsynced: UnsyncedInterface[] = [];
@@ -146,6 +153,15 @@ export const UnsyncedScreen: React.FunctionComponent<
         desc: parseSiteVisitDesc(unsyncedSiteVisit),
         created: new Date(unsyncedSiteVisit.date),
         type: 'site_visit',
+      });
+    }
+    for (const unsyncedSassData of unsyncedSass) {
+      _unsynced.push({
+        id: unsyncedSassData.id,
+        name: 'SASS Data',
+        desc: await parseSassSiteVisitDesc(unsyncedSassData),
+        created: new Date(unsyncedSassData.date),
+        type: 'sass',
       });
     }
     setUnsynced(
@@ -181,13 +197,26 @@ export const UnsyncedScreen: React.FunctionComponent<
           return;
         },
       });
+    } else if (_type === 'sass') {
+      props.navigation.navigate('SASSForm', {
+        sassId: _id,
+        title: 'Edit SASS Record',
+        onBack: async () => {
+          getUnsyncedData();
+          return;
+        },
+      });
     }
   };
 
-  const handleClickRemove = (_id: number, _type: string) => {
+  const handleClickRemove = async (_id: number, _type: string) => {
     const _unsynced = unsynced.find(
       ({id, type}) => id === _id && type === _type,
     );
+    if (_type === 'sass') {
+      await removeSassSiteVisitByField('id', _id);
+      getUnsyncedData();
+    }
   };
 
   return (

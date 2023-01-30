@@ -1,5 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
+import {ViewPropTypes} from 'deprecated-react-native-prop-types';
 import {RNCamera} from 'react-native-camera';
 import {TouchableOpacity, View, Text, StyleSheet} from 'react-native';
 

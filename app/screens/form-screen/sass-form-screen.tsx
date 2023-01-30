@@ -1,18 +1,19 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import {Alert, Image, ScrollView, Text, TextInput, View} from 'react-native';
 import {styles} from './styles';
-import {Button, Header} from '@rneui/themed';
+import {Button, Header, Dialog} from '@rneui/themed';
 import {Formik} from 'formik';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {List, RadioButton} from 'react-native-paper';
-import {BiotopeName, BiotopeObjectKey, FormInitialValues} from './sass-form';
+import {BiotopeName, BiotopeObjectKey, FormInitialValues, SassFormValues} from './sass-form';
 import {SassTaxaForm} from '../../components/sass/sass-taxa-form';
 import {
   allSassSiteVisits,
+  getSassSiteVisitByField,
   loadSassTaxa,
-  saveSassSiteVisit,
+  saveSassSiteVisitByField,
 } from '../../models/sass/sass.store';
 import {load} from '../../utils/storage';
 import {Camera} from '../../components/camera/camera';
@@ -36,6 +37,13 @@ interface BiotopeRadioButtonsInterface {
 
 function BiotopeRadioButtons(props: BiotopeRadioButtonsInterface) {
   const [biotopeValue, setBiotopeValue] = useState<string>(props.value);
+
+  useEffect(() => {
+    if (props.value) {
+      setBiotopeValue(props.value);
+    }
+  }, [props.value]);
+
   return (
     <View style={{marginTop: 10, height: 50}}>
       <View>
@@ -85,8 +93,47 @@ export const SassFormScreen: React.FunctionComponent<
   const [sourceReferenceOptions, setSourceReferenceOptions] = useState<
     SourceReference[]
   >([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   const [biotopeValues, setBiotopeValues] = useState<any>({});
+  const [formInitialValues, setFormInitialValues] =
+    useState<SassFormValues>(FormInitialValues);
+  const formikRef = useRef();
+
+  useEffect(() => {
+    if (
+      formInitialValues &&
+      Object.keys(formInitialValues.biotope).length > 0
+    ) {
+      formikRef.current?.resetForm();
+    }
+  }, [formInitialValues]);
+
+  useEffect(() => {
+    (async () => {
+      if (route.params.sassId) {
+        const sassSiteVisits = await getSassSiteVisitByField(
+          'id',
+          route.params.sassId,
+        );
+        if (sassSiteVisits.length === 0) {
+          return false;
+        }
+        const sassSiteVisit = sassSiteVisits[0];
+        setFormInitialValues({
+          id: sassSiteVisit.id,
+          siteId: sassSiteVisit.siteId,
+          date: new Date(sassSiteVisit.date),
+          sassTaxa: sassSiteVisit.sassTaxa,
+          biotope: sassSiteVisit.biotope,
+          otherBiota: sassSiteVisit.otherBiota,
+          comments: sassSiteVisit.comments,
+        });
+        setBiotopeValues(sassSiteVisit.biotope);
+        setAbioticData(sassSiteVisit.abiotic);
+      }
+    })();
+  }, [route.params.sassId]);
 
   useEffect(() => {
     (async () => {
@@ -105,6 +152,7 @@ export const SassFormScreen: React.FunctionComponent<
           }));
         }
       }
+      setLoading(false);
     })();
   }, [sassTaxaFormOpen]);
 
@@ -112,6 +160,14 @@ export const SassFormScreen: React.FunctionComponent<
     setTakingPicture(false);
     setSiteImageData(pictureData.base64);
   };
+
+  const goToPreviousScreen = React.useMemo(
+    () => () => {
+      props.navigation.pop();
+      route.params.onBack();
+    },
+    [props.navigation, route.params],
+  );
 
   const submitForm = async (formData: any) => {
     if (Object.keys(sassTaxaData).length === 0) {
@@ -124,8 +180,12 @@ export const SassFormScreen: React.FunctionComponent<
       return;
     }
     const allSiteVisitsData = await allSassSiteVisits();
-    formData.id = allSiteVisitsData.length + 1;
-    formData.siteId = sitePk;
+    formData.id = formInitialValues.id
+      ? formInitialValues.id
+      : allSiteVisitsData.length + 1;
+    formData.siteId = formInitialValues.siteId
+      ? formInitialValues.siteId
+      : sitePk;
     formData.siteImage = siteImageData;
     formData.synced = false;
     formData.newData = true;
@@ -134,18 +194,26 @@ export const SassFormScreen: React.FunctionComponent<
     formData.abiotic = abioticData.map(current => {
       if (current.value) {
         return {
-          id: current.abiotic.id,
+          id:
+            typeof current.abiotic === 'object'
+              ? current.abiotic.id
+              : current.abiotic,
           value: current.value,
         };
       }
     });
     const sassSiteVisit = new SassSiteVisit(formData);
-    await saveSassSiteVisit(sassSiteVisit);
-    props.navigation.navigate('map');
+    await saveSassSiteVisitByField('id', sassSiteVisit.id, sassSiteVisit);
+    goToPreviousScreen();
   };
 
   return (
     <View>
+      <Dialog
+        isVisible={loading}
+        overlayStyle={{ backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00' }}>
+        <Dialog.Loading />
+      </Dialog>
       <Header
         placement="center"
         leftComponent={{
@@ -155,14 +223,18 @@ export const SassFormScreen: React.FunctionComponent<
           onPress: () => props.navigation.goBack(),
         }}
         centerComponent={{
-          text: 'Add SASS Record',
+          text: route.params.title ? route.params.title : 'Add SASS Record',
           style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
         }}
         containerStyle={styles.HEADER_CONTAINER}
       />
 
       <ScrollView style={styles.CONTAINER} keyboardShouldPersistTaps="handled">
-        <Formik initialValues={FormInitialValues} onSubmit={submitForm}>
+        <Formik
+          enableReinitialize={true}
+          innerRef={formikRef}
+          initialValues={formInitialValues}
+          onSubmit={submitForm}>
           {({
             /* eslint-disable @typescript-eslint/no-unused-vars */
             handleChange,
@@ -173,6 +245,7 @@ export const SassFormScreen: React.FunctionComponent<
           }) => (
             <View style={{height: '100%'}}>
               <DatetimePicker
+                date={values.date}
                 onDateChange={(datetime: Date) =>
                   setFieldValue('date', datetime)
                 }
@@ -184,7 +257,7 @@ export const SassFormScreen: React.FunctionComponent<
                   return (
                     <BiotopeRadioButtons
                       key={biotopeKey}
-                      value={biotopeValues[biotopeKey]}
+                      value={values.biotope[objKey]}
                       label={BiotopeName[objKey]}
                       onValueChange={newValue =>
                         setBiotopeValues({
@@ -261,6 +334,7 @@ export const SassFormScreen: React.FunctionComponent<
               {/* Abiotic */}
               <Text style={styles.LABEL}>Abiotic</Text>
               <AbioticForm
+                abioticData={abioticData}
                 onChange={_abioticData => setAbioticData(_abioticData)}
               />
 
@@ -281,7 +355,7 @@ export const SassFormScreen: React.FunctionComponent<
                       <Button
                         buttonStyle={{
                           justifyContent: 'flex-start',
-                          backgroundColor: sassTaxaFormOpen[sassTaxaParent]
+                          backgroundColor: (sassTaxaFormOpen[sassTaxaParent] || values.sassTaxa[sassTaxaParent])
                             ? '#79d089'
                             : '#afb4bb',
                         }}
@@ -308,7 +382,8 @@ export const SassFormScreen: React.FunctionComponent<
                         }}>
                         {sassTaxaParent}
                       </Button>
-                      {sassTaxaFormOpen[sassTaxaParent] ? (
+                      {sassTaxaFormOpen[sassTaxaParent] ||
+                        values.sassTaxa[sassTaxaParent] ? (
                         <View
                           style={{
                             padding: 10,
@@ -325,6 +400,11 @@ export const SassFormScreen: React.FunctionComponent<
                                 {sassTaxon}
                               </Text>
                               <SassTaxaForm
+                                initialValue={
+                                  values.sassTaxa[sassTaxaParent]
+                                    ? values.sassTaxa[sassTaxaParent][sassTaxon]
+                                    : {}
+                                }
                                 onValueChange={(taxaValue: any) => {
                                   // Check if empty values
                                   let empty = true;
@@ -358,6 +438,7 @@ export const SassFormScreen: React.FunctionComponent<
 
               <Text style={styles.LABEL}>Other biota</Text>
               <TextInput
+                value={values.otherBiota}
                 multiline={true}
                 style={[
                   styles.TEXT_INPUT_STYLE,
@@ -373,6 +454,7 @@ export const SassFormScreen: React.FunctionComponent<
               <Text style={styles.LABEL}>Comments/Observation</Text>
               <TextInput
                 multiline={true}
+                value={values.comments}
                 style={[
                   styles.TEXT_INPUT_STYLE,
                   {height: 100, textAlignVertical: 'top', marginBottom: 10},

@@ -74,3 +74,44 @@ export const saveSassSiteVisit = async (
   }
   await saveSassSiteVisits(sassSiteVisits);
 };
+
+export const saveSassSiteVisitByField = async (
+  queryField: string,
+  queryFieldValue: any,
+  sassSiteVisit: SassSiteVisit,
+) => {
+  let sassSiteVisits = await load(SASS_SITE_VISIT_KEY);
+  let update = false;
+  if (sassSiteVisits) {
+    for (const index in sassSiteVisits) {
+      const _siteVisit = sassSiteVisits[index];
+      if (_siteVisit[queryField] === queryFieldValue) {
+        sassSiteVisits[index] = sassSiteVisit;
+        update = true;
+        break;
+      }
+    }
+    if (!update) {
+      sassSiteVisits.push(sassSiteVisit);
+    }
+  } else {
+    sassSiteVisits = [sassSiteVisit];
+  }
+  await saveSassSiteVisits(sassSiteVisits);
+};
+
+export const removeSassSiteVisitByField = async (
+  queryField: string,
+  queryFieldValue: any,
+) => {
+  let sassSiteVisits = await load(SASS_SITE_VISIT_KEY);
+  if (sassSiteVisits) {
+    for (const index in sassSiteVisits) {
+      const _siteVisit = sassSiteVisits[index];
+      if (_siteVisit[queryField] === queryFieldValue) {
+        sassSiteVisits.splice(index, 1);
+      }
+    }
+  }
+  await saveSassSiteVisits(sassSiteVisits);
+};

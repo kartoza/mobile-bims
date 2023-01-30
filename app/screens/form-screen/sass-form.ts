@@ -11,6 +11,10 @@ export const BiotopeName = {
 };
 
 export interface SassFormValues {
+  id?: number;
+  siteId?: number;
+  comments?: string | undefined;
+  otherBiota?: string | undefined;
   date: Date | null;
   sassTaxa?: any;
   biotope?: any;
@@ -20,6 +24,8 @@ export const FormInitialValues: SassFormValues = {
   date: new Date(),
   sassTaxa: {},
   biotope: {},
+  otherBiota: '',
+  comments: '',
 };
 
 export type BiotopeObjectKey = keyof typeof BiotopeName;
