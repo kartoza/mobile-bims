@@ -1,19 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
-import {View, Text, TextStyle} from 'react-native';
+import {View, Text, TextStyle, Alert} from 'react-native';
 import {Button, Header, Icon} from '@rneui/themed';
 import {styles} from '../form-screen/styles';
 import {ViewStyle} from 'react-native';
 import {spacing} from '../../theme/spacing';
 import {palette} from '../../theme/palette';
 import {fontStyles} from '../../theme/font';
-import { getSiteVisitsByField } from '../../models/site_visit/site_visit.store';
-import { getSassSiteVisitByField, removeSassSiteVisitByField } from '../../models/sass/sass.store';
-import { getSitesByField } from '../../models/site/site.store';
+import {
+  getSiteVisitsByField,
+  removeSiteVisitByField,
+} from '../../models/site_visit/site_visit.store';
+import {
+  getSassSiteVisitByField,
+  removeSassSiteVisitByField,
+} from '../../models/sass/sass.store';
+import {getSitesByField, removeSiteByField} from '../../models/site/site.store';
 import Site from '../../models/site/site';
 import SiteVisit from '../../models/site_visit/site_visit';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
+import {ScrollView} from 'react-native-gesture-handler';
 
 export interface UnsyncedScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -63,7 +70,6 @@ const ACTION_BUTTON: ViewStyle = {
 };
 
 function UnsyncedItem(props: UnsyncedItemInterface) {
-
   return (
     <View style={ITEM_CONTAINER}>
       <View style={ITEM_CONTENT}>
@@ -175,9 +181,6 @@ export const UnsyncedScreen: React.FunctionComponent<
   }, []);
 
   const handleClickEdit = (_id: number, _type: string) => {
-    const _unsynced = unsynced.find(
-      ({id, type}) => id === _id && type === _type,
-    );
     if (_type === 'site') {
       props.navigation.navigate('siteForm', {
         siteId: _id,
@@ -210,13 +213,30 @@ export const UnsyncedScreen: React.FunctionComponent<
   };
 
   const handleClickRemove = async (_id: number, _type: string) => {
-    const _unsynced = unsynced.find(
-      ({id, type}) => id === _id && type === _type,
+    Alert.alert(
+      'Delete record',
+      'Are you sure you want to delete this record?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            if (_type === 'sass') {
+              await removeSassSiteVisitByField('id', _id);
+            } else if (_type === 'site_visit') {
+              await removeSiteVisitByField('id', _id);
+            } else if (_type === 'site') {
+              await removeSiteByField('id', _id);
+            }
+            getUnsyncedData();
+          },
+        },
+      ],
     );
-    if (_type === 'sass') {
-      await removeSassSiteVisitByField('id', _id);
-      getUnsyncedData();
-    }
   };
 
   return (
@@ -235,19 +255,21 @@ export const UnsyncedScreen: React.FunctionComponent<
         }}
         containerStyle={styles.HEADER_CONTAINER}
       />
-      {unsynced.map((_unsynced: UnsyncedInterface, index: number) => (
-        <UnsyncedItem
-          key={'unsynced_' + index}
-          name={_unsynced.name}
-          desc={_unsynced.desc}
-          id={_unsynced.id}
-          created={_unsynced.created}
-          type={_unsynced.type}
-          onClickEdit={handleClickEdit}
-          onClickRemove={handleClickRemove}
-          loading={loading}
-        />
-      ))}
+      <ScrollView>
+        {unsynced.map((_unsynced: UnsyncedInterface, index: number) => (
+          <UnsyncedItem
+            key={'unsynced_' + index}
+            name={_unsynced.name}
+            desc={_unsynced.desc}
+            id={_unsynced.id}
+            created={_unsynced.created}
+            type={_unsynced.type}
+            onClickEdit={handleClickEdit}
+            onClickRemove={handleClickRemove}
+            loading={loading}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 };

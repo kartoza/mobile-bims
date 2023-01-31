@@ -20,6 +20,12 @@ export const getSiteVisitsByField = async (
   if (siteVisits) {
     for (const index in siteVisits) {
       const _siteVisit = siteVisits[index];
+      if (field === 'siteId' && _siteVisit.site) {
+        if (_siteVisit.site.id === value) {
+          _siteVisits.push(new SiteVisit(_siteVisit));
+        }
+        continue;
+      }
       if (_siteVisit[field] === value) {
         _siteVisits.push(new SiteVisit(_siteVisit));
       }
@@ -53,6 +59,28 @@ export const saveSiteVisitByField = async (
     }
   } else {
     siteVisits = [siteVisit];
+  }
+  await saveSiteVisits(siteVisits);
+};
+
+export const removeSiteVisitByField = async (
+  queryField: string,
+  queryFieldValue: any,
+) => {
+  let siteVisits = await load(_SITE_VISITS_KEY);
+  if (siteVisits) {
+    for (const index in siteVisits) {
+      const _siteVisit = siteVisits[index];
+      if (queryField === 'siteId' && _siteVisit.site) {
+        if (_siteVisit.site.id === queryFieldValue) {
+          siteVisits.splice(index, 1);
+        }
+        continue;
+      }
+      if (_siteVisit[queryField] === queryFieldValue) {
+        siteVisits.splice(index, 1);
+      }
+    }
   }
   await saveSiteVisits(siteVisits);
 };
