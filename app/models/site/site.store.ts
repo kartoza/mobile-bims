@@ -1,4 +1,6 @@
 import {load, save} from '../../utils/storage';
+import { removeSassSiteVisitByField } from '../sass/sass.store';
+import { getSiteVisitsByField, removeSiteVisitByField } from '../site_visit/site_visit.store';
 import Site from './site';
 
 const SITE_STORAGE_KEY = 'sites';
@@ -119,4 +121,23 @@ export const clearTemporaryNewSites = async () => {
     await saveSites(sites);
   }
   return removedIndex.length > 0;
+};
+
+export const removeSiteByField = async (
+  queryField: string,
+  queryFieldValue: any,
+) => {
+  let sites = await loadSites();
+  if (!sites) {
+    return false;
+  }
+  for (const index in sites) {
+    const site = sites[index];
+    if (site[queryField] === queryFieldValue) {
+      sites.splice(index, 1);
+      await removeSassSiteVisitByField('siteId', site.id);
+      await removeSiteVisitByField('siteId', site.id);
+    }
+  }
+  await saveSites(sites);
 };
