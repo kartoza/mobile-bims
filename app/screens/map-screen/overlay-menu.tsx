@@ -36,11 +36,13 @@ export function OverlayMenu(props: OverlayMenuProps) {
     () => () => {
       props.navigation.navigate({
         name: 'UnsyncedList',
-        params: {},
+        params: {
+          onBack: () => props.refreshMap(),
+        },
         merge: true,
       });
     },
-    [props.navigation],
+    [props],
   );
 
   const clearData = async () => {

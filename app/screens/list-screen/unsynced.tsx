@@ -239,6 +239,14 @@ export const UnsyncedScreen: React.FunctionComponent<
     );
   };
 
+  const goToPreviousScreen = React.useMemo(
+    () => () => {
+      props.navigation.pop();
+      route.params.onBack();
+    },
+    [props.navigation, route.params],
+  );
+
   return (
     <View>
       <Header
@@ -247,7 +255,7 @@ export const UnsyncedScreen: React.FunctionComponent<
           icon: 'chevron-left',
           type: 'font-awesome',
           color: '#fff',
-          onPress: () => props.navigation.goBack(),
+          onPress: goToPreviousScreen,
         }}
         centerComponent={{
           text: 'Unsynced Data',
