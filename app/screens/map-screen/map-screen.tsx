@@ -74,6 +74,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [selectedMarker, setSelectedMarker] = useState<any | null>(null);
   const [taxonGroups, setTaxonGroups] = useState<any>([]);
   const [showBiodiversityModule, setShowBiodiversityModule] = useState(false);
+  const [mapViewKey, setMapViewKey] = useState<number>(
+    Math.floor(Math.random() * 100),
+  );
 
   const drawMarkers = (data: any[]) => {
     let _markers: any[];
@@ -179,14 +182,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setShowBiodiversityModule(false);
   };
 
-  const refreshMap = useCallback(async () => {
-    setMarkers([]);
-    markerDeselected();
-    await clearTemporaryNewSites();
-    await getUnsyncedData();
-    await getSites();
-  }, [getSites]);
-
   const mapSelected = async (e: {nativeEvent: {coordinate: any}}) => {
     if (isAddSite) {
       setNewSiteMarker({
@@ -213,7 +208,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         pitch: 0,
         zoom: 11,
       });
-      return
+      return;
     }
     await Geolocation.getCurrentPosition(
       (position: {
@@ -251,6 +246,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     );
   }, [getSites]);
 
+  const refreshMap = useCallback(async () => {
+    setMapViewKey(Math.floor(Math.random() * 100));
+    setMarkers([]);
+    markerDeselected();
+    await clearTemporaryNewSites();
+    await getUnsyncedData();
+    await getSites();
+    watchLocation();
+  }, [getSites, watchLocation]);
+
   const addSiteVisit = React.useMemo(
     () => (moduleId: number) => {
       props.navigation.navigate({
@@ -258,7 +263,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         params: {
           sitePk: selectedSite.id,
           modulePk: moduleId,
-          onBackToMap: () => refreshMap(),
+          onBack: () => refreshMap(),
         },
         merge: true,
       });
@@ -271,6 +276,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       name: 'SASSForm',
       params: {
         sitePk: selectedSite.id,
+        onBack: () => refreshMap(),
       },
     });
   };
@@ -588,6 +594,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       <View style={styles.MAP_VIEW_CONTAINER}>
         <MapView
           // @ts-ignore
+          key={mapViewKey}
           ref={mapViewRef}
           onRegionChange={onRegionChange}
           followsUserLocation

@@ -220,7 +220,7 @@ export const SassFormScreen: React.FunctionComponent<
           icon: 'chevron-left',
           type: 'font-awesome',
           color: '#fff',
-          onPress: () => props.navigation.goBack(),
+          onPress: goToPreviousScreen,
         }}
         centerComponent={{
           text: route.params.title ? route.params.title : 'Add SASS Record',
