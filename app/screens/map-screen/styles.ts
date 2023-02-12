@@ -5,6 +5,7 @@ import {
   TextStyle,
   Dimensions,
 } from 'react-native';
+import { spacing } from "../../theme/spacing"
 
 const ACTIVITY_INDICATOR: ViewStyle = {
   top: 10,
@@ -114,7 +115,7 @@ const MID_BOTTOM_CONTENTS: ViewStyle = {
   alignItems: 'center',
   alignContent: 'center',
   backgroundColor: 'white',
-  height: 120,
+  paddingBottom: spacing[5],
   width: '80%',
   borderRadius: 5,
 };
