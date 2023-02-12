@@ -544,7 +544,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               </View>
 
               {/* Abiotic */}
-              <Text style={styles.LABEL}>Abiotic</Text>
+              <Text style={styles.REQUIRED_LABEL}>Add abiotic data</Text>
               <AbioticForm
                 abioticData={abioticData}
                 onChange={_abioticData => setAbioticData(_abioticData)}
