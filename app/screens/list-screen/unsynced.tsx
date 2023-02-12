@@ -69,6 +69,18 @@ const ACTION_BUTTON: ViewStyle = {
   marginRight: 10,
 };
 
+const FOOTER_STYLE: ViewStyle = {
+  position: 'absolute',
+  left: 0,
+  bottom: 0,
+  width: '100%',
+};
+
+const FOOTER_BUTTON_CONTAINER: ViewStyle = {
+  padding: 10,
+  backgroundColor: '#EEEEEE',
+};
+
 function UnsyncedItem(props: UnsyncedItemInterface) {
   return (
     <View style={ITEM_CONTAINER}>
@@ -240,22 +252,46 @@ export const UnsyncedScreen: React.FunctionComponent<
   };
 
   const goToPreviousScreen = React.useMemo(
-    () => () => {
-      props.navigation.pop();
-      route.params.onBack();
-    },
+    () =>
+      async (sync: boolean = false) => {
+        props.navigation.pop();
+        await route.params.onBack();
+        if (sync) {
+          await route.params.syncRecord();
+        }
+      },
     [props.navigation, route.params],
   );
 
+  const handleClickSync = () => {
+    Alert.alert(
+      'Sync Records',
+      'Are you sure you want to sync these records?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Sync',
+          onPress: () => {
+            goToPreviousScreen(true);
+          },
+        },
+      ],
+    );
+  };
+
   return (
-    <View>
+    <View style={{minHeight: '100%'}}>
       <Header
         placement="center"
         leftComponent={{
           icon: 'chevron-left',
           type: 'font-awesome',
           color: '#fff',
-          onPress: goToPreviousScreen,
+          onPress: () => goToPreviousScreen(false),
         }}
         centerComponent={{
           text: 'Unsynced Data',
@@ -278,6 +314,16 @@ export const UnsyncedScreen: React.FunctionComponent<
           />
         ))}
       </ScrollView>
+      <View style={FOOTER_STYLE}>
+        <View style={FOOTER_BUTTON_CONTAINER}>
+          <Button
+            disabled={unsynced.length == 0}
+            color={'warning'}
+            onPress={handleClickSync}>
+            Sync Records
+          </Button>
+        </View>
+      </View>
     </View>
   );
 };

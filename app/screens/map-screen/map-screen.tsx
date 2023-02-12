@@ -390,8 +390,19 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     return await getUnsyncedData();
   };
 
-  const syncData = async () => {
+  const syncData = async (force: boolean = false) => {
     if (isSyncing) {
+      return;
+    }
+    if (unsyncedData.length > 0 && !force) {
+      props.navigation.navigate({
+        name: 'UnsyncedList',
+        params: {
+          onBack: () => refreshMap(),
+          syncRecord: () => syncData(true),
+        },
+        merge: true,
+      });
       return;
     }
     const isConnected = await checkConnection();
