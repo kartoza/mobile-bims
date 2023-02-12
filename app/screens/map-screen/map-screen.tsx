@@ -45,6 +45,7 @@ import {
 } from '../../models/sass/sass.store';
 import {AbioticApi} from '../../services/api/abiotic-api';
 import {saveAbioticData} from '../../models/abiotic/abiotic.store';
+import { spacing } from "../../theme/spacing"
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -701,26 +702,34 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 : selectedSite.description}{' '}
             </Text>
             <View style={{flexDirection: 'row'}}>
-              <Button
-                title="Add Record"
-                type="outline"
-                raised
-                buttonStyle={styles.MID_BOTTOM_BUTTON}
-                titleStyle={{color: '#ffffff'}}
-                containerStyle={{width: '40%'}}
-                onPress={() => {
-                  addRecordClicked();
-                }}
-              />
-              <Button
-                title="Add SASS"
-                type="outline"
-                raised
-                buttonStyle={styles.SASS_BUTTON}
-                titleStyle={{color: '#ffffff'}}
-                containerStyle={{width: '40%', marginLeft: 10}}
-                onPress={() => addSassClicked()}
-              />
+              <View style={{width: '40%', display: 'flex', flexDirection: 'column'}}>
+                {taxonGroups
+                  .filter((taxonGroup: any) => !taxonGroup.name.toLowerCase().includes('algae') && !taxonGroup.name.toLowerCase().includes('odonate') && !taxonGroup.name.toLowerCase().includes('invert'))
+                  .map(
+                    (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
+                      <Button
+                        key={taxonGroup.id}
+                        title={'Add ' + taxonGroup.name}
+                        type="outline"
+                        raised
+                        buttonStyle={styles.MID_BOTTOM_BUTTON}
+                        titleStyle={{color: '#ffffff'}}
+                        containerStyle={{width: '100%', marginBottom: spacing[2]}}
+                        onPress={() => addSiteVisit(taxonGroup.id as number)}
+                      />
+                    ),
+                  )}
+              </View>
+              <View style={{width: '40%', marginLeft: 10}}>
+                <Button
+                  title="Add SASS"
+                  type="outline"
+                  raised
+                  buttonStyle={styles.SASS_BUTTON}
+                  titleStyle={{color: '#ffffff'}}
+                  onPress={() => addSassClicked()}
+                />
+              </View>
               {selectedSite.newData ? (
                 <Button
                   title="Delete"
@@ -731,7 +740,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     {backgroundColor: 'rgb(234, 53, 53)'},
                   ]}
                   titleStyle={{color: '#ffffff'}}
-                  containerStyle={{width: '40%', marginLeft: 10}}
+                  containerStyle={{width: '40%', marginLeft: 10, height: 10}}
                   onPress={() => {}}
                 />
               ) : null}
@@ -754,21 +763,23 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             <Text style={styles.MODULE_TEXT}>Select Biodiversity Module</Text>
           </View>
           <View style={styles.MODULE_BUTTONS_CONTAINER}>
-            {taxonGroups.map(
-              (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
-                <View style={styles.MODULE_BUTTONS} key={taxonGroup.id}>
-                  <Button
-                    title={taxonGroup.name}
-                    type="outline"
-                    raised
-                    buttonStyle={styles.MID_BOTTOM_BUTTON}
-                    titleStyle={{color: '#ffffff'}}
-                    containerStyle={{width: '100%'}}
-                    onPress={() => addSiteVisit(taxonGroup.id as number)}
-                  />
-                </View>
-              ),
-            )}
+            {taxonGroups
+              .filter((taxonGroup: any) => !taxonGroup.name.toLowerCase().includes('algae') && !taxonGroup.name.toLowerCase().includes('odonate') && !taxonGroup.name.toLowerCase().includes('invert'))
+              .map(
+                (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
+                  <View style={styles.MODULE_BUTTONS} key={taxonGroup.id}>
+                    <Button
+                      title={taxonGroup.name}
+                      type="outline"
+                      raised
+                      buttonStyle={styles.MID_BOTTOM_BUTTON}
+                      titleStyle={{color: '#ffffff'}}
+                      containerStyle={{width: '100%'}}
+                      onPress={() => addSiteVisit(taxonGroup.id as number)}
+                    />
+                  </View>
+                ),
+              )}
           </View>
         </View>
       ) : null}

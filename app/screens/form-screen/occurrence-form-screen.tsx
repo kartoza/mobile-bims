@@ -44,6 +44,7 @@ import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
+import { spacing } from "../../theme/spacing"
 
 const keyboardStyles = StyleSheet.create({
   container: {
@@ -478,31 +479,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   ))}
                 </Picker>
               </View>
-              {/* Source References */}
-              <Text style={styles.LABEL}>Source Reference</Text>
-              <View style={styles.TEXT_INPUT_STYLE}>
-                <Picker
-                  selectedValue={sourceReference}
-                  numberOfLines={4}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
-                    setSourceReference(itemValue);
-                    values.sourceReference = itemValue;
-                  }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
-                  {sourceReferenceOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.label()}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
-              </View>
+
               {/* Capture Image */}
               <View style={{marginTop: 10, marginBottom: 10}}>
                 <Text style={styles.LABEL}>Site Image</Text>
@@ -542,13 +519,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   </View>
                 ) : null}
               </View>
-
-              {/* Abiotic */}
-              <Text style={styles.REQUIRED_LABEL}>Add abiotic data</Text>
-              <AbioticForm
-                abioticData={abioticData}
-                onChange={_abioticData => setAbioticData(_abioticData)}
-              />
 
               {/* Sampling Method */}
               <View>
@@ -611,6 +581,39 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     </TouchableOpacity>
                   ))}
                 </View>
+              </View>
+
+              {/* Abiotic */}
+              <Text style={styles.REQUIRED_LABEL}>Add abiotic data</Text>
+              <AbioticForm
+                abioticData={abioticData}
+                onChange={_abioticData => setAbioticData(_abioticData)}
+              />
+
+              {/* Source References */}
+              <Text style={styles.LABEL}>Source Reference</Text>
+              <View style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
+                <Picker
+                  selectedValue={sourceReference}
+                  numberOfLines={4}
+                  style={styles.PICKER_INPUT_STYLE}
+                  onValueChange={itemValue => {
+                    setSourceReference(itemValue);
+                    values.sourceReference = itemValue;
+                  }}>
+                  <Picker.Item
+                    key="not_specified"
+                    label="Not specified"
+                    value=""
+                  />
+                  {sourceReferenceOptions.map(option => (
+                    <Picker.Item
+                      key={option.id}
+                      label={option.label()}
+                      value={option.id}
+                    />
+                  ))}
+                </Picker>
               </View>
 
               <View style={{marginBottom: 100}}>
