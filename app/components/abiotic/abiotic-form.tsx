@@ -22,6 +22,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
   const [abioticOptionList, setAbioticOptionList] = useState<Abiotic[]>([]);
   const [selectedAbiotic, setSelectedAbiotic] = useState<string>('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
+  const [isAddAbiotic, setIsAddAbiotic] = useState<boolean>(false);
 
   useEffect(() => {
     if (props.abioticData && abioticData.length === 0) {
@@ -73,15 +74,8 @@ export default function AbioticForm(props: AbioticFormInterface) {
   }, [abioticData, abioticOptionList]);
 
   const addAbiotic = () => {
-    abioticOptions.map((abioticOption: Abiotic) => {
-      if (abioticOption.id === parseInt(selectedAbiotic)) {
-        const newAbioticData = {
-          abiotic: abioticOption,
-          value: '',
-        };
-        setAbioticData([...abioticData, newAbioticData]);
-      }
-    });
+    setIsAddAbiotic(true);
+
   };
 
   const deleteAbiotic = (abioticId: number) => {
@@ -92,34 +86,49 @@ export default function AbioticForm(props: AbioticFormInterface) {
 
   return (
     <View>
-      <View style={styles.TEXT_INPUT_STYLE}>
-        <Picker
-          selectedValue={selectedAbiotic}
-          style={styles.PICKER_INPUT_STYLE}
-          onValueChange={itemValue => {
-            setSelectedAbiotic(itemValue);
+      {isAddAbiotic ? (
+        <View style={styles.TEXT_INPUT_STYLE}>
+          <Picker
+            selectedValue={selectedAbiotic}
+            style={styles.PICKER_INPUT_STYLE}
+            onValueChange={itemValue => {
+              if (itemValue) {
+                setSelectedAbiotic(itemValue);
+                abioticOptions.map((abioticOption: Abiotic) => {
+                  if (abioticOption.id === parseInt(itemValue)) {
+                    const newAbioticData = {
+                      abiotic: abioticOption,
+                      value: '',
+                    };
+                    setIsAddAbiotic(false);
+                    setAbioticData([...abioticData, newAbioticData]);
+                  }
+                });
+              }
+            }}>
+            <Picker.Item key="not_specified" label="Not specified" value="" />
+            {abioticOptions.map(abioticOption => (
+              <Picker.Item
+                key={abioticOption.id}
+                label={abioticOption.description}
+                value={abioticOption.id}
+              />
+            ))}
+          </Picker>
+        </View>
+      ) : (
+        <Button
+          onPress={addAbiotic}
+          style={{
+            width: '100%',
+            backgroundColor: '#3ca290',
+          }}
+          labelStyle={{
+            color: '#ffffff',
           }}>
-          <Picker.Item key="not_specified" label="Not specified" value="" />
-          {abioticOptions.map(abioticOption => (
-            <Picker.Item
-              key={abioticOption.id}
-              label={abioticOption.description}
-              value={abioticOption.id}
-            />
-          ))}
-        </Picker>
-      </View>
-      <Button
-        onPress={addAbiotic}
-        style={{
-          width: '100%',
-          backgroundColor: '#3ca290',
-        }}
-        labelStyle={{
-          color: '#ffffff',
-        }}>
-        Add Abiotic
-      </Button>
+          Add Abiotic
+        </Button>
+      )}
       <View>
         {abioticData.map(abioticSingleData => (
           <TextInput
