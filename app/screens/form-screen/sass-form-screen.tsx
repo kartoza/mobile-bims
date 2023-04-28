@@ -45,7 +45,7 @@ function BiotopeRadioButtons(props: BiotopeRadioButtonsInterface) {
   }, [props.value]);
 
   return (
-    <View style={{marginTop: 10, height: 50}}>
+    <View style={{marginTop: 10, height: 50, marginBottom: 5}}>
       <View>
         <Text>{props.label}</Text>
         <RadioButton.Group
@@ -57,18 +57,30 @@ function BiotopeRadioButtons(props: BiotopeRadioButtonsInterface) {
           }}
           value={biotopeValue}>
           <View style={styles.BIOTOPE_CONTAINER}>
-            <Text style={styles.BIOTOPE_RADIO_LABEL}>0</Text>
-            <RadioButton value={'0'} />
-            <Text style={styles.BIOTOPE_RADIO_LABEL_2}>1</Text>
-            <RadioButton value={'1'} />
-            <Text style={styles.BIOTOPE_RADIO_LABEL_2}>2</Text>
-            <RadioButton value={'2'} />
-            <Text style={styles.BIOTOPE_RADIO_LABEL_2}>3</Text>
-            <RadioButton value={'3'} />
-            <Text style={styles.BIOTOPE_RADIO_LABEL_2}>4</Text>
-            <RadioButton value={'4'} />
-            <Text style={styles.BIOTOPE_RADIO_LABEL_2}>5</Text>
-            <RadioButton value={'5'} />
+            <View style={styles.BIOTOPE_ROW}>
+              <RadioButton value={'0'} />
+              <Text style={styles.BIOTOPE_RADIO_LABEL}>0</Text>
+            </View>
+            <View style={styles.BIOTOPE_ROW}>
+              <RadioButton value={'1'} />
+              <Text style={styles.BIOTOPE_RADIO_LABEL}>1</Text>
+            </View>
+            <View style={styles.BIOTOPE_ROW}>
+              <RadioButton value={'2'} />
+              <Text style={styles.BIOTOPE_RADIO_LABEL}>2</Text>
+            </View>
+            <View style={styles.BIOTOPE_ROW}>
+              <RadioButton value={'3'} />
+              <Text style={styles.BIOTOPE_RADIO_LABEL}>3</Text>
+            </View>
+            <View style={styles.BIOTOPE_ROW}>
+              <RadioButton value={'4'} />
+              <Text style={styles.BIOTOPE_RADIO_LABEL}>4</Text>
+            </View>
+            <View style={styles.BIOTOPE_ROW}>
+              <RadioButton value={'5'} />
+              <Text style={styles.BIOTOPE_RADIO_LABEL}>5</Text>
+            </View>
           </View>
         </RadioButton.Group>
       </View>

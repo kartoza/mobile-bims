@@ -1,8 +1,24 @@
 import React, {useEffect, useState} from 'react';
-import {Text, View} from 'react-native';
+import {Text, View, StyleSheet, Platform} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {styles} from '../../screens/form-screen/styles';
-import {TextInput} from "react-native-paper";
+
+const pickerStyles = StyleSheet.create({
+  picker: {
+    ...Platform.select({
+      ios: {
+        backgroundColor: 'transparent',
+        paddingRight: 10, // Adjust this value to align the text
+      },
+      android: {
+        width: 100,
+        marginLeft: 60,
+        height: 10,
+        marginTop: 10
+      },
+    }),
+  },
+});
 
 interface SASSPickerInterface {
   label?: string;
@@ -20,14 +36,15 @@ function SASSPicker(props: SASSPickerInterface) {
     }
   }, [props.value]);
   return (
-    <View>
+    <View style={{ display: 'flex' }}>
       {props.label ? (
         <Text
           style={{
-            fontSize: 11,
+            fontSize: 9,
             fontWeight: 'bold',
             paddingLeft: 5,
             paddingTop: 5,
+            height: 20,
           }}>
           {props.label}
         </Text>
@@ -35,40 +52,32 @@ function SASSPicker(props: SASSPickerInterface) {
       <View
         style={{
           width: '100%',
-          height: 70,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
+          paddingTop: 5,
         }}>
-        <Text
-          style={{
-            width: '100%',
-            paddingLeft: '50%',
-            height: 65,
-            fontSize: 18,
-            color: '#000000',
-          }}>
-          {dropdownValue}
-        </Text>
+        <Picker
+          style={pickerStyles.picker}
+          dropdownIconColor={'#FFFFFF'}
+          dropdownIconRippleColor={'#FFFFFF'}
+          onValueChange={(newValue: string) => {
+            if (props.onValueChange) {
+              props.onValueChange(newValue);
+            }
+            setDropdownValue(newValue);
+          }}
+          selectedValue={dropdownValue}>
+          <Picker.Item label={''} value={''} />
+          {SASSTaxaRatings.map(sassTaxaRating => (
+            <Picker.Item
+              label={sassTaxaRating}
+              value={sassTaxaRating}
+              key={sassTaxaRating}
+            />
+          ))}
+        </Picker>
       </View>
-      <Picker
-        style={{position: 'absolute', top: 0, width: 200, height: 200}}
-        onValueChange={(newValue: string) => {
-          if (props.onValueChange) {
-            props.onValueChange(newValue);
-          }
-          setDropdownValue(newValue);
-        }}
-        selectedValue={dropdownValue}>
-        <Picker.Item label={''} value={''} />
-        {SASSTaxaRatings.map(sassTaxaRating => (
-          <Picker.Item
-            label={sassTaxaRating}
-            value={sassTaxaRating}
-            key={sassTaxaRating}
-          />
-        ))}
-      </Picker>
     </View>
   );
 }
