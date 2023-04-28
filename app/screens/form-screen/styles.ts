@@ -18,16 +18,21 @@ const BIOTOPE_SAMPLED_CONTAINER: ViewStyle = {
 const BIOTOPE_CONTAINER: ViewStyle = {
   display: 'flex',
   flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-evenly',
+  marginBottom: 10,
+  marginLeft: -15,
+};
+
+const BIOTOPE_ROW: ViewStyle = {
+  display: 'flex',
+  alignItems: 'center',
 };
 
 const BIOTOPE_RADIO_LABEL: TextStyle = {
-  marginTop: 7,
+  marginTop: -10,
+  fontSize: 11,
   fontWeight: 'bold',
-};
-
-const BIOTOPE_RADIO_LABEL_2: TextStyle = {
-  ...BIOTOPE_RADIO_LABEL,
-  marginLeft: 12,
 };
 
 const FORM_HEADER: TextStyle = {
@@ -128,7 +133,7 @@ const MULTIPLE_INPUT_STYLE: ViewStyle = {
 
 const HEADER_CONTAINER: ViewStyle = {
   backgroundColor: '#005198',
-  height: 120,
+  height: 80,
   marginTop: Platform.OS === 'ios' ? -25 : 0,
 };
 
@@ -200,7 +205,6 @@ const SASS_TAXA_FORM: ViewStyle = {
 const SASS_TAXA_DROPDOWN: ViewStyle = {
   maxWidth: '33.33%',
   borderWidth: 1,
-  borderRadius: 5,
   borderColor: '#cccccc',
   width: '33.33%',
 };
@@ -210,8 +214,8 @@ export const styles = StyleSheet.create({
   AUTOCOMPLETE_LIST,
   AUTOCOMPLETE_LIST_TEXT,
   BIOTOPE_CONTAINER,
+  BIOTOPE_ROW,
   BIOTOPE_RADIO_LABEL,
-  BIOTOPE_RADIO_LABEL_2,
   BIOTOPE_SAMPLED_CONTAINER,
   CHART_CONTAINER,
   CHART_LABEL,
