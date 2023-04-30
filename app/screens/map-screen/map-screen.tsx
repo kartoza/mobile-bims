@@ -7,7 +7,16 @@ import {SearchBar, Button, Icon, Badge} from '@rneui/themed';
 import {PERMISSIONS, request} from 'react-native-permissions';
 import {View, Text, ActivityIndicator, Modal, Alert} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
-import MapView, {Details, Marker, Region} from 'react-native-maps';
+import MapView, {
+  Details,
+  Marker,
+  Region,
+  UrlTile,
+  WMSTile,
+  PROVIDER_GOOGLE,
+  PROVIDER_DEFAULT,
+  LocalTile,
+} from 'react-native-maps';
 import {styles} from './styles';
 import {
   postLocationSite,
@@ -45,7 +54,9 @@ import {
 } from '../../models/sass/sass.store';
 import {AbioticApi} from '../../services/api/abiotic-api';
 import {saveAbioticData} from '../../models/abiotic/abiotic.store';
-import { spacing } from "../../theme/spacing"
+import {spacing} from '../../theme/spacing';
+import {downloadTiles, riverLayer} from '../../utils/offline-map';
+import RNFS from 'react-native-fs';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -60,6 +71,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [markers, setMarkers] = useState<any[]>([]);
   const [newSiteMarker, setNewSiteMarker] = useState<any>(null);
   const [search, setSearch] = useState('');
+  const [region, setRegion] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
@@ -75,9 +87,40 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [selectedMarker, setSelectedMarker] = useState<any | null>(null);
   const [taxonGroups, setTaxonGroups] = useState<any>([]);
   const [showBiodiversityModule, setShowBiodiversityModule] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean | null>(false);
+  const [downloadLayerVisible, setDownloadLayerVisible] =
+    useState<boolean>(false);
   const [mapViewKey, setMapViewKey] = useState<number>(
     Math.floor(Math.random() * 100),
   );
+
+  const getZoomLevel = (longitudeDelta: number) => {
+    const angle = 360 / longitudeDelta;
+    return Math.round(Math.log(angle) / Math.log(2));
+  };
+
+  const createSatelliteWMSUrl = (x: number, y: number, z: number) => {
+    const bbox = [
+      (x * 360) / Math.pow(2, z) - 180,
+      (-Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / Math.pow(2, z)))) * 180) /
+        Math.PI,
+      ((x + 1) * 360) / Math.pow(2, z) - 180,
+      (-Math.atan(Math.sinh(Math.PI * (1 - (2 * (y + 1)) / Math.pow(2, z)))) *
+        180) /
+        Math.PI,
+    ].join(',');
+
+    const baseUrl = 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
+    const layer = 'MODIS_Terra_CorrectedReflectance_TrueColor';
+    const date = '2022-08-01'; // Replace with the desired date in the format YYYY-MM-DD
+    const format = 'image/jpeg';
+    const version = '1.3.0';
+    const crs = 'CRS:84';
+    const width = '256';
+    const height = '256';
+
+    return `${baseUrl}?SERVICE=WMS&REQUEST=GetMap&LAYERS=${layer}&VERSION=${version}&CRS=${crs}&BBOX=${bbox}&WIDTH=${width}&HEIGHT=${height}&FORMAT=${format}&TIME=${date}`;
+  };
 
   const drawMarkers = (data: any[]) => {
     let _markers: any[];
@@ -156,6 +199,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   const onRegionChange = (region: Region, details: Details) => {
     // console.log(region, details);
+    setRegion(region);
   };
 
   const markerSelected = (marker: React.SetStateAction<any>) => {
@@ -506,6 +550,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   useEffect(() => {
     let isMounted = true;
+    // Subscribe to network status changes
+    const unsubscribe = NetInfo.addEventListener(netInfoState => {
+      setIsConnected(netInfoState.isConnected);
+    });
+
     const setup = async () => {
       const token = await load('token');
       const _taxonGroups = await loadTaxonGroups();
@@ -539,8 +588,27 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         SUBS = null;
       }
       isMounted = false;
+      unsubscribe();
     };
   }, [props.navigation, watchLocation]);
+
+  const downloadMap = async () => {
+    const currentRegion = region;
+    setIsLoading(true);
+    await downloadTiles(
+      currentRegion,
+      getZoomLevel(currentRegion.longitudeDelta),
+    );
+    setMapViewKey(Math.floor(Math.random() * 100));
+    setTimeout(() => {
+      if (mapViewRef && mapViewRef.current) {
+        // @ts-ignore
+        mapViewRef.current.animateToRegion(currentRegion, 1000);
+      }
+      setIsLoading(false);
+      setDownloadLayerVisible(false);
+    }, 500);
+  };
 
   // @ts-ignore
   return (
@@ -549,6 +617,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         visible={overlayVisible}
         navigation={props.navigation}
         refreshMap={refreshMap}
+        downloadRiverClicked={() => setDownloadLayerVisible(true)}
       />
 
       <View style={styles.SEARCH_BAR_CONTAINER}>
@@ -607,6 +676,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         <MapView
           // @ts-ignore
           key={mapViewKey}
+          provider={PROVIDER_DEFAULT}
           ref={mapViewRef}
           onRegionChange={onRegionChange}
           followsUserLocation
@@ -618,6 +688,14 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           onPress={(e: {nativeEvent: {coordinate: any}}) => {
             mapSelected(e).catch(error => console.log(error));
           }}>
+          {!isConnected ? (
+            <LocalTile
+              pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
+              tileSize={256}
+            />
+          ) : (
+            <WMSTile urlTemplate={riverLayer} zIndex={99} tileSize={256} />
+          )}
           {markers.map(marker => {
             return (
               <Marker
@@ -675,6 +753,37 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           </View>
         </View>
       </Modal>
+      <View style={styles.TOP_LEFT_CONTAINER}>
+        <Icon
+          name="circle"
+          type="font-awesome"
+          size={10}
+          color={isConnected ? '#42D417' : '#AFAFAF'}
+        />
+        <Text style={styles.ONLINE_STATUS}>
+          {isConnected ? 'Online' : 'Offline'}
+        </Text>
+      </View>
+      {downloadLayerVisible ? (
+        <View style={styles.MID_BOTTOM_CONTAINER}>
+          <Button
+            color={'#d5d23e'}
+            icon={
+              <Icon name="close" type="font-awesome" size={23} color="white" />
+            }
+            onPress={() => setDownloadLayerVisible(false)}
+          />
+          <Button
+            title={'Download River'}
+            containerStyle={{
+              backgroundColor: 'rgb(225, 232, 238)',
+              justifyContent: 'center',
+            }}
+            type="clear"
+            onPress={() => downloadMap()}
+          />
+        </View>
+      ) : null}
 
       {isSyncing ? (
         <View style={styles.MID_BOTTOM_CONTAINER}>
@@ -702,11 +811,24 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 : selectedSite.description}{' '}
             </Text>
             <View style={{flexDirection: 'row'}}>
-              <View style={{width: '40%', display: 'flex', flexDirection: 'column'}}>
+              <View
+                style={{
+                  width: '40%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}>
                 {taxonGroups
-                  .filter((taxonGroup: any) => !taxonGroup.name.toLowerCase().includes('algae') && !taxonGroup.name.toLowerCase().includes('odonate') && !taxonGroup.name.toLowerCase().includes('invert'))
+                  .filter(
+                    (taxonGroup: any) =>
+                      !taxonGroup.name.toLowerCase().includes('algae') &&
+                      !taxonGroup.name.toLowerCase().includes('odonate') &&
+                      !taxonGroup.name.toLowerCase().includes('invert'),
+                  )
                   .map(
-                    (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
+                    (taxonGroup: {
+                      id: React.Key | null | undefined;
+                      name: any;
+                    }) => (
                       <Button
                         key={taxonGroup.id}
                         title={'Add ' + taxonGroup.name}
@@ -714,7 +836,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                         raised
                         buttonStyle={styles.MID_BOTTOM_BUTTON}
                         titleStyle={{color: '#ffffff'}}
-                        containerStyle={{width: '100%', marginBottom: spacing[2]}}
+                        containerStyle={{
+                          width: '100%',
+                          marginBottom: spacing[2],
+                        }}
                         onPress={() => addSiteVisit(taxonGroup.id as number)}
                       />
                     ),
@@ -764,7 +889,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           </View>
           <View style={styles.MODULE_BUTTONS_CONTAINER}>
             {taxonGroups
-              .filter((taxonGroup: any) => !taxonGroup.name.toLowerCase().includes('algae') && !taxonGroup.name.toLowerCase().includes('odonate') && !taxonGroup.name.toLowerCase().includes('invert'))
+              .filter(
+                (taxonGroup: any) =>
+                  !taxonGroup.name.toLowerCase().includes('algae') &&
+                  !taxonGroup.name.toLowerCase().includes('odonate') &&
+                  !taxonGroup.name.toLowerCase().includes('invert'),
+              )
               .map(
                 (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
                   <View style={styles.MODULE_BUTTONS} key={taxonGroup.id}>

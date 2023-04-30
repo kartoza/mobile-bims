@@ -8,12 +8,13 @@
     "start": "react-native start",
     "upgrade": "react-native upgrade",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "postinstall": "node scripts/rn-fetch-blob_warning.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.17.7",
     "@react-native-community/datetimepicker": "^6.2.0",
-    "@react-native-community/netinfo": "^9.3.0",
+    "@react-native-community/netinfo": "^9.3.9",
     "@react-native-picker/picker": "github:FonDorn/picker#chore/react18",
     "@react-navigation/native": "^6.1.2",
     "@react-navigation/native-stack": "^6.9.8",
@@ -30,6 +31,7 @@
     "react-native-autocomplete-input": "^5.2.0",
     "react-native-camera": "github:dimasciput/react-native-camera#18",
     "react-native-config": "^1.4.6",
+    "react-native-fs": "^2.20.0",
     "react-native-geolocation-service": "^5.3.0",
     "react-native-gesture-handler": "^2.5.0",
     "react-native-maps": "^1.4.0",
@@ -39,7 +41,8 @@
     "react-native-safe-area-context": "^4.3.1",
     "react-native-screens": "^3.15.0",
     "react-native-vector-icons": "^9.2.0",
-    "react-native-vector-image": "^0.3.3"
+    "react-native-vector-image": "^0.3.3",
+    "rn-fetch-blob": "^0.12.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
