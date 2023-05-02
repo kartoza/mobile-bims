@@ -98,6 +98,27 @@ const MID_BOTTOM_CONTAINER: ViewStyle = {
   flexDirection: 'row-reverse',
 };
 
+const TOP_LEFT_CONTAINER: ViewStyle = {
+  position: 'absolute',
+  width: 50,
+  height: 18,
+  borderRadius: 3,
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'flex-start',
+  alignItems: 'center',
+  marginTop: 70,
+  marginLeft: 5,
+  paddingLeft: 5,
+  backgroundColor: 'rgba(0,0,0,0.25)',
+};
+
+const ONLINE_STATUS: TextStyle = {
+  fontSize: 10,
+  marginLeft: 3,
+  color: '#FFF',
+};
+
 const BOTTOM_CONTAINER: ViewStyle = {
   alignItems: 'center',
   alignContent: 'center',
@@ -184,6 +205,8 @@ export const styles = StyleSheet.create({
   MID_BOTTOM_CONTENTS,
   MID_BOTTOM_SUB_TEXT,
   MID_BOTTOM_TEXT,
+  TOP_LEFT_CONTAINER,
+  ONLINE_STATUS,
   MODAL_BACKGROUND,
   MODAL_TEXT,
   MODULE_BUTTONS,
