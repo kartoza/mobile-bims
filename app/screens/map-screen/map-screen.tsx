@@ -57,6 +57,7 @@ import {saveAbioticData} from '../../models/abiotic/abiotic.store';
 import {spacing} from '../../theme/spacing';
 import {downloadTiles, riverLayer} from '../../utils/offline-map';
 import RNFS from 'react-native-fs';
+import {color} from '../../theme/color';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -594,11 +595,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   const downloadMap = async () => {
     const currentRegion = region;
+    const zoomLevel = getZoomLevel(currentRegion.longitudeDelta);
+    if (zoomLevel <= 11) {
+      Alert.alert(
+        'Zoom Level Error',
+        'Zoom level too high. Please zoom in further.',
+      );
+      return;
+    }
     setIsLoading(true);
-    await downloadTiles(
-      currentRegion,
-      getZoomLevel(currentRegion.longitudeDelta),
-    );
+    await downloadTiles(currentRegion, zoomLevel);
     setMapViewKey(Math.floor(Math.random() * 100));
     setTimeout(() => {
       if (mapViewRef && mapViewRef.current) {
@@ -664,15 +670,15 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           }}
           icon={
             <Icon
-              name="user-circle-o"
+              name="bars"
               type="font-awesome"
-              size={35}
+              size={32}
               color="rgb(138, 151, 161)"
             />
           }
         />
       </View>
-      <View style={styles.MAP_VIEW_CONTAINER}>
+      <View style={[styles.MAP_VIEW_CONTAINER, downloadLayerVisible ? styles.MAP_VIEW_DOWNLOAD_RIVER : {}]}>
         <MapView
           // @ts-ignore
           key={mapViewKey}
@@ -764,25 +770,38 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           {isConnected ? 'Online' : 'Offline'}
         </Text>
       </View>
+
       {downloadLayerVisible ? (
-        <View style={styles.MID_BOTTOM_CONTAINER}>
-          <Button
-            color={'#d5d23e'}
-            icon={
-              <Icon name="close" type="font-awesome" size={23} color="white" />
-            }
-            onPress={() => setDownloadLayerVisible(false)}
-          />
-          <Button
-            title={'Download River'}
-            containerStyle={{
-              backgroundColor: 'rgb(225, 232, 238)',
-              justifyContent: 'center',
-            }}
-            type="clear"
-            onPress={() => downloadMap()}
-          />
-        </View>
+        <>
+          <View style={styles.TOP_CENTER_CONTAINER}>
+            <Text style={styles.TOP_CENTER_TEXT}>
+              Zoom into desired region to download river layer for offline use.
+            </Text>
+          </View>
+          <View style={styles.MID_BOTTOM_CONTAINER}>
+            <Button
+              color={color.primaryFBIS}
+              icon={
+                <Icon
+                  name="close"
+                  type="font-awesome"
+                  size={23}
+                  color="white"
+                />
+              }
+              onPress={() => setDownloadLayerVisible(false)}
+            />
+            <Button
+              title={'Download River'}
+              containerStyle={{
+                backgroundColor: 'rgb(225, 232, 238)',
+                justifyContent: 'center',
+              }}
+              type="clear"
+              onPress={() => downloadMap()}
+            />
+          </View>
+        </>
       ) : null}
 
       {isSyncing ? (

@@ -6,6 +6,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { spacing } from "../../theme/spacing"
+import { color } from "../../theme/color"
 
 const ACTIVITY_INDICATOR: ViewStyle = {
   top: 10,
@@ -37,9 +38,13 @@ const SEARCH_BAR_CONTAINER: ViewStyle = {
   height: 65,
   flexDirection: 'row',
 };
+const MAP_VIEW_DOWNLOAD_RIVER: ViewStyle = {
+  borderColor: color.primaryFBIS,
+  borderWidth: 3,
+};
 const MAP_VIEW_CONTAINER: ViewStyle = {
   height:
-    Dimensions.get('window').height - (Platform.OS === 'ios' ? 100 : 60) - 65,
+    Dimensions.get('window').height - (Platform.OS === 'ios' ? 100 : 85) - 65,
 };
 const MAP: ViewStyle = {
   height: '100%',
@@ -57,8 +62,8 @@ const MODAL_BACKGROUND: ViewStyle = {
   justifyContent: 'space-around',
 };
 const LOCATE_ME_BUTTON: ViewStyle = {
-  borderColor: '#3ca290',
-  backgroundColor: '#3ca290',
+  borderColor: color.secondaryFBIS,
+  backgroundColor: color.secondaryFBIS,
   width: '50%',
   marginBottom: 20,
   height: '100%',
@@ -111,6 +116,28 @@ const TOP_LEFT_CONTAINER: ViewStyle = {
   marginLeft: 5,
   paddingLeft: 5,
   backgroundColor: 'rgba(0,0,0,0.25)',
+};
+
+const TOP_CENTER_CONTAINER: ViewStyle = {
+  position: 'absolute',
+  width: 200,
+  minHeight: 70,
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0,0,0,0.25)',
+  top: 0,
+  marginTop: 70,
+  borderRadius: 5,
+  alignSelf: 'center',
+  padding: 15,
+};
+
+const TOP_CENTER_TEXT: TextStyle = {
+  fontSize: 13,
+  color: '#FFF',
+  lineHeight: 16,
+  textAlign: 'center',
 };
 
 const ONLINE_STATUS: TextStyle = {
@@ -200,12 +227,15 @@ export const styles = StyleSheet.create({
   LOCATE_ME_CONTAINER,
   MAP,
   MAP_VIEW_CONTAINER,
+  MAP_VIEW_DOWNLOAD_RIVER,
   MID_BOTTOM_BUTTON,
   MID_BOTTOM_CONTAINER,
   MID_BOTTOM_CONTENTS,
   MID_BOTTOM_SUB_TEXT,
   MID_BOTTOM_TEXT,
   TOP_LEFT_CONTAINER,
+  TOP_CENTER_CONTAINER,
+  TOP_CENTER_TEXT,
   ONLINE_STATUS,
   MODAL_BACKGROUND,
   MODAL_TEXT,
