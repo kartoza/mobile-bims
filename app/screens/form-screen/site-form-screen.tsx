@@ -1,4 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
+import RNFS from "react-native-fs"
+
 {
   /* eslint-disable @typescript-eslint/no-unused-vars */
 }
@@ -10,9 +12,11 @@ import {Alert, ScrollView, View} from 'react-native';
 import {Button, Header} from '@rneui/base';
 import {styles} from './styles';
 import {Formik, isNaN} from 'formik';
-import MapView, {Marker} from 'react-native-maps';
+import MapView, {LocalTile, Marker, WMSTile} from 'react-native-maps';
 import {FormInput} from '../../components/form-input/form-input';
 import {LogBox} from 'react-native';
+import NetInfo from "@react-native-community/netinfo"
+import { riverLayer } from "../../utils/offline-map"
 
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
@@ -30,20 +34,29 @@ export const SiteFormScreen: React.FunctionComponent<
   // @ts-ignore
   const {route} = props;
   const [siteData, setSiteData] = useState({} as any);
-  const [editMode, setEditMode] = useState(true);
+  const [editMode, setEditMode] = useState(route.params.editMode);
   const [updatedSiteData, setUpdatedSiteData] = useState({} as any);
+  const [isConnected, setIsConnected] = useState<boolean | null>(false);
 
   const loadSiteData = useCallback(async () => {
     const _siteData = await getSiteByField('id', route.params.siteId);
     setUpdatedSiteData(_siteData);
     setSiteData(_siteData);
+    const unsubscribe = NetInfo.addEventListener(netInfoState => {
+      setIsConnected(netInfoState.isConnected);
+    });
+    return function cleanup() {
+      unsubscribe();
+    };
   }, [route.params.siteId]);
 
   const goToMapScreen = React.useMemo(
     () =>
       (siteId: Number | null = null) => {
         props.navigation.pop();
-        route.params.onBackToMap(siteId);
+        if (typeof route.params.onBackToMap !== 'undefined') {
+          route.params.onBackToMap(siteId);
+        }
       },
     [props.navigation, route.params],
   );
@@ -106,10 +119,6 @@ export const SiteFormScreen: React.FunctionComponent<
               <View style={{height: 200, marginTop: 20}}>
                 {siteData.longitude && siteData.latitude ? (
                   <MapView
-                    pitchEnabled={editMode}
-                    rotateEnabled={editMode}
-                    zoomEnabled={editMode}
-                    scrollEnabled={editMode}
                     mapType={'satellite'}
                     // @ts-ignore
                     ref={mapViewRef}
@@ -139,8 +148,21 @@ export const SiteFormScreen: React.FunctionComponent<
                         },
                       });
                     }}>
+                    {!isConnected ? (
+                      <LocalTile
+                        pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
+                        tileSize={256}
+                      />
+                    ) : (
+                      <WMSTile
+                        urlTemplate={riverLayer}
+                        zIndex={99}
+                        tileSize={256}
+                      />
+                    )}
                     {updatedSiteData.latitude && updatedSiteData.longitude ? (
                       <Marker
+                        pinColor={'gold'}
                         key={updatedSiteData.id}
                         title={'Site'}
                         coordinate={{
@@ -153,7 +175,7 @@ export const SiteFormScreen: React.FunctionComponent<
                 ) : null}
               </View>
               <FormInput
-                editable={true}
+                editable={editMode}
                 checkValue={(val: number) => {
                   if (val < -90 || val > 90) {
                     return 'Please enter value comprised between -90 and 90';
@@ -170,7 +192,7 @@ export const SiteFormScreen: React.FunctionComponent<
                 }
               />
               <FormInput
-                editable={true}
+                editable={editMode}
                 checkValue={(val: number) => {
                   if (val < -180 || val > 180) {
                     return 'Please enter value comprised between -90 and 90';
@@ -187,27 +209,31 @@ export const SiteFormScreen: React.FunctionComponent<
                 }
               />
               <FormInput
+                editable={editMode}
                 key="site_description"
                 title="Site Description"
                 onChange={(val: string) => formOnChange(val, 'description')}
                 value={updatedSiteData ? updatedSiteData.description : ''}
               />
               <FormInput
+                editable={editMode}
                 key="site_code"
                 title="Site Code (optional)"
                 onChange={(val: string) => formOnChange(val, 'siteCode')}
                 value={updatedSiteData ? updatedSiteData.siteCode : ''}
               />
-              <View style={{marginBottom: 20, marginTop: 20}}>
-                <Button
-                  title="Submit"
-                  buttonStyle={{
-                    width: '100%',
-                    backgroundColor: 'rgb(241, 137, 3)',
-                  }}
-                  onPress={() => submitForm()}
-                />
-              </View>
+              {editMode ? (
+                <View style={{marginBottom: 20, marginTop: 20}}>
+                  <Button
+                    title="Submit"
+                    buttonStyle={{
+                      width: '100%',
+                      backgroundColor: 'rgb(241, 137, 3)',
+                    }}
+                    onPress={() => submitForm()}
+                  />
+                </View>
+              ) : null}
             </View>
           )}
         </Formik>

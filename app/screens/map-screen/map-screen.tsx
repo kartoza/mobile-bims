@@ -1,11 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState, useEffect, createRef, useCallback} from 'react';
+import React, {
+  useState,
+  useEffect,
+  createRef,
+  useCallback,
+  useRef,
+} from 'react';
 import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {ParamListBase, useFocusEffect} from '@react-navigation/native';
 import {SearchBar, Button, Icon, Badge} from '@rneui/themed';
 import {PERMISSIONS, request} from 'react-native-permissions';
-import {View, Text, ActivityIndicator, Modal, Alert} from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Modal,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {
   Details,
@@ -55,9 +68,10 @@ import {
 import {AbioticApi} from '../../services/api/abiotic-api';
 import {saveAbioticData} from '../../models/abiotic/abiotic.store';
 import {spacing} from '../../theme/spacing';
-import {downloadTiles, riverLayer} from '../../utils/offline-map';
+import {downloadTiles, getZoomLevel, riverLayer} from '../../utils/offline-map';
 import RNFS from 'react-native-fs';
 import {color} from '../../theme/color';
+import Site from "../../models/site/site"
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -89,39 +103,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [taxonGroups, setTaxonGroups] = useState<any>([]);
   const [showBiodiversityModule, setShowBiodiversityModule] = useState(false);
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
+  const [formStatus, setFormStatus] = useState<string>('closed');
   const [downloadLayerVisible, setDownloadLayerVisible] =
     useState<boolean>(false);
   const [mapViewKey, setMapViewKey] = useState<number>(
     Math.floor(Math.random() * 100),
   );
-
-  const getZoomLevel = (longitudeDelta: number) => {
-    const angle = 360 / longitudeDelta;
-    return Math.round(Math.log(angle) / Math.log(2));
-  };
-
-  const createSatelliteWMSUrl = (x: number, y: number, z: number) => {
-    const bbox = [
-      (x * 360) / Math.pow(2, z) - 180,
-      (-Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / Math.pow(2, z)))) * 180) /
-        Math.PI,
-      ((x + 1) * 360) / Math.pow(2, z) - 180,
-      (-Math.atan(Math.sinh(Math.PI * (1 - (2 * (y + 1)) / Math.pow(2, z)))) *
-        180) /
-        Math.PI,
-    ].join(',');
-
-    const baseUrl = 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
-    const layer = 'MODIS_Terra_CorrectedReflectance_TrueColor';
-    const date = '2022-08-01'; // Replace with the desired date in the format YYYY-MM-DD
-    const format = 'image/jpeg';
-    const version = '1.3.0';
-    const crs = 'CRS:84';
-    const width = '256';
-    const height = '256';
-
-    return `${baseUrl}?SERVICE=WMS&REQUEST=GetMap&LAYERS=${layer}&VERSION=${version}&CRS=${crs}&BBOX=${bbox}&WIDTH=${width}&HEIGHT=${height}&FORMAT=${format}&TIME=${date}`;
-  };
 
   const drawMarkers = (data: any[]) => {
     let _markers: any[];
@@ -164,7 +151,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         setIsAddSite(false);
         setSites(_sites);
         drawMarkers(_sites);
-        setIsViewRecord(false);
+        if (formStatus === 'sass' || formStatus === 'site_visit') {
+          setIsViewRecord(false);
+        }
         setIsLoading(false);
       }
     },
@@ -252,7 +241,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         },
         heading: 0,
         pitch: 0,
-        zoom: 11,
+        zoom: 12,
       });
       return;
     }
@@ -277,7 +266,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             },
             heading: 0,
             pitch: 0,
-            zoom: 11,
+            zoom: 12,
           });
         }
       },
@@ -292,24 +281,55 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     );
   }, [getSites]);
 
-  const refreshMap = useCallback(async () => {
-    setMapViewKey(Math.floor(Math.random() * 100));
-    setMarkers([]);
-    markerDeselected();
-    await clearTemporaryNewSites();
-    await getUnsyncedData();
-    await getSites();
-    watchLocation();
-  }, [getSites, watchLocation]);
+  const zoomToSelected = useCallback((site: Site) => {
+    if (!site) {
+      return;
+    }
+    setSelectedSite(site);
+  }, []);
+
+  const refreshMap = useCallback(
+    async (deselectMarkers = false) => {
+      setMapViewKey(Math.floor(Math.random() * 100));
+      if (deselectMarkers) {
+        setMarkers([]);
+        markerDeselected();
+      }
+      await clearTemporaryNewSites();
+      await getUnsyncedData();
+      await getSites();
+      watchLocation();
+    },
+    [getSites, watchLocation],
+  );
 
   const addSiteVisit = React.useMemo(
     () => (moduleId: number) => {
+      const siteId = selectedSite.id;
+      const currentRegion = region;
+      setFormStatus('site_visit');
       props.navigation.navigate({
         name: 'OccurrenceForm',
         params: {
           sitePk: selectedSite.id,
           modulePk: moduleId,
-          onBack: () => refreshMap(),
+          onBack: async () => {
+            await refreshMap();
+            if (mapViewRef && mapViewRef.current) {
+              // @ts-ignore
+              mapViewRef.current.animateToRegion(currentRegion, 1000);
+            }
+            if (showBiodiversityModule) {
+              setIsViewRecord(false);
+              return;
+            }
+            for (const site of sites) {
+              if (site.id === siteId) {
+                zoomToSelected(site);
+              }
+            }
+            setFormStatus('map');
+          },
         },
         merge: true,
       });
@@ -318,11 +338,26 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   );
 
   const addSassClicked = () => {
+    const siteId = selectedSite.id;
+    const currentRegion = region;
+    setFormStatus('sass');
     props.navigation.navigate({
       name: 'SASSForm',
       params: {
         sitePk: selectedSite.id,
-        onBack: () => refreshMap(),
+        onBack: async () => {
+          await refreshMap();
+          if (mapViewRef && mapViewRef.current) {
+            // @ts-ignore
+            mapViewRef.current.animateToRegion(currentRegion, 1000);
+          }
+          for (const site of sites) {
+            if (site.id === siteId) {
+              zoomToSelected(site);
+            }
+          }
+          setFormStatus('map');
+        },
       },
     });
   };
@@ -349,6 +384,25 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             }
           }
         }
+        return;
+      },
+    });
+  };
+
+  const openSite = (siteId: any) => {
+    props.navigation.navigate('siteForm', {
+      siteId: siteId,
+      title: 'View Site',
+      editMode: false,
+      onBackToMap: async (newSiteId: Number | null = null) => {
+        for (const site of sites) {
+          if (site.id === siteId) {
+            setSelectedSite(site);
+          }
+        }
+        setTimeout(() => {
+          setIsViewRecord(true);
+        }, 300);
         return;
       },
     });
@@ -444,7 +498,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       props.navigation.navigate({
         name: 'UnsyncedList',
         params: {
-          onBack: () => refreshMap(),
+          onBack: () => refreshMap(true),
           syncRecord: () => syncData(true),
         },
         merge: true,
@@ -678,7 +732,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           }
         />
       </View>
-      <View style={[styles.MAP_VIEW_CONTAINER, downloadLayerVisible ? styles.MAP_VIEW_DOWNLOAD_RIVER : {}]}>
+      <View
+        style={[
+          styles.MAP_VIEW_CONTAINER,
+          downloadLayerVisible ? styles.MAP_VIEW_DOWNLOAD_RIVER : {},
+        ]}>
         <MapView
           // @ts-ignore
           key={mapViewKey}
@@ -721,7 +779,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   markerSelected(marker);
                 }}
                 pinColor={
-                  marker.newData ? 'orange' : marker.synced ? 'red' : 'gold'
+                  marker.newData
+                    ? 'yellow'
+                    : typeof marker.synced !== 'undefined'
+                    ? marker.synced
+                      ? 'gold'
+                      : 'red'
+                    : 'gold'
                 }
               />
             );
@@ -824,11 +888,14 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       {isViewRecord ? (
         <View style={styles.MID_BOTTOM_CONTAINER}>
           <View style={styles.MID_BOTTOM_CONTENTS}>
-            <Text style={styles.MID_BOTTOM_TEXT}>
-              {selectedSite.siteCode !== '-'
-                ? selectedSite.siteCode
-                : selectedSite.description}{' '}
-            </Text>
+            <TouchableOpacity onPress={() => openSite(selectedSite.id)}>
+              <Text
+                style={[styles.MID_BOTTOM_TEXT, {color: color.primaryFBIS}]}>
+                {selectedSite.siteCode !== '-'
+                  ? selectedSite.siteCode
+                  : selectedSite.description}{' '}
+              </Text>
+            </TouchableOpacity>
             <View style={{flexDirection: 'row'}}>
               <View
                 style={{

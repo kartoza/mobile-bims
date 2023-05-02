@@ -177,7 +177,9 @@ export const SassFormScreen: React.FunctionComponent<
   const goToPreviousScreen = React.useMemo(
     () => () => {
       props.navigation.pop();
-      route.params.onBack();
+      if (typeof route.params.onBack !== 'undefined') {
+        route.params.onBack();
+      }
     },
     [props.navigation, route.params],
   );
