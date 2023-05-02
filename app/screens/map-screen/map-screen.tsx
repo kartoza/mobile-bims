@@ -188,7 +188,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   );
 
   const onRegionChange = (region: Region, details: Details) => {
-    // console.log(region, details);
     setRegion(region);
   };
 
@@ -196,6 +195,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     if (isAddSite) {
       return;
     }
+    setShowBiodiversityModule(false);
     for (const site of sites) {
       if (marker) {
         try {
@@ -371,6 +371,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       newSiteMarker.coordinate.latitude,
       newSiteMarker.coordinate.longitude,
     );
+    setFormStatus('site')
     props.navigation.navigate('siteForm', {
       siteId: newSite.id,
       editMode: true,
@@ -382,8 +383,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               setSelectedSite(site);
               addRecordClicked();
             }
+            delay(500).then(() => {
+              setSelectedMarker(newSiteMarker);
+            });
           }
         }
+        setFormStatus('map');
         return;
       },
     });
@@ -660,14 +665,14 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setIsLoading(true);
     await downloadTiles(currentRegion, zoomLevel);
     setMapViewKey(Math.floor(Math.random() * 100));
-    setTimeout(() => {
+    delay(500).then(() => {
       if (mapViewRef && mapViewRef.current) {
         // @ts-ignore
         mapViewRef.current.animateToRegion(currentRegion, 1000);
       }
       setIsLoading(false);
       setDownloadLayerVisible(false);
-    }, 500);
+    });
   };
 
   // @ts-ignore
