@@ -6,6 +6,11 @@ export const riverLayer =
   '{minX},{minY},{maxX},{maxY}&service=WMS&version=1.1.1&CRS=EPSG:3857&request=' +
   'GetMap&layers=kartoza:sa_rivers&styles=&width={width}&height={height}&format=image/png';
 
+export const getZoomLevel = (longitudeDelta: number) => {
+  const angle = 360 / longitudeDelta;
+  return Math.round(Math.log(angle) / Math.log(2));
+};
+
 function long2tile(lon: number, zoom: number) {
   return Math.floor(((lon + 180) / 360) * Math.pow(2, zoom));
 }

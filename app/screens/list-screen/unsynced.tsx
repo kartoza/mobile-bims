@@ -74,6 +74,7 @@ const FOOTER_STYLE: ViewStyle = {
   left: 0,
   bottom: 0,
   width: '100%',
+  height: 60,
 };
 
 const FOOTER_BUTTON_CONTAINER: ViewStyle = {
@@ -129,7 +130,7 @@ export const UnsyncedScreen: React.FunctionComponent<
     const siteCode = siteData.siteCode
       ? 'Site Code : ' + siteData.siteCode + '\n'
       : '';
-    return siteCode + 'Site Desc : ' + siteData.description;
+    return siteCode + 'Site Desc : ' + (siteData.description ? siteData.description : '-');
   };
 
   const parseSiteVisitDesc = (siteVisit: SiteVisit) => {
@@ -284,7 +285,7 @@ export const UnsyncedScreen: React.FunctionComponent<
   };
 
   return (
-    <View style={{minHeight: '100%'}}>
+    <View style={{minHeight: '100%', marginBottom: 100}}>
       <Header
         placement="center"
         leftComponent={{
@@ -299,7 +300,7 @@ export const UnsyncedScreen: React.FunctionComponent<
         }}
         containerStyle={styles.HEADER_CONTAINER}
       />
-      <ScrollView>
+      <ScrollView style={{ marginBottom: 60, height: 1 }}>
         {unsynced.map((_unsynced: UnsyncedInterface, index: number) => (
           <UnsyncedItem
             key={'unsynced_' + index}
