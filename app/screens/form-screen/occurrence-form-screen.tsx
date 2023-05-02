@@ -12,8 +12,8 @@ import {
   Alert,
   Platform,
   StyleSheet,
-  Dimensions,
-} from 'react-native';
+  Dimensions, Keyboard,
+} from "react-native"
 import {Button, Header, CheckBox, Dialog} from '@rneui/themed';
 import {Formik} from 'formik';
 import {Picker} from '@react-native-picker/picker';
@@ -523,7 +523,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               {/* Sampling Method */}
               <View>
                 <Text style={styles.REQUIRED_LABEL}>Observed Taxa</Text>
-                <View style={styles.AUTOCOMPLETE_CONTAINER}>
+                <View style={[styles.AUTOCOMPLETE_CONTAINER, {zIndex: 2}]}>
                   <Autocomplete
                     data={filterTaxonList(taxonQuery)}
                     placeholder={'Find species here'}
@@ -538,13 +538,17 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     flatListProps={{
                       horizontal: false,
                       nestedScrollEnabled: true,
+                      keyboardShouldPersistTaps: 'always',
                       keyExtractor: (taxon: Taxon) => '' + taxon.id,
                       renderItem: (taxon: any) => {
                         taxon = taxon.item;
                         return (
                           <TouchableOpacity
                             style={styles.AUTOCOMPLETE_LIST}
-                            onPress={() => addTaxon(taxon)}>
+                            onPress={() => {
+                              addTaxon(taxon);
+                              Keyboard.dismiss();
+                            }}>
                             <Text style={styles.AUTOCOMPLETE_LIST_TEXT}>
                               {taxon.canonicalName}
                             </Text>
@@ -587,10 +591,12 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               <Text style={styles.REQUIRED_LABEL}>Add abiotic data</Text>
               <AbioticForm
                 abioticData={abioticData}
+                scrollViewRef={scrollViewRef}
                 onChange={_abioticData => setAbioticData(_abioticData)}
               />
 
               {/* Source References */}
+              <View style={{marginTop: spacing[8]}}></View>
               <Text style={styles.LABEL}>Source Reference</Text>
               <View style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
                 <Picker

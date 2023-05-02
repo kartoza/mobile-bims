@@ -367,9 +367,11 @@ export const SassFormScreen: React.FunctionComponent<
                       <Button
                         buttonStyle={{
                           justifyContent: 'flex-start',
-                          backgroundColor: (sassTaxaFormOpen[sassTaxaParent] || values.sassTaxa[sassTaxaParent])
-                            ? '#79d089'
-                            : '#afb4bb',
+                          backgroundColor:
+                            sassTaxaFormOpen[sassTaxaParent] ||
+                            values.sassTaxa[sassTaxaParent]
+                              ? '#79d089'
+                              : '#afb4bb',
                         }}
                         titleStyle={{
                           fontSize: 15,

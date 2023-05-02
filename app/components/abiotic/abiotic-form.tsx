@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {View} from 'react-native';
-import {Button, TextInput} from 'react-native-paper';
+import {View, TouchableOpacity, Text, Dimensions, Keyboard} from 'react-native';
+import {TextInput} from 'react-native-paper';
 import Abiotic from '../../models/abiotic/abiotic';
 import {loadAbioticData} from '../../models/abiotic/abiotic.store';
 import {styles} from '../../screens/form-screen/styles';
-import {Picker} from '@react-native-picker/picker';
+import Autocomplete from 'react-native-autocomplete-input';
+import {spacing} from '../../theme/spacing';
 
 export interface AbioticDataInterface {
   abiotic: Abiotic;
@@ -14,6 +15,7 @@ export interface AbioticDataInterface {
 interface AbioticFormInterface {
   onChange?: (abioticData: AbioticDataInterface[]) => void;
   abioticData?: any[];
+  scrollViewRef?: any;
 }
 
 export default function AbioticForm(props: AbioticFormInterface) {
@@ -22,7 +24,12 @@ export default function AbioticForm(props: AbioticFormInterface) {
   const [abioticOptionList, setAbioticOptionList] = useState<Abiotic[]>([]);
   const [selectedAbiotic, setSelectedAbiotic] = useState<string>('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
-  const [isAddAbiotic, setIsAddAbiotic] = useState<boolean>(false);
+  const [isAddAbiotic, setIsAddAbiotic] = useState<boolean>(true);
+  const [inputText, setInputText] = useState('');
+
+  const filteredOptions = abioticOptions.filter(option =>
+    option.description.toLowerCase().includes(inputText.toLowerCase()),
+  );
 
   useEffect(() => {
     if (props.abioticData && abioticData.length === 0) {
@@ -75,7 +82,6 @@ export default function AbioticForm(props: AbioticFormInterface) {
 
   const addAbiotic = () => {
     setIsAddAbiotic(true);
-
   };
 
   const deleteAbiotic = (abioticId: number) => {
@@ -86,50 +92,44 @@ export default function AbioticForm(props: AbioticFormInterface) {
 
   return (
     <View>
-      {isAddAbiotic ? (
-        <View style={styles.TEXT_INPUT_STYLE}>
-          <Picker
-            selectedValue={selectedAbiotic}
-            style={styles.PICKER_INPUT_STYLE}
-            onValueChange={itemValue => {
-              if (itemValue) {
-                setSelectedAbiotic(itemValue);
-                abioticOptions.map((abioticOption: Abiotic) => {
-                  if (abioticOption.id === parseInt(itemValue)) {
-                    const newAbioticData = {
-                      abiotic: abioticOption,
-                      value: '',
-                    };
-                    setIsAddAbiotic(false);
-                    setAbioticData([...abioticData, newAbioticData]);
-                  }
-                });
-              }
-            }}>
-            <Picker.Item key="not_specified" label="Not specified" value="" />
-            {abioticOptions.map(abioticOption => (
-              <Picker.Item
-                key={abioticOption.id}
-                label={abioticOption.description}
-                value={abioticOption.id}
-              />
-            ))}
-          </Picker>
-        </View>
-      ) : (
-        <Button
-          onPress={addAbiotic}
-          style={{
-            width: '100%',
-            backgroundColor: '#3ca290',
+      <View style={[styles.AUTOCOMPLETE_CONTAINER, {top: 0}]}>
+        <Autocomplete
+          data={inputText.length >= 2 ? filteredOptions : []}
+          value={inputText}
+          placeholder={'Find abiotic here'}
+          onChangeText={text => setInputText(text)}
+          onChange={e => {
+            props.scrollViewRef?.current?.scrollTo({
+              y: Dimensions.get('window').height,
+              animated: true,
+            });
           }}
-          labelStyle={{
-            color: '#ffffff',
-          }}>
-          Add Abiotic
-        </Button>
-      )}
-      <View>
+          flatListProps={{
+            keyboardShouldPersistTaps: 'always',
+            horizontal: false,
+            nestedScrollEnabled: true,
+            keyExtractor: item => item.id.toString(),
+            renderItem: ({item}) => (
+              <TouchableOpacity
+                style={styles.AUTOCOMPLETE_LIST}
+                onPress={() => {
+                  const newAbioticData = {
+                    abiotic: item,
+                    value: '',
+                  };
+                  setInputText('');
+                  setAbioticData([...abioticData, newAbioticData]);
+                  Keyboard.dismiss();
+                }}>
+                <Text style={styles.AUTOCOMPLETE_LIST_TEXT}>
+                  {item.description}
+                </Text>
+              </TouchableOpacity>
+            ),
+          }}
+        />
+      </View>
+      <View style={{ marginTop: spacing[6], marginBottom: -spacing[7] }}>
         {abioticData.map(abioticSingleData => (
           <TextInput
             key={abioticSingleData.abiotic.id}
