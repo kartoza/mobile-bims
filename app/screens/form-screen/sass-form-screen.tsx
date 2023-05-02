@@ -24,6 +24,7 @@ import SassSiteVisit from '../../models/sass/sass_site_visit';
 import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
+import { spacing } from "../../theme/spacing"
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -344,12 +345,13 @@ export const SassFormScreen: React.FunctionComponent<
               </View>
 
               {/* Abiotic */}
-              <Text style={styles.LABEL}>Abiotic</Text>
+              <Text style={styles.LABEL_IMPORTANT}>Add abiotic data</Text>
               <AbioticForm
                 abioticData={abioticData}
                 onChange={_abioticData => setAbioticData(_abioticData)}
               />
 
+              <View style={{ marginTop: spacing[8]}}></View>
               <Text style={styles.REQUIRED_LABEL}>Taxa</Text>
               <View
                 style={{
