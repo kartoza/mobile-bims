@@ -61,4 +61,8 @@ export const color = {
    * white background
    */
   storybookTextColor: palette.black,
-}
+
+  primaryFBIS: '#d5d23e',
+  secondaryFBIS: '#3ca290'
+};
+
