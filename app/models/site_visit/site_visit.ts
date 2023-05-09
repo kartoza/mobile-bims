@@ -17,6 +17,7 @@ export default class SiteVisit {
   siteImage: any;
   synced?: boolean;
   newData?: boolean;
+  recordType?: string;
 
   constructor(siteVisit: any) {
     if (siteVisit) {

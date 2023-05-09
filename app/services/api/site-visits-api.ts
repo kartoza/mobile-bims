@@ -17,7 +17,7 @@ export class SiteVisitsApi extends Api {
     const postData: any = {
       date: siteVisit.date.split('T')[0],
       owner: siteVisit.owner,
-      record_type: 'mobile',
+      record_type: siteVisit.recordType,
       abundance_type: 'number',
       biotope: siteVisit.biotope,
       specific_biotope: siteVisit.specificBiotope,

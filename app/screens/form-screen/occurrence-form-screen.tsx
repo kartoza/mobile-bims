@@ -75,6 +75,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [specificBiotope, setSpecificBiotope] = useState('');
   const [substratum, setSubstratum] = useState('');
   const [samplingMethod, setSamplingMethod] = useState('');
+  const [recordType, setRecordType] = useState('');
   const [sourceReference, setSourceReference] = useState('');
   const [sourceReferenceOptions, setSourceReferenceOptions] = useState<
     SourceReference[]
@@ -97,6 +98,14 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [username, setUsername] = useState('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   let scrollViewRef = useRef();
+
+  const recordTypeOptions = [
+    'Visual observation',
+    'Photographic record',
+    'Specimen collection',
+    'Acoustic record',
+    'DNA sample',
+  ];
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -160,6 +169,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }
         if (_siteVisit.siteImage) {
           setSiteImageData(_siteVisit.siteImage);
+        }
+        if (_siteVisit.recordType) {
+          setRecordType(_siteVisit.recordType);
         }
         setDate(new Date(_siteVisit.date));
         setAbioticData(_siteVisit.abiotic);
@@ -250,6 +262,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       siteImage: siteImageData,
       observedTaxa: observedTaxaValues,
       samplingMethod: samplingMethod,
+      recordType: recordType,
       specificBiotope: specificBiotope,
       sourceReferenceId: sourceReference,
       substratum: substratum,
@@ -355,6 +368,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
             samplingMethod: '',
             substratum: '',
             sourceReference: '',
+            recordType: '',
             abiotic: [],
           }}
           onSubmit={submitForm}>
@@ -480,6 +494,28 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                 </Picker>
               </View>
 
+              {/* Record Type */}
+              <View>
+                <Text style={styles.LABEL}>Record Type</Text>
+                <View style={styles.TEXT_INPUT_STYLE}>
+                  <Picker
+                    selectedValue={recordType}
+                    style={styles.PICKER_INPUT_STYLE}
+                    onValueChange={itemValue => {
+                      setRecordType(itemValue);
+                      values.recordType = itemValue;
+                    }}>
+                    <Picker.Item
+                      key="not_specified"
+                      label="Not specified"
+                      value=""
+                    />
+                    {recordTypeOptions.map(option => (
+                      <Picker.Item key={option} label={option} value={option} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
               {/* Capture Image */}
               <View style={{marginTop: 10, marginBottom: 10}}>
                 <Text style={styles.LABEL}>Site Image</Text>
