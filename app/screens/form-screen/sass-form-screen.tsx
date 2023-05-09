@@ -7,7 +7,12 @@ import {Button, Header, Dialog} from '@rneui/themed';
 import {Formik} from 'formik';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {List, RadioButton} from 'react-native-paper';
-import {BiotopeName, BiotopeObjectKey, FormInitialValues, SassFormValues} from './sass-form';
+import {
+  BiotopeName,
+  BiotopeObjectKey,
+  FormInitialValues,
+  SassFormValues,
+} from './sass-form';
 import {SassTaxaForm} from '../../components/sass/sass-taxa-form';
 import {
   allSassSiteVisits,
@@ -24,7 +29,7 @@ import SassSiteVisit from '../../models/sass/sass_site_visit';
 import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
-import { spacing } from "../../theme/spacing"
+import {spacing} from '../../theme/spacing';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -109,8 +114,13 @@ export const SassFormScreen: React.FunctionComponent<
   const [loading, setLoading] = useState<boolean>(true);
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   const [biotopeValues, setBiotopeValues] = useState<any>({});
-  const [formInitialValues, setFormInitialValues] =
-    useState<SassFormValues>(FormInitialValues);
+  const [formInitialValues, setFormInitialValues] = useState<SassFormValues>({
+    date: new Date(),
+    sassTaxa: {},
+    biotope: {},
+    otherBiota: '',
+    comments: '',
+  });
   const formikRef = useRef();
 
   useEffect(() => {
@@ -226,7 +236,7 @@ export const SassFormScreen: React.FunctionComponent<
     <View>
       <Dialog
         isVisible={loading}
-        overlayStyle={{ backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00' }}>
+        overlayStyle={{backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00'}}>
         <Dialog.Loading />
       </Dialog>
       <Header
@@ -353,7 +363,7 @@ export const SassFormScreen: React.FunctionComponent<
                 onChange={_abioticData => setAbioticData(_abioticData)}
               />
 
-              <View style={{ marginTop: spacing[8]}}></View>
+              <View style={{marginTop: spacing[8]}} />
               <Text style={styles.REQUIRED_LABEL}>Taxa</Text>
               <View
                 style={{
@@ -401,7 +411,7 @@ export const SassFormScreen: React.FunctionComponent<
                         {sassTaxaParent}
                       </Button>
                       {sassTaxaFormOpen[sassTaxaParent] ||
-                        values.sassTaxa[sassTaxaParent] ? (
+                      values.sassTaxa[sassTaxaParent] ? (
                         <View
                           style={{
                             padding: 10,
@@ -432,7 +442,14 @@ export const SassFormScreen: React.FunctionComponent<
                                       break;
                                     }
                                   }
-                                  if (empty) return;
+                                  if (empty) {
+                                    return;
+                                  }
+                                  console.log(
+                                    'sassTaxaData',
+                                    sassTaxon,
+                                    taxaValue,
+                                  );
                                   setSassTaxaData({
                                     ...sassTaxaData,
                                     ...{

@@ -96,7 +96,7 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
   };
 
   useEffect(() => {
-    if (prop.initialValue) {
+    if (prop.initialValue && Object.keys(taxaValues).length === 0) {
       setTaxaValues(prop.initialValue);
     }
   }, [prop.initialValue]);
