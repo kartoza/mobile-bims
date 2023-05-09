@@ -18,6 +18,7 @@ export interface SassFormValues {
   date: Date | null;
   sassTaxa?: any;
   biotope?: any;
+  accredited?: boolean;
 }
 
 export const FormInitialValues: SassFormValues = {
@@ -26,6 +27,7 @@ export const FormInitialValues: SassFormValues = {
   biotope: {},
   otherBiota: '',
   comments: '',
+  accredited: false,
 };
 
 export type BiotopeObjectKey = keyof typeof BiotopeName;

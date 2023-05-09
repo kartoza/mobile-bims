@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
-import {Alert, Image, ScrollView, Text, TextInput, View} from 'react-native';
+import {Alert, Image, ScrollView, Text, TextInput, View, Switch, TouchableOpacity} from 'react-native';
 import {styles} from './styles';
 import {Button, Header, Dialog} from '@rneui/themed';
 import {Formik} from 'formik';
@@ -121,6 +121,7 @@ export const SassFormScreen: React.FunctionComponent<
     otherBiota: '',
     comments: '',
   });
+  const [accredited, setAccredited] = useState<boolean>(false);
   const formikRef = useRef();
 
   useEffect(() => {
@@ -151,7 +152,9 @@ export const SassFormScreen: React.FunctionComponent<
           biotope: sassSiteVisit.biotope,
           otherBiota: sassSiteVisit.otherBiota,
           comments: sassSiteVisit.comments,
+          accredited: sassSiteVisit.accredited,
         });
+        setAccredited(sassSiteVisit.accredited);
         setBiotopeValues(sassSiteVisit.biotope);
         setAbioticData(sassSiteVisit.abiotic);
       }
@@ -216,6 +219,7 @@ export const SassFormScreen: React.FunctionComponent<
     formData.newData = true;
     formData.sassTaxa = sassTaxaData;
     formData.biotope = biotopeValues;
+    formData.accredited = accredited;
     formData.abiotic = abioticData.map(current => {
       if (current.value) {
         return {
@@ -306,6 +310,23 @@ export const SassFormScreen: React.FunctionComponent<
                 style={styles.UNEDITABLE_TEXT_INPUT_STYLE}
                 value={username}
               />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginTop: spacing[3],
+                }}>
+                <Switch
+                  value={accredited}
+                  onValueChange={value => setAccredited(value)}
+                />
+                <TouchableOpacity onPress={() => setAccredited(!accredited)}>
+                  <Text style={{color: '#000'}}>
+                    Accredited at the time of collection
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Source References */}
               <Text style={styles.LABEL}>Source Reference</Text>
               <View style={styles.TEXT_INPUT_STYLE}>

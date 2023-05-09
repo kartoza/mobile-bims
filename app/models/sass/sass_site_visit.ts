@@ -11,6 +11,7 @@ export default class SassSiteVisit {
   newData?: boolean;
   comments?: string;
   otherBiota?: string;
+  accredited?: boolean;
 
   constructor(sassSiteVisit: any) {
     if (sassSiteVisit) {
