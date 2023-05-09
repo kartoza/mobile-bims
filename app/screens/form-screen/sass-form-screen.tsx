@@ -445,11 +445,6 @@ export const SassFormScreen: React.FunctionComponent<
                                   if (empty) {
                                     return;
                                   }
-                                  console.log(
-                                    'sassTaxaData',
-                                    sassTaxon,
-                                    taxaValue,
-                                  );
                                   setSassTaxaData({
                                     ...sassTaxaData,
                                     ...{
