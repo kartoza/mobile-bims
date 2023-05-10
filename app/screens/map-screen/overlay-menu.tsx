@@ -70,7 +70,11 @@ export function OverlayMenu(props: OverlayMenuProps) {
           onPress: async () => {
             await save('token', '');
             await save('user', '');
+            await save('@first_launch', null);
+            await save('unsynced', []);
+            await save('synced', []);
             await saveSiteVisits([]);
+            await saveSassSiteVisits([]);
             await saveSites([]);
             goToLoginScreen();
           },

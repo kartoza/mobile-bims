@@ -612,6 +612,24 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   useEffect(() => {
+    // check first launch
+    const checkFirstLaunch = async () => {
+      try {
+        // Try to get the value from AsyncStorage
+        const value = await load('@first_launch');
+        if (value === null) {
+          await save('@first_launch', 'true');
+          await syncData();
+        }
+      } catch (e) {
+        // Error reading value
+        console.error(e);
+      }
+    };
+    checkFirstLaunch();
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
     // Subscribe to network status changes
     const unsubscribe = NetInfo.addEventListener(netInfoState => {

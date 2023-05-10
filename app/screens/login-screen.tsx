@@ -1,5 +1,5 @@
 import Config from 'react-native-config';
-import React, {useState} from 'react';
+import React, { useEffect, useState } from "react"
 import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {ParamListBase, useFocusEffect} from '@react-navigation/native';
 import {
@@ -31,7 +31,7 @@ const loginButtonStyle: ViewStyle = {
 
 const logoStyle: ImageStyle = {
   width: '100%',
-  height: 50
+  height: 50,
 };
 
 export interface LoginScreenProps {
@@ -50,6 +50,12 @@ export const LoginScreenPage: React.FunctionComponent<
     () => () => props.navigation.navigate('map'),
     [props.navigation],
   );
+
+  useEffect(() => {
+    setUsername('');
+    setPassword('');
+    setLoading(false);
+  }, []);
 
   useFocusEffect(() => {
     (async () => {
@@ -112,7 +118,8 @@ export const LoginScreenPage: React.FunctionComponent<
           value={username}
           autoCapitalize={'none'}
           placeholder={'Username'}
-          onChangeText={text => setUsername(text)}></TextInput>
+          onChangeText={text => setUsername(text)}
+        />
         <Text style={styles.REQUIRED_LABEL}>Password</Text>
         <TextInput
           editable={!loading}
@@ -121,7 +128,8 @@ export const LoginScreenPage: React.FunctionComponent<
           style={styles.TEXT_INPUT_STYLE}
           value={password}
           placeholder={'Password'}
-          onChangeText={text => setPassword(text)}></TextInput>
+          onChangeText={text => setPassword(text)}
+        />
         <Button
           title="Login"
           disabled={!username || !password || loading}
