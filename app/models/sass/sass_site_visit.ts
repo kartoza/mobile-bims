@@ -12,6 +12,7 @@ export default class SassSiteVisit {
   comments?: string;
   otherBiota?: string;
   accredited?: boolean;
+  sourceReferenceId?: string;
 
   constructor(sassSiteVisit: any) {
     if (sassSiteVisit) {

@@ -98,12 +98,23 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
   useEffect(() => {
     if (prop.initialValue && Object.keys(taxaValues).length === 0) {
       setTaxaValues(prop.initialValue);
+      setSiteRanking(prop.initialValue.site);
     }
   }, [prop.initialValue]);
 
   useEffect(() => {
     let highest: string = '';
+    let _siteRanking = '';
+    if (taxaValues.hasOwnProperty('site')) {
+      _siteRanking = taxaValues.site;
+    }
     Object.keys(taxaValues).forEach(taxaValue => {
+      if (taxaValue === 'site' && Object.keys(taxaValues).length > 1) {
+        return false;
+      }
+      if (!siteRanking && _siteRanking) {
+        highest = _siteRanking;
+      }
       if (!highest) {
         highest = taxaValues[taxaValue];
       } else {
@@ -118,7 +129,11 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
     if (prop.onValueChange) {
       prop.onValueChange({...taxaValues, site: highest});
     }
-    setSiteRanking(highest);
+    if (highest) {
+      setSiteRanking(highest);
+    } else {
+      setSiteRanking(_siteRanking);
+    }
   }, [taxaValues]);
 
   return (
