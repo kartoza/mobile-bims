@@ -537,6 +537,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       if (apiResult.kind === 'ok') {
         await saveSites(apiResult.sites);
         setSites(apiResult.sites);
+        setMarkers([]);
+        markerDeselected();
+        await getSites();
       }
       setSyncProgress(1);
     }
@@ -1022,6 +1025,17 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   </View>
                 ),
               )}
+          </View>
+          <View style={{ width: '50%'}}>
+            <Button
+              title="Add SASS"
+              type="outline"
+              raised
+              buttonStyle={styles.SASS_BUTTON}
+              titleStyle={{color: '#ffffff'}}
+              containerStyle={{width: '100%'}}
+              onPress={() => addSassClicked()}
+            />
           </View>
         </View>
       ) : null}
