@@ -157,6 +157,8 @@ export const SassFormScreen: React.FunctionComponent<
         setAccredited(sassSiteVisit.accredited);
         setBiotopeValues(sassSiteVisit.biotope);
         setAbioticData(sassSiteVisit.abiotic);
+        setSourceReference(sassSiteVisit.sourceReferenceId);
+        setSassTaxaData(sassSiteVisit.sassTaxa);
       }
     })();
   }, [route.params.sassId]);
@@ -220,6 +222,7 @@ export const SassFormScreen: React.FunctionComponent<
     formData.sassTaxa = sassTaxaData;
     formData.biotope = biotopeValues;
     formData.accredited = accredited;
+    formData.sourceReferenceId = sourceReference;
     formData.abiotic = abioticData.map(current => {
       if (current.value) {
         return {

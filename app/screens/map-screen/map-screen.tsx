@@ -472,7 +472,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const pushUnsynced = async () => {
-    const _unsyncedData = Object.assign([], unsyncedData);
+    const _unsyncedData = Object.assign([], await getUnsyncedData());
+    if (_unsyncedData.length === 0) {
+      return false;
+    }
     let syncResult = true;
     for (let i = 0; i < _unsyncedData.length; i++) {
       setSyncMessage(`${i + 1} records of ${unsyncedData.length} are synced`);
@@ -522,7 +525,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setSyncMessage('Push data to server');
     let currentUnsyncedData = unsyncedData;
     if (currentUnsyncedData.length > 0) {
-      currentUnsyncedData = await pushUnsynced();
+      await pushUnsynced();
     }
 
     if (latitude && longitude) {
