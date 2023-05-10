@@ -9,6 +9,9 @@ export default class Site {
   synced: boolean | undefined;
   newData?: boolean; // temporary data
   description?: string;
+  river_name?: string;
+  riverName?: string;
+  owner?: string;
 
   constructor(data: {
     id: number;
@@ -22,7 +25,10 @@ export default class Site {
     datetime: any;
     newData: boolean;
     description?: string;
+    riverName?: string;
+    river_name?: string;
     synced: boolean;
+    owner?: string;
   }) {
     if (this.newData && typeof this.synced === 'undefined') {
       this.synced = false;
@@ -62,6 +68,14 @@ export default class Site {
     }
     if (!this.localId) {
       this.localId = this.id;
+    }
+    if (data.river_name) {
+      this.riverName = data.river_name;
+    } else if (data.riverName) {
+      this.riverName = data.riverName;
+    }
+    if (data.owner) {
+      this.owner = data.owner;
     }
     return this;
   }

@@ -17,6 +17,7 @@ import {FormInput} from '../../components/form-input/form-input';
 import {LogBox} from 'react-native';
 import NetInfo from "@react-native-community/netinfo"
 import { riverLayer } from "../../utils/offline-map"
+import { load } from "../../utils/storage"
 
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
@@ -37,11 +38,13 @@ export const SiteFormScreen: React.FunctionComponent<
   const [editMode, setEditMode] = useState(route.params.editMode);
   const [updatedSiteData, setUpdatedSiteData] = useState({} as any);
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
+  const [username, setUsername] = useState<string>('');
 
   const loadSiteData = useCallback(async () => {
     const _siteData = await getSiteByField('id', route.params.siteId);
     setUpdatedSiteData(_siteData);
     setSiteData(_siteData);
+    setUsername(_siteData.id > 0 ? _siteData.owner : await load('user'));
     const unsubscribe = NetInfo.addEventListener(netInfoState => {
       setIsConnected(netInfoState.isConnected);
     });
@@ -115,9 +118,9 @@ export const SiteFormScreen: React.FunctionComponent<
           }}
           onSubmit={values => console.log(values)}>
           {({handleChange, handleBlur, handleSubmit, setFieldValue}) => (
-            <View>
+            <View style={{marginBottom: 50}}>
               <View style={{height: 200, marginTop: 20}}>
-                {siteData.longitude && siteData.latitude ? (
+                {siteData && siteData.longitude && siteData.latitude ? (
                   <MapView
                     mapType={'satellite'}
                     // @ts-ignore
@@ -209,8 +212,15 @@ export const SiteFormScreen: React.FunctionComponent<
                 }
               />
               <FormInput
+                key="river_name"
+                editable={false}
+                title={'River'}
+                value={siteData.riverName}
+              />
+              <FormInput
                 editable={editMode}
                 key="site_description"
+                multiline={true}
                 title="Site Description"
                 onChange={(val: string) => formOnChange(val, 'description')}
                 value={updatedSiteData ? updatedSiteData.description : ''}
@@ -221,6 +231,12 @@ export const SiteFormScreen: React.FunctionComponent<
                 title="Site Code (optional)"
                 onChange={(val: string) => formOnChange(val, 'siteCode')}
                 value={updatedSiteData ? updatedSiteData.siteCode : ''}
+              />
+              <FormInput
+                key="owner"
+                editable={false}
+                title={'Owner'}
+                value={username}
               />
               {editMode ? (
                 <View style={{marginBottom: 20, marginTop: 20}}>

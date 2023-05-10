@@ -130,9 +130,10 @@ export function FormInput(props: FormInputProps) {
       </Text>
       {error ? <Text style={styles.ERROR_INPUT}>{error}</Text> : null}
       <View
-        style={
-          props.units ? styles.MULTIPLE_INPUT_STYLE : styles.TEXT_INPUT_STYLE
-        }>
+        style={[
+          props.units ? styles.MULTIPLE_INPUT_STYLE : styles.TEXT_INPUT_STYLE,
+          !editable ? styles.UNEDITABLE_TEXT_INPUT_STYLE : {},
+        ]}>
         {props.options ? (
           pickerForm(props.options)
         ) : (
@@ -146,6 +147,7 @@ export function FormInput(props: FormInputProps) {
               styles.TEXT_INPUT_STYLE,
               props.multiline ? {height: 100, textAlignVertical: 'top'} : {},
               props.units ? {width: '60%'} : {},
+              !editable ? styles.UNEDITABLE_TEXT_INPUT_STYLE : {},
             ]}
             multiline={props.multiline}
             keyboardType={props.numeric ? 'numeric' : 'default'}
