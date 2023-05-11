@@ -909,7 +909,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
       {showBiodiversityModule ? (
         <View style={[styles.BOTTOM_CONTAINER, { backgroundColor: 'rgba(255,255,255,0.80)' }]}>
-          <View style={[styles.MODULE_TEXT_CONTAINER, { backgroundColor: 'transparent' }]}>
+          <View style={[styles.MODULE_TEXT_CONTAINER, { backgroundColor: 'transparent', width: '100%' }]}>
             <TouchableOpacity onPress={() => openSite(selectedSite.id)}>
               <Text style={[styles.MODULE_TEXT, {color: color.secondaryFBIS}]}>
                 Add Record to{' '}
@@ -918,6 +918,35 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   : selectedSite.description}{' '}
               </Text>
             </TouchableOpacity>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly', paddingLeft: spacing[4], paddingRight: spacing[4]}}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+                <Icon
+                  name="user"
+                  type="font-awesome-5"
+                  size={11}
+                  color={'grey'}
+                />
+                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>{ selectedSite.owner ? selectedSite.owner : '-' }</Text>
+              </View>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+                <Icon
+                  name="water"
+                  type="font-awesome-5"
+                  size={11}
+                  color={'grey'}
+                />
+                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>{ selectedSite.riverName ? selectedSite.riverName : '-' }</Text>
+              </View>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+                <Icon
+                  name="map-pin"
+                  type="font-awesome-5"
+                  size={11}
+                  color={'grey'}
+                />
+                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>LAT: {selectedSite.latitude?.toFixed(2)} LON: {selectedSite.longitude?.toFixed(2)}</Text>
+              </View>
+            </View>
             <Text style={styles.MODULE_TEXT}>Select Biodiversity Module</Text>
           </View>
           <View style={[styles.MODULE_BUTTONS_CONTAINER, { backgroundColor: 'transparent'}]}>
