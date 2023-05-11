@@ -891,16 +891,18 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       ) : null}
 
       {isSyncing ? (
-        <View style={styles.MID_BOTTOM_CONTAINER}>
-          <View style={styles.MID_BOTTOM_CONTENTS}>
-            <Text style={styles.MID_BOTTOM_TEXT}>Sync is on</Text>
-            <Text style={styles.MID_BOTTOM_SUB_TEXT}>{syncMessage}</Text>
-            <Progress.Bar
-              color={'rgb(241, 137, 3)'}
-              height={12}
-              progress={syncProgress}
-              width={250}
-            />
+        <View style={{ position: 'absolute', backgroundColor: 'transparent', zIndex: 999, width: '100%', height: '100%' }}>
+          <View style={styles.MID_BOTTOM_CONTAINER}>
+            <View style={styles.MID_BOTTOM_CONTENTS}>
+              <Text style={styles.MID_BOTTOM_TEXT}>Sync is on</Text>
+              <Text style={styles.MID_BOTTOM_SUB_TEXT}>{syncMessage}</Text>
+              <Progress.Bar
+                color={'rgb(241, 137, 3)'}
+                height={12}
+                progress={syncProgress}
+                width={250}
+              />
+            </View>
           </View>
         </View>
       ) : (
