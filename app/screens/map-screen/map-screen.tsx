@@ -973,7 +973,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 ),
               )}
           </View>
-          <View style={{width: '50%', paddingBottom: spacing[2]}}>
+          <View style={{width: '43%', paddingBottom: spacing[2]}}>
             <Button
               title="Add SASS"
               type="outline"
@@ -990,7 +990,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       {isAddSite ? (
         <View style={styles.MID_BOTTOM_CONTAINER}>
           <View style={styles.MID_BOTTOM_CONTENTS}>
-            <Text style={styles.MID_BOTTOM_TEXT}>Add Site</Text>
+            <Text style={[styles.MID_BOTTOM_TEXT, { paddingBottom: spacing[2]}]}>Add Site</Text>
+            {newSiteMarker ? (
+              <Text style={{ paddingBottom: spacing[3], fontSize: 11 }}>LAT: {newSiteMarker.coordinate.latitude?.toFixed(2)} LON: {newSiteMarker.coordinate.longitude?.toFixed(2)}</Text>
+            ) : null}
             <View style={{flexDirection: 'row'}}>
               <Button
                 title="Cancel"
@@ -1025,12 +1028,21 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       <View style={styles.BOTTOM_VIEW}>
         <Button
           icon={
-            <Icon
-              name="plus-circle"
-              type="font-awesome"
-              size={25}
-              color="rgb(196, 196, 196)"
-            />
+            <View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+              <Icon
+                name="map-marker"
+                type="font-awesome-5"
+                size={30}
+                color={isAddSite ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
+              />
+              <Icon
+                name="plus"
+                type="font-awesome-5"
+                size={15}
+                color={'#FFF'}
+                containerStyle={{ position: 'absolute', zIndex: 99, height: '100%', paddingTop: spacing[1] }}
+              />
+            </View>
           }
           onPress={() => addNewSiteMode()}
           buttonStyle={styles.USER_BUTTON}
@@ -1041,8 +1053,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           icon={
             <Icon
               name="location-arrow"
-              type="font-awesome"
-              size={30}
+              type="font-awesome-5"
+              size={25}
               color="#ffffff"
             />
           }
@@ -1057,8 +1069,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         <Button
           icon={
             <Icon
-              name="refresh"
-              type="font-awesome"
+              name="sync"
+              type="font-awesome-5"
               size={25}
               color={isSyncing ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
             />

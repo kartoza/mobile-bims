@@ -137,7 +137,7 @@ export const UnsyncedScreen: React.FunctionComponent<
     const locationSite = siteVisit.site.siteCode
       ? siteVisit.site.siteCode
       : siteVisit.site.description;
-    return 'Location Site : ' + locationSite;
+    return 'Location Site : ' + locationSite + ' Module : ' + siteVisit.taxonGroup.name;
   };
 
   const parseSassSiteVisitDesc = async (sassSiteVisit: SassSiteVisit) => {

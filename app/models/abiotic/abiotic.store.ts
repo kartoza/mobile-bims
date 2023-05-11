@@ -12,7 +12,7 @@ export const loadAbioticData = async () => {
   try {
     _abioticData = abioticData.abioticData;
   } catch (e) {}
-  return _abioticData.map((abiotic: any) => new Abiotic(abiotic));
+  return _abioticData ? _abioticData.map((abiotic: any) => new Abiotic(abiotic)) : [];
 };
 
 export const saveAbioticData = async (abioticData: Abiotic[]) => {
