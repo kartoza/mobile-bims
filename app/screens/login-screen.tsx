@@ -1,5 +1,5 @@
 import Config from 'react-native-config';
-import React, { useEffect, useState } from "react"
+import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {ParamListBase, useFocusEffect} from '@react-navigation/native';
 import {
@@ -11,11 +11,12 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {load, save} from '../utils/storage';
+import {load, loadEncrypted, save, saveEncrypted} from '../utils/storage';
 import {styles} from './form-screen/styles';
 import {Button} from '@rneui/themed';
 import {Wallpaper} from '../components/wallpaper/wallpaper';
 import axios from 'axios';
+import {Switch} from '@rneui/base';
 
 const logo = require('../components/logo/fbis_v2_logo.png');
 
@@ -44,16 +45,22 @@ export const LoginScreenPage: React.FunctionComponent<
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const loginUrl = `${Config.API_URL}/mobile/api-token-auth/`;
 
   const goToMapScreen = React.useMemo(
     () => () => props.navigation.navigate('map'),
     [props.navigation],
   );
-
   useEffect(() => {
-    setUsername('');
-    setPassword('');
+    (async () => {
+      setUsername(await loadEncrypted('@username'));
+      const _password = await loadEncrypted('@password');
+      setPassword(_password);
+      if (_password) {
+        setRememberMe(true);
+      }
+    })();
     setLoading(false);
   }, []);
 
@@ -84,6 +91,13 @@ export const LoginScreenPage: React.FunctionComponent<
         if (responseData) {
           await save('token', responseData.token);
           await save('user', username);
+          if (rememberMe) {
+            await saveEncrypted('@password', password);
+            await saveEncrypted('@username', username);
+          } else {
+            await saveEncrypted('@password', '');
+            await saveEncrypted('@username', '');
+          }
           goToMapScreen();
         }
       })
@@ -130,6 +144,14 @@ export const LoginScreenPage: React.FunctionComponent<
           placeholder={'Password'}
           onChangeText={text => setPassword(text)}
         />
+        <View
+          style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
+          <Switch
+            value={rememberMe}
+            onValueChange={newValue => setRememberMe(newValue)}
+          />
+          <Text style={{marginLeft: 8}}>Remember me</Text>
+        </View>
         <Button
           title="Login"
           disabled={!username || !password || loading}
