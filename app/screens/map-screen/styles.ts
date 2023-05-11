@@ -208,6 +208,7 @@ const MODULE_BUTTONS_CONTAINER: ViewStyle = {
   flexDirection: 'row',
   justifyContent: 'space-around',
   padding: 10,
+  paddingTop: 0,
   backgroundColor: '#ffffff',
   flexWrap: 'wrap',
 };

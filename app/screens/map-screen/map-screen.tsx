@@ -90,7 +90,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
-  const [isViewRecord, setIsViewRecord] = useState(false);
   const [isAddSite, setIsAddSite] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>({});
   const [newCreatedSite, setNewCreatedSite] = useState<any>(null);
@@ -152,7 +151,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         setSites(_sites);
         drawMarkers(_sites);
         if (formStatus === 'sass' || formStatus === 'site_visit') {
-          setIsViewRecord(false);
+          setShowBiodiversityModule(false);
         }
         setIsLoading(false);
       }
@@ -195,7 +194,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     if (isAddSite) {
       return;
     }
-    setShowBiodiversityModule(false);
     for (const site of sites) {
       if (marker) {
         try {
@@ -208,11 +206,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         }
       }
     }
-    setIsViewRecord(true);
+    setShowBiodiversityModule(true);
   };
 
   const markerDeselected = () => {
-    setIsViewRecord(false);
     setSelectedMarker(null);
     setShowBiodiversityModule(false);
   };
@@ -319,10 +316,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               // @ts-ignore
               mapViewRef.current.animateToRegion(currentRegion, 1000);
             }
-            if (showBiodiversityModule) {
-              setIsViewRecord(false);
-              return;
-            }
             for (const site of sites) {
               if (site.id === siteId) {
                 zoomToSelected(site);
@@ -406,7 +399,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           }
         }
         setTimeout(() => {
-          setIsViewRecord(true);
+          setShowBiodiversityModule(true);
         }, 300);
         return;
       },
@@ -436,7 +429,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const submitSearch = async () => {
-    setIsViewRecord(false);
+    setShowBiodiversityModule(false);
     setSelectedMarker(null);
     setIsAddSite(false);
     setIsLoading(true);
@@ -914,95 +907,49 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         <View />
       )}
 
-      {isViewRecord ? (
-        <View style={styles.MID_BOTTOM_CONTAINER}>
-          <View style={styles.MID_BOTTOM_CONTENTS}>
+      {showBiodiversityModule ? (
+        <View style={[styles.BOTTOM_CONTAINER, { backgroundColor: 'rgba(255,255,255,0.80)' }]}>
+          <View style={[styles.MODULE_TEXT_CONTAINER, { backgroundColor: 'transparent', width: '100%' }]}>
             <TouchableOpacity onPress={() => openSite(selectedSite.id)}>
-              <Text
-                style={[styles.MID_BOTTOM_TEXT, {color: color.primaryFBIS}]}>
+              <Text style={[styles.MODULE_TEXT, {color: color.secondaryFBIS}]}>
+                Add Record to{' '}
                 {selectedSite.siteCode !== '-'
                   ? selectedSite.siteCode
                   : selectedSite.description}{' '}
               </Text>
             </TouchableOpacity>
-            <View style={{flexDirection: 'row'}}>
-              <View
-                style={{
-                  width: '40%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}>
-                {taxonGroups
-                  .filter(
-                    (taxonGroup: any) =>
-                      !taxonGroup.name.toLowerCase().includes('algae') &&
-                      !taxonGroup.name.toLowerCase().includes('odonate') &&
-                      !taxonGroup.name.toLowerCase().includes('invert'),
-                  )
-                  .map(
-                    (taxonGroup: {
-                      id: React.Key | null | undefined;
-                      name: any;
-                    }) => (
-                      <Button
-                        key={taxonGroup.id}
-                        title={'Add ' + taxonGroup.name}
-                        type="outline"
-                        raised
-                        buttonStyle={styles.MID_BOTTOM_BUTTON}
-                        titleStyle={{color: '#ffffff'}}
-                        containerStyle={{
-                          width: '100%',
-                          marginBottom: spacing[2],
-                        }}
-                        onPress={() => addSiteVisit(taxonGroup.id as number)}
-                      />
-                    ),
-                  )}
-              </View>
-              <View style={{width: '40%', marginLeft: 10}}>
-                <Button
-                  title="Add SASS"
-                  type="outline"
-                  raised
-                  buttonStyle={styles.SASS_BUTTON}
-                  titleStyle={{color: '#ffffff'}}
-                  onPress={() => addSassClicked()}
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly', paddingLeft: spacing[4], paddingRight: spacing[4]}}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+                <Icon
+                  name="user"
+                  type="font-awesome-5"
+                  size={11}
+                  color={'grey'}
                 />
+                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>{ selectedSite.owner ? selectedSite.owner : '-' }</Text>
               </View>
-              {selectedSite.newData ? (
-                <Button
-                  title="Delete"
-                  type="outline"
-                  raised
-                  buttonStyle={[
-                    styles.MID_BOTTOM_BUTTON,
-                    {backgroundColor: 'rgb(234, 53, 53)'},
-                  ]}
-                  titleStyle={{color: '#ffffff'}}
-                  containerStyle={{width: '40%', marginLeft: 10, height: 10}}
-                  onPress={() => {}}
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+                <Icon
+                  name="water"
+                  type="font-awesome-5"
+                  size={11}
+                  color={'grey'}
                 />
-              ) : null}
+                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>{ selectedSite.riverName ? selectedSite.riverName : '-' }</Text>
+              </View>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+                <Icon
+                  name="map-pin"
+                  type="font-awesome-5"
+                  size={11}
+                  color={'grey'}
+                />
+                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>LAT: {selectedSite.latitude?.toFixed(2)} LON: {selectedSite.longitude?.toFixed(2)}</Text>
+              </View>
             </View>
-          </View>
-        </View>
-      ) : (
-        <View />
-      )}
-
-      {showBiodiversityModule ? (
-        <View style={styles.BOTTOM_CONTAINER}>
-          <View style={styles.MODULE_TEXT_CONTAINER}>
-            <Text style={styles.MODULE_TEXT}>
-              Add Record to{' '}
-              {selectedSite.siteCode !== '-'
-                ? selectedSite.siteCode
-                : selectedSite.description}{' '}
-            </Text>
             <Text style={styles.MODULE_TEXT}>Select Biodiversity Module</Text>
           </View>
-          <View style={styles.MODULE_BUTTONS_CONTAINER}>
+          <View style={[styles.MODULE_BUTTONS_CONTAINER, { backgroundColor: 'transparent'}]}>
             {taxonGroups
               .filter(
                 (taxonGroup: any) =>
@@ -1026,7 +973,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 ),
               )}
           </View>
-          <View style={{ width: '50%'}}>
+          <View style={{width: '50%', paddingBottom: spacing[2]}}>
             <Button
               title="Add SASS"
               type="outline"
