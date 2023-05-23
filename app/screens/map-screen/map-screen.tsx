@@ -364,7 +364,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       newSiteMarker.coordinate.latitude,
       newSiteMarker.coordinate.longitude,
     );
-    setFormStatus('site')
+    setFormStatus('site');
     props.navigation.navigate('siteForm', {
       siteId: newSite.id,
       editMode: true,
@@ -407,7 +407,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const addNewSiteMode = async () => {
-    await watchLocation();
     setIsAddSite(true);
     if (latitude && longitude) {
       setNewSiteMarker({
