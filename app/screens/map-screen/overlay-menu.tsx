@@ -14,6 +14,7 @@ export interface OverlayMenuProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
   refreshMap: Function;
   downloadRiverClicked?: Function;
+  downloadSiteClicked?: Function;
 }
 
 export function OverlayMenu(props: OverlayMenuProps) {
@@ -116,6 +117,18 @@ export function OverlayMenu(props: OverlayMenuProps) {
             setOverlayVisible(false);
             if (props.downloadRiverClicked) {
               props.downloadRiverClicked();
+            }
+          }}
+        />
+        <Button
+          title="Download Sites"
+          raised
+          titleStyle={{color: '#ffffff'}}
+          containerStyle={{width: '100%', marginBottom: 20}}
+          onPress={() => {
+            setOverlayVisible(false);
+            if (props.downloadSiteClicked) {
+              props.downloadSiteClicked();
             }
           }}
         />
