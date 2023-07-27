@@ -41,12 +41,20 @@ export class SitesApi extends Api {
   /**
    * Get nearest sites
    */
-  async getSites(latitude: Number, longitude: Number): Promise<GetSitesResult> {
+  async getSites(
+    latitude: Number,
+    longitude: Number,
+    extent: string = '',
+  ): Promise<GetSitesResult> {
     // make the api call
     const limit = SITES_LIMIT ? `limit=${SITES_LIMIT}` : '';
     let userCoordinate = '';
-    if (latitude && longitude) {
-      userCoordinate = `lat=${latitude}&lon=${longitude}`;
+    if (extent) {
+      userCoordinate = `extent=${extent}`;
+    } else {
+      if (latitude && longitude) {
+        userCoordinate = `lat=${latitude}&lon=${longitude}`;
+      }
     }
     const apiUrl = `/mobile/nearest-sites/?${userCoordinate}&${limit}`;
     const response: ApiResponse<any> = await this.apisauce.get(apiUrl);

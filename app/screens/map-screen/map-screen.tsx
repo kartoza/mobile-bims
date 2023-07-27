@@ -105,6 +105,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [formStatus, setFormStatus] = useState<string>('closed');
   const [downloadLayerVisible, setDownloadLayerVisible] =
     useState<boolean>(false);
+  const [downloadSiteVisible, setDownloadSiteVisible] =
+    useState<boolean>(false);
   const [mapViewKey, setMapViewKey] = useState<number>(
     Math.floor(Math.random() * 100),
   );
@@ -691,6 +693,55 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     });
   };
 
+  const downloadSitesByExtent = async () => {
+    const currentRegion = region;
+    const zoomLevel = getZoomLevel(currentRegion.longitudeDelta);
+    if (zoomLevel <= 8) {
+      Alert.alert(
+        'Zoom Level Error',
+        'Zoom level too high. Please zoom in further.',
+      );
+      return;
+    }
+    setIsLoading(true);
+    // await downloadTiles(currentRegion, zoomLevel);
+    let _sites: any[] = [];
+    const api = new SitesApi();
+    await api.setup();
+    const minLongitude = region.longitude - region.longitudeDelta / 2;
+    const maxLongitude = region.longitude + region.longitudeDelta / 2;
+    const minLatitude = region.latitude - region.latitudeDelta / 2;
+    const maxLatitude = region.latitude + region.latitudeDelta / 2;
+    const extent = `${minLongitude},${minLatitude},${maxLongitude},${maxLatitude}`;
+    const apiResult = await api.getSites(0, 0, extent);
+    if (apiResult.kind === 'ok') {
+      _sites = apiResult.sites;
+    }
+    if (_sites.length > 0) {
+      const existingSiteIds = new Set(sites.map(site => site.id));
+      for (const site of _sites) {
+        if (!existingSiteIds.has(site.id)) {
+          sites.push(site);
+          existingSiteIds.add(site.id);
+        }
+      }
+      await saveSites(sites);
+      setSites(sites);
+      setNewSiteMarker(null);
+      setIsAddSite(false);
+      drawMarkers(sites);
+    }
+    setMapViewKey(Math.floor(Math.random() * 100));
+    delay(500).then(() => {
+      if (mapViewRef && mapViewRef.current) {
+        // @ts-ignore
+        mapViewRef.current.animateToRegion(currentRegion, 1000);
+      }
+      setIsLoading(false);
+      setDownloadSiteVisible(false);
+    });
+  };
+
   // @ts-ignore
   return (
     <View style={styles.CONTAINER}>
@@ -699,6 +750,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         navigation={props.navigation}
         refreshMap={refreshMap}
         downloadRiverClicked={() => setDownloadLayerVisible(true)}
+        downloadSiteClicked={() => setDownloadSiteVisible(true)}
       />
 
       <View style={styles.SEARCH_BAR_CONTAINER}>
@@ -756,7 +808,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       <View
         style={[
           styles.MAP_VIEW_CONTAINER,
-          downloadLayerVisible ? styles.MAP_VIEW_DOWNLOAD_RIVER : {},
+          downloadLayerVisible || downloadSiteVisible
+            ? styles.MAP_VIEW_DOWNLOAD_RIVER
+            : {},
         ]}>
         <MapView
           // @ts-ignore
@@ -856,11 +910,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         </Text>
       </View>
 
-      {downloadLayerVisible ? (
+      {downloadLayerVisible || downloadSiteVisible ? (
         <>
           <View style={styles.TOP_CENTER_CONTAINER}>
             <Text style={styles.TOP_CENTER_TEXT}>
-              Zoom into desired region to download river layer for offline use.
+              Zoom into desired region to
+              {downloadLayerVisible ? ' download river layer ' : ' download sites '}
+              for offline use.
             </Text>
           </View>
           <View style={styles.MID_BOTTOM_CONTAINER}>
@@ -877,13 +933,15 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               onPress={() => setDownloadLayerVisible(false)}
             />
             <Button
-              title={'Download River'}
+              title={downloadLayerVisible ? 'Download River' : 'Download Sites'}
               containerStyle={{
                 backgroundColor: 'rgb(225, 232, 238)',
                 justifyContent: 'center',
               }}
               type="clear"
-              onPress={() => downloadMap()}
+              onPress={() =>
+                downloadLayerVisible ? downloadMap() : downloadSitesByExtent()
+              }
             />
           </View>
         </>
