@@ -12,6 +12,8 @@ export default class Site {
   river_name?: string;
   riverName?: string;
   owner?: string;
+  userRiverName?: string;
+  userSiteCode?: string;
 
   constructor(data: {
     id: number;
@@ -27,6 +29,8 @@ export default class Site {
     description?: string;
     riverName?: string;
     river_name?: string;
+    userRiverName?: string;
+    userSiteCode?: string;
     synced: boolean;
     owner?: string;
   }) {
@@ -73,6 +77,12 @@ export default class Site {
       this.riverName = data.river_name;
     } else if (data.riverName) {
       this.riverName = data.riverName;
+    }
+    if (data.userRiverName) {
+      this.userRiverName = data.userRiverName;
+    }
+    if (data.userSiteCode) {
+      this.userSiteCode = data.userSiteCode;
     }
     if (data.owner) {
       this.owner = data.owner;

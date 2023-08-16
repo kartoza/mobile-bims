@@ -18,6 +18,8 @@ import {LogBox} from 'react-native';
 import NetInfo from "@react-native-community/netinfo"
 import { riverLayer } from "../../utils/offline-map"
 import { load } from "../../utils/storage"
+import { Api } from "../../services/api/api"
+import { ApiResponse } from "apisauce"
 
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
@@ -39,6 +41,7 @@ export const SiteFormScreen: React.FunctionComponent<
   const [updatedSiteData, setUpdatedSiteData] = useState({} as any);
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
   const [username, setUsername] = useState<string>('');
+  const [fetchingRiverName, setFetchingRiverName] = useState<boolean>(false);
 
   const loadSiteData = useCallback(async () => {
     const _siteData = await getSiteByField('id', route.params.siteId);
@@ -77,6 +80,18 @@ export const SiteFormScreen: React.FunctionComponent<
     }
     updatedSiteData[key] = value;
     await setUpdatedSiteData({...updatedSiteData, [key]: value});
+  };
+
+  const fetchRiverName = async (lat: Number, lon: Number) => {
+    const url = `/mobile/river/?lon=${lon}&lat=${lat}`;
+    const api = new Api();
+    await api.setup();
+    const response: ApiResponse<any> = await api.apisauce.get(url);
+    if (response.data) {
+      return response.data.river_name;
+    } else {
+      return '';
+    }
   };
 
   const submitForm = async () => {
@@ -215,7 +230,34 @@ export const SiteFormScreen: React.FunctionComponent<
                 key="river_name"
                 editable={false}
                 title={'River'}
-                value={siteData.riverName}
+                value={updatedSiteData.riverName}
+              />
+              <Button
+                title={'Fetch River Name'}
+                buttonStyle={{borderRadius: 5, marginTop: 5}}
+                disabled={fetchingRiverName}
+                loading={fetchingRiverName}
+                onPress={async () => {
+                  setFetchingRiverName(true);
+                  const riverName = await fetchRiverName(
+                    updatedSiteData.latitude,
+                    updatedSiteData.longitude,
+                  );
+                  setUpdatedSiteData({
+                    ...updatedSiteData,
+                    ...{
+                      riverName: riverName,
+                    },
+                  });
+                  setFetchingRiverName(false);
+                }}
+              />
+              <FormInput
+                key="user_river_name"
+                editable={editMode}
+                title={'User River Name'}
+                value={updatedSiteData ? updatedSiteData.userRiverName : ''}
+                onChange={(val: string) => formOnChange(val, 'userRiverName')}
               />
               <FormInput
                 editable={editMode}
@@ -226,11 +268,18 @@ export const SiteFormScreen: React.FunctionComponent<
                 value={updatedSiteData ? updatedSiteData.description : ''}
               />
               <FormInput
-                editable={editMode}
+                editable={false}
                 key="site_code"
-                title="Site Code (optional)"
+                title="Site Code"
                 onChange={(val: string) => formOnChange(val, 'siteCode')}
                 value={updatedSiteData ? updatedSiteData.siteCode : ''}
+              />
+              <FormInput
+                editable={editMode}
+                key="user_site_code"
+                title="User Site Code"
+                value={updatedSiteData ? updatedSiteData.userSiteCode : ''}
+                onChange={(val: string) => formOnChange(val, 'userSiteCode')}
               />
               <FormInput
                 key="owner"
