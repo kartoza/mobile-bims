@@ -159,6 +159,9 @@ export const SassFormScreen: React.FunctionComponent<
         setAbioticData(sassSiteVisit.abiotic);
         setSourceReference(sassSiteVisit.sourceReferenceId);
         setSassTaxaData(sassSiteVisit.sassTaxa);
+        if (sassSiteVisit.siteImage) {
+          setSiteImageData(sassSiteVisit.siteImage);
+        }
       }
     })();
   }, [route.params.sassId]);
@@ -373,10 +376,19 @@ export const SassFormScreen: React.FunctionComponent<
                   </View>
                 ) : null}
                 {siteImageData ? (
-                  <Image
-                    source={{uri: `data:image/jpeg;base64,${siteImageData}`}}
-                    style={{height: 450}}
-                  />
+                  <View
+                    onLayout={event => console.log(event.nativeEvent.layout)}>
+                    <Image
+                      source={{uri: `data:image/jpeg;base64,${siteImageData}`}}
+                      style={{height: 450}}
+                    />
+                    <Button
+                      type="solid"
+                      title={'Delete Image'}
+                      color="error"
+                      onPress={() => setSiteImageData('')}
+                    />
+                  </View>
                 ) : null}
               </View>
 

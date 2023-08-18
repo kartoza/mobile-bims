@@ -5,8 +5,9 @@ import {
   TextStyle,
   Dimensions,
 } from 'react-native';
-import { spacing } from "../../theme/spacing"
-import { color } from "../../theme/color"
+import {spacing} from '../../theme/spacing';
+import {color} from '../../theme/color';
+import {StatusBar} from 'react-native';
 
 const ACTIVITY_INDICATOR: ViewStyle = {
   top: 10,
@@ -44,7 +45,13 @@ const MAP_VIEW_DOWNLOAD_RIVER: ViewStyle = {
 };
 const MAP_VIEW_CONTAINER: ViewStyle = {
   height:
-    Dimensions.get('window').height - (Platform.OS === 'ios' ? 100 : 85) - 65,
+    Dimensions.get('window').height -
+    (Platform.OS === 'ios'
+      ? 100
+      : StatusBar.currentHeight
+      ? StatusBar.currentHeight
+      : 0) -
+    65,
 };
 const MAP: ViewStyle = {
   height: '100%',

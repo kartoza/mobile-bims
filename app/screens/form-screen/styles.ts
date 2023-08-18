@@ -1,4 +1,10 @@
-import {TextStyle, ViewStyle, Platform, StyleSheet} from 'react-native';
+import {
+  TextStyle,
+  ViewStyle,
+  Platform,
+  StyleSheet,
+  StatusBar,
+} from 'react-native';
 
 const CONTAINER: ViewStyle = {
   height: '100%',
@@ -133,7 +139,13 @@ const MULTIPLE_INPUT_STYLE: ViewStyle = {
 
 const HEADER_CONTAINER: ViewStyle = {
   backgroundColor: '#005198',
-  height: 80,
+  height:
+    80 +
+    (Platform.OS === 'ios'
+      ? 0
+      : StatusBar.currentHeight
+      ? StatusBar.currentHeight
+      : 0),
   marginTop: Platform.OS === 'ios' ? -25 : 0,
 };
 
