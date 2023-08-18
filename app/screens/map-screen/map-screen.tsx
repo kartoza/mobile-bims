@@ -71,7 +71,7 @@ import {spacing} from '../../theme/spacing';
 import {downloadTiles, getZoomLevel, riverLayer} from '../../utils/offline-map';
 import RNFS from 'react-native-fs';
 import {color} from '../../theme/color';
-import Site from "../../models/site/site"
+import Site from '../../models/site/site';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
