@@ -16,7 +16,10 @@ export class SitesApi extends Api {
       latitude: site.latitude,
       longitude: site.longitude,
       site_code: site.siteCode,
+      user_site_code: site.userSiteCode,
       description: site.description,
+      river_name: site.riverName,
+      user_river_name: site.userRiverName,
       additional_data: '{ "source": "mobile" }',
     };
     const url = '/mobile/add-location-site/';
@@ -39,9 +42,9 @@ export class SitesApi extends Api {
   }
 
   /**
-   * Get nearest sites
+   * Fetch nearest sites
    */
-  async getSites(
+  async fetchSites(
     latitude: Number,
     longitude: Number,
     extent: string = '',

@@ -47,6 +47,7 @@ import {
   clearTemporaryNewSites,
   createNewSite,
   getSitesByField,
+  saveSiteByField,
 } from '../../models/site/site.store';
 import {OverlayMenu} from './overlay-menu';
 import {load, save} from '../../utils/storage';
@@ -140,7 +141,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         if (userLatitude && userLongitude) {
           const api = new SitesApi();
           await api.setup();
-          const apiResult = await api.getSites(userLatitude, userLongitude);
+          const apiResult = await api.fetchSites(userLatitude, userLongitude);
           if (apiResult.kind === 'ok') {
             _sites = apiResult.sites;
           }
@@ -492,6 +493,48 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     return await getUnsyncedData();
   };
 
+  const fetchAndUpdateSites = async (
+    latitudeData: Number,
+    longitudeData: Number,
+    extent: string = '',
+  ) => {
+    // Fetch sites from server, and then update the existing ones
+    const sitesApi = new SitesApi();
+    await sitesApi.setup();
+    const apiResult = await sitesApi.fetchSites(
+      latitudeData,
+      longitudeData,
+      extent,
+    );
+    if (apiResult.kind === 'ok') {
+      let apiResultSites = apiResult.sites;
+      let newSites = sites;
+      if (sites.length > 0) {
+        const existingSiteIds = new Set(sites.map(site => site.id));
+        for (const site of apiResultSites) {
+          if (!existingSiteIds.has(site.id)) {
+            newSites.push(site);
+            existingSiteIds.add(site.id);
+          } else {
+            for (const index in sites) {
+              const _site = sites[index];
+              if (_site.id === site.id) {
+                sites[index] = site;
+              }
+            }
+          }
+        }
+      } else {
+        newSites = apiResultSites;
+      }
+      await saveSites(newSites);
+      setSites(newSites);
+      setMarkers([]);
+      markerDeselected();
+      await getSites();
+    }
+  };
+
   const syncData = async (force: boolean = false) => {
     if (isSyncing) {
       return;
@@ -525,16 +568,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     if (latitude && longitude) {
       setSyncMessage('Downloading Nearest Sites');
       setSyncProgress(0);
-      const sitesApi = new SitesApi();
-      await sitesApi.setup();
-      const apiResult = await sitesApi.getSites(latitude, longitude);
-      if (apiResult.kind === 'ok') {
-        await saveSites(apiResult.sites);
-        setSites(apiResult.sites);
-        setMarkers([]);
-        markerDeselected();
-        await getSites();
-      }
+      await fetchAndUpdateSites(latitude, longitude);
       setSyncProgress(1);
     }
 
@@ -713,24 +747,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     const minLatitude = region.latitude - region.latitudeDelta / 2;
     const maxLatitude = region.latitude + region.latitudeDelta / 2;
     const extent = `${minLongitude},${minLatitude},${maxLongitude},${maxLatitude}`;
-    const apiResult = await api.getSites(0, 0, extent);
-    if (apiResult.kind === 'ok') {
-      _sites = apiResult.sites;
-    }
-    if (_sites.length > 0) {
-      const existingSiteIds = new Set(sites.map(site => site.id));
-      for (const site of _sites) {
-        if (!existingSiteIds.has(site.id)) {
-          sites.push(site);
-          existingSiteIds.add(site.id);
-        }
-      }
-      await saveSites(sites);
-      setSites(sites);
-      setNewSiteMarker(null);
-      setIsAddSite(false);
-      drawMarkers(sites);
-    }
+    await fetchAndUpdateSites(0, 0, extent);
     setMapViewKey(Math.floor(Math.random() * 100));
     delay(500).then(() => {
       if (mapViewRef && mapViewRef.current) {
