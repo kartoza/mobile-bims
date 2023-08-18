@@ -232,26 +232,28 @@ export const SiteFormScreen: React.FunctionComponent<
                 title={'River'}
                 value={updatedSiteData.riverName}
               />
-              <Button
-                title={'Fetch River Name'}
-                buttonStyle={{borderRadius: 5, marginTop: 5}}
-                disabled={fetchingRiverName}
-                loading={fetchingRiverName}
-                onPress={async () => {
-                  setFetchingRiverName(true);
-                  const riverName = await fetchRiverName(
-                    updatedSiteData.latitude,
-                    updatedSiteData.longitude,
-                  );
-                  setUpdatedSiteData({
-                    ...updatedSiteData,
-                    ...{
-                      riverName: riverName,
-                    },
-                  });
-                  setFetchingRiverName(false);
-                }}
-              />
+              {editMode ? (
+                <Button
+                  title={'Fetch River Name'}
+                  buttonStyle={{borderRadius: 5, marginTop: 5}}
+                  disabled={fetchingRiverName}
+                  loading={fetchingRiverName}
+                  onPress={async () => {
+                    setFetchingRiverName(true);
+                    const riverName = await fetchRiverName(
+                      updatedSiteData.latitude,
+                      updatedSiteData.longitude,
+                    );
+                    setUpdatedSiteData({
+                      ...updatedSiteData,
+                      ...{
+                        riverName: riverName,
+                      },
+                    });
+                    setFetchingRiverName(false);
+                  }}
+                />
+              ) : null}
               <FormInput
                 key="user_river_name"
                 editable={editMode}
