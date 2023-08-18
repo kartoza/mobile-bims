@@ -20,6 +20,8 @@ export default class Site {
     localId?: number;
     site_code?: string;
     siteCode?: string;
+    user_site_code?: string;
+    user_river_name?: string;
     name?: string;
     geometry?: any | null;
     latitude?: number | null;
@@ -80,9 +82,13 @@ export default class Site {
     }
     if (data.userRiverName) {
       this.userRiverName = data.userRiverName;
+    } else if (data.user_river_name) {
+      this.userRiverName = data.user_river_name;
     }
     if (data.userSiteCode) {
       this.userSiteCode = data.userSiteCode;
+    } else if (data.user_site_code) {
+      this.userSiteCode = data.user_site_code;
     }
     if (data.owner) {
       this.owner = data.owner;
