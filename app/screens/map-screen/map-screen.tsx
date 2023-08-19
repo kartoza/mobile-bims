@@ -439,7 +439,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     if (sites) {
       for (const index in sites) {
         if (
-          sites[index].siteCode.toLowerCase().includes(search.toLowerCase())
+          sites[index].siteCode.toLowerCase().includes(search.toLowerCase()) ||
+          sites[index].userSiteCode
+            ?.toLowerCase()
+            .includes(search.toLowerCase())
         ) {
           results.push(sites[index]);
         }
@@ -991,7 +994,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 Add Record to{' '}
                 {selectedSite.siteCode !== '-'
                   ? selectedSite.siteCode
-                  : selectedSite.description}{' '}
+                  : selectedSite.userSiteCode}{' '}
               </Text>
             </TouchableOpacity>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly', paddingLeft: spacing[4], paddingRight: spacing[4]}}>
