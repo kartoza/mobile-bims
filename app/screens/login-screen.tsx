@@ -80,6 +80,7 @@ export const LoginScreenPage: React.FunctionComponent<
     setLoading(true);
     const axiosClient = axios.create();
     axiosClient.defaults.timeout = 5000;
+    console.log('loginUrl', loginUrl);
     axiosClient
       .post(loginUrl, {
         username: username,

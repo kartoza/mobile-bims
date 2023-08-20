@@ -120,6 +120,10 @@ const PICKER_INPUT_STYLE: ViewStyle = {
   width: '120%',
 };
 
+const ACTION_SHEETS_STYLE: ViewStyle = {
+  paddingTop: 10,
+};
+
 const PICKER_SM_INPUT_STYLE: ViewStyle = {
   // transform: [{ scaleX: 0.70 }, { scaleY: 0.70 }],
   // left: 0,
@@ -133,8 +137,8 @@ const MULTIPLE_INPUT_STYLE: ViewStyle = {
 
 const HEADER_CONTAINER: ViewStyle = {
   backgroundColor: '#005198',
-  height: 80,
-  marginTop: Platform.OS === 'ios' ? -25 : 0,
+  height: Platform.OS === 'ios' ? 120 : 80,
+  paddingTop: Platform.OS === 'ios' ? 0 : 0,
 };
 
 const SUBMIT_BUTTON: ViewStyle = {
@@ -210,6 +214,7 @@ const SASS_TAXA_DROPDOWN: ViewStyle = {
 };
 
 export const styles = StyleSheet.create({
+  ACTION_SHEETS_STYLE,
   AUTOCOMPLETE_CONTAINER,
   AUTOCOMPLETE_LIST,
   AUTOCOMPLETE_LIST_TEXT,

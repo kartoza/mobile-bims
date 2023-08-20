@@ -12,8 +12,10 @@ import {
   Alert,
   Platform,
   StyleSheet,
-  Dimensions, Keyboard,
-} from "react-native"
+  Dimensions,
+  Keyboard,
+  ActionSheetIOS,
+} from 'react-native';
 import {Button, Header, CheckBox, Dialog} from '@rneui/themed';
 import {Formik} from 'formik';
 import {Picker} from '@react-native-picker/picker';
@@ -44,7 +46,7 @@ import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
-import { spacing } from "../../theme/spacing"
+import {spacing} from '../../theme/spacing';
 
 const keyboardStyles = StyleSheet.create({
   container: {
@@ -61,6 +63,48 @@ interface ObservedTaxonInterface {
   checked: boolean;
   value: string;
 }
+
+const CustomPicker = (props: any) => {
+  return Platform.OS === 'ios' ? (
+    <TouchableOpacity
+      style={styles.ACTION_SHEETS_STYLE}
+      onPress={() => {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: [
+              'Cancel',
+              ...props.options.map((option: any) => option.name),
+            ],
+            cancelButtonIndex: 0,
+          },
+          buttonIndex => {
+            if (buttonIndex !== 0) {
+              const selectedOption: any = props.options[buttonIndex - 1];
+              props.onValueChange(selectedOption.id);
+            }
+          },
+        );
+      }}>
+      <Text>
+        {props.options.find(
+          (_option: any) => _option.id === props.selectedValue,
+        )?.name || 'Not specified'}
+      </Text>
+    </TouchableOpacity>
+  ) : (
+    <Picker
+      selectedValue={props.selectedValue}
+      style={styles.PICKER_INPUT_STYLE}
+      onValueChange={itemValue => {
+        props.onValueChange(itemValue);
+      }}>
+      <Picker.Item key="not_specified" label="Not specified" value="" />
+      {props.options.map((option: any) => (
+        <Picker.Item key={option.id} label={option.name} value={option.id} />
+      ))}
+    </Picker>
+  );
+};
 
 export const OccurrenceFormScreen: React.FunctionComponent<
   FormScreenProps
@@ -342,7 +386,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         placement="center"
         leftComponent={{
           icon: 'chevron-left',
-          type: 'font-awesome',
+          type: 'font-awesome-5',
           color: '#fff',
           onPress: goToPreviousScreen,
         }}
@@ -400,120 +444,83 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               {/* Broad biotope */}
               <Text style={styles.LABEL}>Broad Biotope</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
-                <Picker
-                  selectedValue={broadBiotope}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
-                    setBroadBiotope(itemValue);
-                    values.broadBiotope = itemValue;
+                <TouchableOpacity
+                  style={styles.ACTION_SHEETS_STYLE}
+                  onPress={() => {
+                    ActionSheetIOS.showActionSheetWithOptions(
+                      {
+                        options: [
+                          'Cancel',
+                          ...broadBiotopeOptions.map(option => option.name),
+                        ],
+                        cancelButtonIndex: 0,
+                      },
+                      buttonIndex => {
+                        if (buttonIndex !== 0) {
+                          const selectedOption: any =
+                            broadBiotopeOptions[buttonIndex - 1];
+                          setBroadBiotope(selectedOption.id);
+                          values.broadBiotope = selectedOption.name;
+                        }
+                      },
+                    );
                   }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
-                  {broadBiotopeOptions.map(broadBiotopeOption => (
-                    <Picker.Item
-                      key={broadBiotopeOption.id}
-                      label={broadBiotopeOption.name}
-                      value={broadBiotopeOption.id}
-                    />
-                  ))}
-                </Picker>
+                  <Text>
+                    {broadBiotopeOptions.find(
+                      (_broadBiotope: any) => _broadBiotope.id === broadBiotope,
+                    )?.name || 'Not specified'}
+                  </Text>
+                </TouchableOpacity>
               </View>
               {/* Specific biotope */}
               <Text style={styles.LABEL}>Specific Biotope</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
-                <Picker
+                <CustomPicker
                   selectedValue={specificBiotope}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
+                  options={specificBiotopeOptions}
+                  onValueChange={(itemValue: any) => {
                     setSpecificBiotope(itemValue);
                     values.specificBiotope = itemValue;
-                  }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
-                  {specificBiotopeOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.name}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
+                  }}
+                />
               </View>
               {/* Substratum */}
               <Text style={styles.LABEL}>Substratum</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
-                <Picker
+                <CustomPicker
                   selectedValue={substratum}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
+                  options={substratumOptions}
+                  onValueChange={(itemValue: any) => {
                     setSubstratum(itemValue);
                     values.substratum = itemValue;
-                  }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
-                  {substratumOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.name}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
+                  }}
+                />
               </View>
               {/* Sampling Method */}
               <Text style={styles.LABEL}>Sampling Method</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
-                <Picker
+                <CustomPicker
                   selectedValue={samplingMethod}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
+                  options={samplingMethodOptions}
+                  onValueChange={(itemValue: any) => {
                     setSamplingMethod(itemValue);
                     values.samplingMethod = itemValue;
-                  }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
-                  {samplingMethodOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.name}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
+                  }}
+                />
               </View>
 
               {/* Record Type */}
               <View>
                 <Text style={styles.LABEL}>Record Type</Text>
                 <View style={styles.TEXT_INPUT_STYLE}>
-                  <Picker
+                  <CustomPicker
                     selectedValue={recordType}
-                    style={styles.PICKER_INPUT_STYLE}
-                    onValueChange={itemValue => {
+                    options={recordTypeOptions}
+                    onValueChange={(itemValue: any) => {
                       setRecordType(itemValue);
                       values.recordType = itemValue;
-                    }}>
-                    <Picker.Item
-                      key="not_specified"
-                      label="Not specified"
-                      value=""
-                    />
-                    {recordTypeOptions.map(option => (
-                      <Picker.Item key={option} label={option} value={option} />
-                    ))}
-                  </Picker>
+                    }}
+                  />
                 </View>
               </View>
               {/* Capture Image */}
@@ -634,7 +641,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               {/* Source References */}
               <View style={{marginTop: spacing[8]}}></View>
               <Text style={styles.LABEL}>Source Reference</Text>
-              <View style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
+              <View
+                style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
                 <Picker
                   selectedValue={sourceReference}
                   numberOfLines={4}

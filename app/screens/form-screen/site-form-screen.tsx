@@ -101,7 +101,7 @@ export const SiteFormScreen: React.FunctionComponent<
         placement="center"
         leftComponent={{
           icon: 'chevron-left',
-          type: 'font-awesome',
+          type: 'font-awesome-5',
           color: '#fff',
           onPress: () => goToMapScreen(),
         }}

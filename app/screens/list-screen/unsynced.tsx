@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
-import {View, Text, TextStyle, Alert} from 'react-native';
+import {View, Text, TextStyle, Alert, Platform} from 'react-native';
 import {Button, Header, Icon} from '@rneui/themed';
 import {styles} from '../form-screen/styles';
 import {ViewStyle} from 'react-native';
@@ -20,7 +20,7 @@ import {getSitesByField, removeSiteByField} from '../../models/site/site.store';
 import Site from '../../models/site/site';
 import SiteVisit from '../../models/site_visit/site_visit';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
-import {ScrollView} from 'react-native-gesture-handler';
+import {ScrollView, GestureHandlerRootView} from 'react-native-gesture-handler';
 
 export interface UnsyncedScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -74,7 +74,7 @@ const FOOTER_STYLE: ViewStyle = {
   left: 0,
   bottom: 0,
   width: '100%',
-  height: 60,
+  height: Platform.OS === 'ios' ? 100 : 60,
 };
 
 const FOOTER_BUTTON_CONTAINER: ViewStyle = {
@@ -99,7 +99,7 @@ function UnsyncedItem(props: UnsyncedItemInterface) {
         <Icon
           name="trash"
           color={palette.white}
-          type="font-awesome"
+          type="font-awesome-5"
           size={25}
         />
       </Button>
@@ -108,9 +108,9 @@ function UnsyncedItem(props: UnsyncedItemInterface) {
         disabled={props.loading}
         onPress={e => props.onClickEdit(props.id, props.type)}>
         <Icon
-          name="pencil"
+          name="edit"
           color={palette.white}
-          type="font-awesome"
+          type="font-awesome-5"
           size={25}
         />
       </Button>
@@ -285,12 +285,12 @@ export const UnsyncedScreen: React.FunctionComponent<
   };
 
   return (
-    <View style={{minHeight: '100%', marginBottom: 100}}>
+    <GestureHandlerRootView style={{minHeight: '100%', marginBottom: 100}}>
       <Header
         placement="center"
         leftComponent={{
           icon: 'chevron-left',
-          type: 'font-awesome',
+          type: 'font-awesome-5',
           color: '#fff',
           onPress: () => goToPreviousScreen(false),
         }}
@@ -325,6 +325,6 @@ export const UnsyncedScreen: React.FunctionComponent<
           </Button>
         </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 };

@@ -30,12 +30,15 @@ const BOTTOM_VIEW: ViewStyle = {
   paddingBottom: Platform.OS === 'ios' ? 20 : 0,
   position: 'absolute',
   width: '100%',
+  zIndex: 999,
 };
 const CONTAINER: ViewStyle = {
   height: '100%',
+  backgroundColor: '#E2E8EE',
 };
 const SEARCH_BAR_CONTAINER: ViewStyle = {
   height: 65,
+  marginTop: 60,
   flexDirection: 'row',
 };
 const MAP_VIEW_DOWNLOAD_RIVER: ViewStyle = {
@@ -47,7 +50,8 @@ const MAP_VIEW_CONTAINER: ViewStyle = {
     Dimensions.get('window').height - (Platform.OS === 'ios' ? 100 : 85) - 65,
 };
 const MAP: ViewStyle = {
-  height: '100%',
+  height:
+    Platform.OS === 'ios' ? Dimensions.get('window').height - 205 : '100%',
   marginVertical: 0,
 };
 const MODAL_TEXT: TextStyle = {
@@ -64,7 +68,7 @@ const MODAL_BACKGROUND: ViewStyle = {
 const LOCATE_ME_BUTTON: ViewStyle = {
   borderColor: color.secondaryFBIS,
   backgroundColor: color.secondaryFBIS,
-  width: '50%',
+  width: 70,
   marginBottom: 20,
   height: '100%',
 };
@@ -112,7 +116,7 @@ const TOP_LEFT_CONTAINER: ViewStyle = {
   flexDirection: 'row',
   justifyContent: 'flex-start',
   alignItems: 'center',
-  marginTop: 70,
+  marginTop: 130,
   marginLeft: 5,
   paddingLeft: 5,
   backgroundColor: 'rgba(0,0,0,0.25)',
@@ -149,7 +153,7 @@ const ONLINE_STATUS: TextStyle = {
 const BOTTOM_CONTAINER: ViewStyle = {
   alignItems: 'center',
   alignContent: 'center',
-  bottom: Platform.OS === 'ios' ? 100 : 0,
+  bottom: Platform.OS === 'ios' ? 80 : 0,
   paddingBottom: Platform.OS === 'ios' ? 20 : 10,
   width: '100%',
   position: 'absolute',

@@ -8,12 +8,27 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* FbisMobileTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* FbisMobileTests.m */; };
+		0247AD0884D44FC290110696 /* fa-regular-400.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 05F9306C300B40DEB052D36C /* fa-regular-400.ttf */; };
+		040A9444449849B080EFBB47 /* fa-solid-900.svg in Resources */ = {isa = PBXBuildFile; fileRef = 563DE1EDBEEC44578B74C175 /* fa-solid-900.svg */; };
+		04C53C3817AF40D985C38EA8 /* fa-regular-400.woff2 in Resources */ = {isa = PBXBuildFile; fileRef = 8E1EB3C67F244167BFB2D4D6 /* fa-regular-400.woff2 */; };
+		0A8AE3E282D146D486771346 /* fa-brands-400.woff in Resources */ = {isa = PBXBuildFile; fileRef = C1854ADFD1754DAB8AF723A0 /* fa-brands-400.woff */; };
 		0C80B921A6F3F58F76C31292 /* libPods-FbisMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-FbisMobile.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		15625AAB2F4D42DA84475831 /* fa-solid-900.woff in Resources */ = {isa = PBXBuildFile; fileRef = 4BAEE263EC88416A8F744713 /* fa-solid-900.woff */; };
+		4781DFFCBCF343E4BA8C47AA /* fa-solid-900.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8C8F68FAF96041AA88C43FB8 /* fa-solid-900.ttf */; };
+		491C9C4089834AA5B24AF83E /* fa-regular-400.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8B2AA22882884D18942E6457 /* fa-regular-400.svg */; };
 		7699B88040F8A987B510C191 /* libPods-FbisMobile-FbisMobileTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-FbisMobile-FbisMobileTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		88AF912794E7433CAFABD85C /* fa-regular-400.eot in Resources */ = {isa = PBXBuildFile; fileRef = 2A67F4324F0342C19F6BA41B /* fa-regular-400.eot */; };
+		A3C8CFDB52CF43FE96C79CA3 /* fa-brands-400.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1387FA0A8EE64E9FBEEF68F2 /* fa-brands-400.ttf */; };
+		A4167CB21BA246808D8F6B49 /* fa-solid-900.woff2 in Resources */ = {isa = PBXBuildFile; fileRef = E4123E55425D4D4DA7BC527F /* fa-solid-900.woff2 */; };
+		A81383BCEABF4251BF2B4E56 /* fa-regular-400.woff in Resources */ = {isa = PBXBuildFile; fileRef = 6C062FD26A5F4CDCBEE1C5FD /* fa-regular-400.woff */; };
+		ABE8247EF8614CF9A234A5A2 /* fa-brands-400.woff2 in Resources */ = {isa = PBXBuildFile; fileRef = 0206ACE1D86649739275B3FF /* fa-brands-400.woff2 */; };
+		D2F58095B6F84C82B08FD97F /* fa-solid-900.eot in Resources */ = {isa = PBXBuildFile; fileRef = EC42C0252F83473E9E6566AB /* fa-solid-900.eot */; };
+		E7CD8B0B6974412A8581BDD7 /* fa-brands-400.svg in Resources */ = {isa = PBXBuildFile; fileRef = 2D4D393229D64F2CA470E12B /* fa-brands-400.svg */; };
+		FD8E2C38D50F49BFBBFA0D7E /* fa-brands-400.eot in Resources */ = {isa = PBXBuildFile; fileRef = 0A0D5D5099654D408DDE9D90 /* fa-brands-400.eot */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +45,10 @@
 		00E356EE1AD99517003FC87E /* FbisMobileTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FbisMobileTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* FbisMobileTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FbisMobileTests.m; sourceTree = "<group>"; };
+		0206ACE1D86649739275B3FF /* fa-brands-400.woff2 */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-brands-400.woff2"; path = "../assets/fonts/fa-brands-400.woff2"; sourceTree = "<group>"; };
+		05F9306C300B40DEB052D36C /* fa-regular-400.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-regular-400.ttf"; path = "../assets/fonts/fa-regular-400.ttf"; sourceTree = "<group>"; };
+		0A0D5D5099654D408DDE9D90 /* fa-brands-400.eot */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-brands-400.eot"; path = "../assets/fonts/fa-brands-400.eot"; sourceTree = "<group>"; };
+		1387FA0A8EE64E9FBEEF68F2 /* fa-brands-400.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-brands-400.ttf"; path = "../assets/fonts/fa-brands-400.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* FbisMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FbisMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = FbisMobile/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = FbisMobile/AppDelegate.mm; sourceTree = "<group>"; };
@@ -37,12 +56,23 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = FbisMobile/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = FbisMobile/main.m; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-FbisMobile-FbisMobileTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FbisMobile-FbisMobileTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A67F4324F0342C19F6BA41B /* fa-regular-400.eot */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-regular-400.eot"; path = "../assets/fonts/fa-regular-400.eot"; sourceTree = "<group>"; };
+		2D4D393229D64F2CA470E12B /* fa-brands-400.svg */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-brands-400.svg"; path = "../assets/fonts/fa-brands-400.svg"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-FbisMobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FbisMobile.debug.xcconfig"; path = "Target Support Files/Pods-FbisMobile/Pods-FbisMobile.debug.xcconfig"; sourceTree = "<group>"; };
+		4BAEE263EC88416A8F744713 /* fa-solid-900.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-solid-900.woff"; path = "../assets/fonts/fa-solid-900.woff"; sourceTree = "<group>"; };
+		563DE1EDBEEC44578B74C175 /* fa-solid-900.svg */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-solid-900.svg"; path = "../assets/fonts/fa-solid-900.svg"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-FbisMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FbisMobile.release.xcconfig"; path = "Target Support Files/Pods-FbisMobile/Pods-FbisMobile.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-FbisMobile-FbisMobileTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FbisMobile-FbisMobileTests.debug.xcconfig"; path = "Target Support Files/Pods-FbisMobile-FbisMobileTests/Pods-FbisMobile-FbisMobileTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-FbisMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FbisMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C062FD26A5F4CDCBEE1C5FD /* fa-regular-400.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-regular-400.woff"; path = "../assets/fonts/fa-regular-400.woff"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = FbisMobile/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-FbisMobile-FbisMobileTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FbisMobile-FbisMobileTests.release.xcconfig"; path = "Target Support Files/Pods-FbisMobile-FbisMobileTests/Pods-FbisMobile-FbisMobileTests.release.xcconfig"; sourceTree = "<group>"; };
+		8B2AA22882884D18942E6457 /* fa-regular-400.svg */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-regular-400.svg"; path = "../assets/fonts/fa-regular-400.svg"; sourceTree = "<group>"; };
+		8C8F68FAF96041AA88C43FB8 /* fa-solid-900.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-solid-900.ttf"; path = "../assets/fonts/fa-solid-900.ttf"; sourceTree = "<group>"; };
+		8E1EB3C67F244167BFB2D4D6 /* fa-regular-400.woff2 */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-regular-400.woff2"; path = "../assets/fonts/fa-regular-400.woff2"; sourceTree = "<group>"; };
+		C1854ADFD1754DAB8AF723A0 /* fa-brands-400.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-brands-400.woff"; path = "../assets/fonts/fa-brands-400.woff"; sourceTree = "<group>"; };
+		E4123E55425D4D4DA7BC527F /* fa-solid-900.woff2 */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-solid-900.woff2"; path = "../assets/fonts/fa-solid-900.woff2"; sourceTree = "<group>"; };
+		EC42C0252F83473E9E6566AB /* fa-solid-900.eot */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "fa-solid-900.eot"; path = "../assets/fonts/fa-solid-900.eot"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -106,6 +136,29 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		45A89FDC5FB2411892F4E615 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				1387FA0A8EE64E9FBEEF68F2 /* fa-brands-400.ttf */,
+				05F9306C300B40DEB052D36C /* fa-regular-400.ttf */,
+				8C8F68FAF96041AA88C43FB8 /* fa-solid-900.ttf */,
+				0A0D5D5099654D408DDE9D90 /* fa-brands-400.eot */,
+				2D4D393229D64F2CA470E12B /* fa-brands-400.svg */,
+				C1854ADFD1754DAB8AF723A0 /* fa-brands-400.woff */,
+				0206ACE1D86649739275B3FF /* fa-brands-400.woff2 */,
+				2A67F4324F0342C19F6BA41B /* fa-regular-400.eot */,
+				8B2AA22882884D18942E6457 /* fa-regular-400.svg */,
+				6C062FD26A5F4CDCBEE1C5FD /* fa-regular-400.woff */,
+				8E1EB3C67F244167BFB2D4D6 /* fa-regular-400.woff2 */,
+				EC42C0252F83473E9E6566AB /* fa-solid-900.eot */,
+				563DE1EDBEEC44578B74C175 /* fa-solid-900.svg */,
+				4BAEE263EC88416A8F744713 /* fa-solid-900.woff */,
+				E4123E55425D4D4DA7BC527F /* fa-solid-900.woff2 */,
+			);
+			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -122,6 +175,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				45A89FDC5FB2411892F4E615 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -244,6 +298,21 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				A3C8CFDB52CF43FE96C79CA3 /* fa-brands-400.ttf in Resources */,
+				0247AD0884D44FC290110696 /* fa-regular-400.ttf in Resources */,
+				4781DFFCBCF343E4BA8C47AA /* fa-solid-900.ttf in Resources */,
+				FD8E2C38D50F49BFBBFA0D7E /* fa-brands-400.eot in Resources */,
+				E7CD8B0B6974412A8581BDD7 /* fa-brands-400.svg in Resources */,
+				0A8AE3E282D146D486771346 /* fa-brands-400.woff in Resources */,
+				ABE8247EF8614CF9A234A5A2 /* fa-brands-400.woff2 in Resources */,
+				88AF912794E7433CAFABD85C /* fa-regular-400.eot in Resources */,
+				491C9C4089834AA5B24AF83E /* fa-regular-400.svg in Resources */,
+				A81383BCEABF4251BF2B4E56 /* fa-regular-400.woff in Resources */,
+				04C53C3817AF40D985C38EA8 /* fa-regular-400.woff2 in Resources */,
+				D2F58095B6F84C82B08FD97F /* fa-solid-900.eot in Resources */,
+				040A9444449849B080EFBB47 /* fa-solid-900.svg in Resources */,
+				15625AAB2F4D42DA84475831 /* fa-solid-900.woff in Resources */,
+				A4167CB21BA246808D8F6B49 /* fa-solid-900.woff2 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -562,7 +631,7 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -596,6 +665,7 @@
 					"-DFOLLY_MOBILE=1",
 					"-DFOLLY_USE_LIBCPP=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -633,7 +703,7 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -659,6 +729,7 @@
 					"-DFOLLY_MOBILE=1",
 					"-DFOLLY_USE_LIBCPP=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};

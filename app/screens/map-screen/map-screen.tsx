@@ -18,6 +18,7 @@ import {
   Modal,
   Alert,
   TouchableOpacity,
+  Platform
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {
@@ -191,6 +192,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const markerSelected = (marker: React.SetStateAction<any>) => {
+    console.log('select2');
     if (isAddSite) {
       return;
     }
@@ -642,15 +644,17 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         delay(500).then(() => {
           try {
             setIsLoading(false);
-            request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION).then(
-              (res: string) => {
-                if (res === 'granted') {
-                  watchLocation().catch(err => console.log(err));
-                } else {
-                  // getSites()
-                }
-              },
-            );
+            request(
+              Platform.OS === 'ios'
+                ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
+                : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+            ).then((res: string) => {
+              if (res === 'granted') {
+                watchLocation().catch(err => console.log(err));
+              } else {
+                // getSites()
+              }
+            });
           } catch (error) {
             console.log('location set error:', error);
           }
@@ -716,7 +720,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             <Icon
               style={!search ? {display: 'none'} : {}}
               name="times"
-              type="font-awesome"
+              type="font-awesome-5"
               size={20}
               color="rgb(138, 151, 161)"
               onPress={() => setSearch('')}
@@ -725,7 +729,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           searchIcon={
             <Icon
               name="search"
-              type="font-awesome"
+              type="font-awesome-5"
               size={20}
               color="rgb(138, 151, 161)"
             />
@@ -746,7 +750,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           icon={
             <Icon
               name="bars"
-              type="font-awesome"
+              type="font-awesome-5"
               size={32}
               color="rgb(138, 151, 161)"
             />
@@ -790,11 +794,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 ref={(ref: any) => {
                   marker.ref = ref;
                 }}
-                onPress={() => {
-                  markerSelected(marker);
-                }}
                 onDeselect={() => {
-                  markerDeselected();
+                  // markerDeselected();
                 }}
                 onSelect={() => {
                   markerSelected(marker);
@@ -846,8 +847,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       </Modal>
       <View style={styles.TOP_LEFT_CONTAINER}>
         <Icon
+          solid
           name="circle"
-          type="font-awesome"
+          type="font-awesome-5"
           size={10}
           color={isConnected ? '#42D417' : '#AFAFAF'}
         />
@@ -869,7 +871,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               icon={
                 <Icon
                   name="close"
-                  type="font-awesome"
+                  type="font-awesome-5"
                   size={23}
                   color="white"
                 />
@@ -1033,13 +1035,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               <Icon
                 name="map-marker"
                 type="font-awesome-5"
-                size={30}
+                size={40}
                 color={isAddSite ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
               />
               <Icon
                 name="plus"
                 type="font-awesome-5"
-                size={15}
+                size={22}
                 color={'#FFF'}
                 containerStyle={{ position: 'absolute', zIndex: 99, height: '100%', paddingTop: spacing[1] }}
               />
@@ -1055,7 +1057,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             <Icon
               name="location-arrow"
               type="font-awesome-5"
-              size={25}
+              size={30}
               color="#ffffff"
             />
           }
@@ -1072,7 +1074,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             <Icon
               name="sync"
               type="font-awesome-5"
-              size={25}
+              size={30}
               color={isSyncing ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
             />
           }
