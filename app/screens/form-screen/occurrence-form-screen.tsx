@@ -144,11 +144,26 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   let scrollViewRef = useRef();
 
   const recordTypeOptions = [
-    'Visual observation',
-    'Photographic record',
-    'Specimen collection',
-    'Acoustic record',
-    'DNA sample',
+    {
+      id: 1,
+      name: 'Visual observation',
+    },
+    {
+      id: 2,
+      name: 'Photographic record',
+    },
+    {
+      id: 3,
+      name: 'Specimen collection',
+    },
+    {
+      id: 4,
+      name: 'Acoustic record',
+    },
+    {
+      id: 5,
+      name: 'DNA sample',
+    },
   ];
 
   useEffect(() => {
@@ -608,6 +623,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                       style={styles.OBSERVED_TAXA_LIST}
                       onPress={() => checkObservedTaxon(observedTaxon.taxon)}>
                       <CheckBox
+                        iconType="font-awesome-5"
+                        checkedIcon="check-square"
+                        uncheckedIcon="square"
                         disabled={false}
                         checked={observedTaxon.checked}
                         onPress={() => checkObservedTaxon(observedTaxon.taxon)}
@@ -640,30 +658,17 @@ export const OccurrenceFormScreen: React.FunctionComponent<
 
               {/* Source References */}
               <View style={{marginTop: spacing[8]}}></View>
-              <Text style={styles.LABEL}>Source Reference</Text>
+              <Text style={{zIndex: -1, ...styles.LABEL}}>Source Reference</Text>
               <View
-                style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
-                <Picker
+                style={{marginBottom: spacing[5], zIndex: -1, ...styles.TEXT_INPUT_STYLE}}>
+                <CustomPicker
                   selectedValue={sourceReference}
-                  numberOfLines={4}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
+                  options={sourceReferenceOptions}
+                  onValueChange={(itemValue: any) => {
                     setSourceReference(itemValue);
                     values.sourceReference = itemValue;
-                  }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
-                  {sourceReferenceOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.label()}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
+                  }}
+                />
               </View>
 
               <View style={{marginBottom: 100}}>

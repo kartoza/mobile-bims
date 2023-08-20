@@ -6,6 +6,7 @@ import {loadAbioticData} from '../../models/abiotic/abiotic.store';
 import {styles} from '../../screens/form-screen/styles';
 import Autocomplete from 'react-native-autocomplete-input';
 import {spacing} from '../../theme/spacing';
+import { Icon } from '@rneui/themed';
 
 export interface AbioticDataInterface {
   abiotic: Abiotic;
@@ -108,6 +109,10 @@ export default function AbioticForm(props: AbioticFormInterface) {
             keyboardShouldPersistTaps: 'always',
             horizontal: false,
             nestedScrollEnabled: true,
+            style: {
+              maxHeight: 150,
+              zIndex: 9999
+            },
             keyExtractor: item => item.id.toString(),
             renderItem: ({item}) => (
               <TouchableOpacity
@@ -138,7 +143,14 @@ export default function AbioticForm(props: AbioticFormInterface) {
             value={abioticSingleData.value}
             right={
               <TextInput.Icon
-                icon="delete"
+                name={() => (
+                  <Icon
+                    name="trash"
+                    type="font-awesome-5"
+                    size={20}
+                    color="rgb(138, 151, 161)"
+                  />
+                )}
                 onPress={() => deleteAbiotic(abioticSingleData.abiotic.id)}
               />
             }

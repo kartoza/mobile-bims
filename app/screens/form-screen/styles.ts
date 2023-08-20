@@ -175,11 +175,11 @@ const AUTOCOMPLETE_CONTAINER: ViewStyle = {
   position: 'absolute',
   right: 0,
   top: 35,
-  zIndex: 1,
+  zIndex: 10,
 };
 
 const AUTOCOMPLETE_LIST: ViewStyle = {
-  backgroundColor: 'white',
+  backgroundColor: '#ffffff',
   padding: 5,
   borderBottomWidth: 0.2,
   borderBottomColor: 'rgba(0,0,0,0.21)',

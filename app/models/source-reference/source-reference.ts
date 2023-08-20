@@ -6,6 +6,7 @@ export default class SourceReference {
   year?: string;
   authors?: string;
   referenceType!: string;
+  name?: string;
 
   constructor(data: any) {
     for (const key in data) {
@@ -21,6 +22,7 @@ export default class SourceReference {
     if (!this.localId) {
       this.localId = data.id;
     }
+    this.name = `${this.title}\n(${this.referenceType})`;
     return this;
   }
 
