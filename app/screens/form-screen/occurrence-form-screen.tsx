@@ -71,6 +71,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [siteVisit, setSiteVisit] = useState<SiteVisit | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [date, setDate] = useState(new Date());
+  const [scrollY, setScrollY] = useState(0);
   const [broadBiotope, setBroadBiotope] = useState('');
   const [specificBiotope, setSpecificBiotope] = useState('');
   const [substratum, setSubstratum] = useState('');
@@ -99,6 +100,18 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   let scrollViewRef = useRef();
 
+  const viewRef = useRef(null);
+
+  const getYPosition = () => {
+    viewRef.current.measure((x, y, width, height, pageX, pageY) => {
+      scrollViewRef.current?.scrollTo({
+        y: (Dimensions.get('window').height / 2) + (siteImageData ? 450 : 0) + 50,
+        animated: true,
+      });
+      console.log("Y position relative to the screen:", pageY);
+    });
+  };
+
   const recordTypeOptions = [
     'Visual observation',
     'Photographic record',
@@ -106,6 +119,11 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     'Acoustic record',
     'DNA sample',
   ];
+
+  const handleScroll = (event) => {
+    // Update scrollY with current y offset
+    setScrollY(event.nativeEvent.contentOffset.y);
+  };
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -359,6 +377,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       </Dialog>
       <ScrollView
         style={styles.CONTAINER}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
         ref={scrollViewRef}>
         <Formik
@@ -559,16 +579,13 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               {/* Sampling Method */}
               <View>
                 <Text style={styles.REQUIRED_LABEL}>Observed Taxa</Text>
-                <View style={[styles.AUTOCOMPLETE_CONTAINER, {zIndex: 2}]}>
+                <View ref={viewRef} style={[styles.AUTOCOMPLETE_CONTAINER, {zIndex: 2}]}>
                   <Autocomplete
                     data={filterTaxonList(taxonQuery)}
                     placeholder={'Find species here'}
                     value={taxonQuery}
                     onChange={e => {
-                      scrollViewRef?.current?.scrollTo({
-                        y: Dimensions.get('window').height,
-                        animated: true,
-                      });
+                      getYPosition();
                     }}
                     onChangeText={setTaxonQuery}
                     flatListProps={{
@@ -594,7 +611,14 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     }}
                   />
                 </View>
-                <View style={{marginTop: 50, marginBottom: 20}}>
+                <View style={{marginTop: 50}}>
+                  {observedTaxaList.length > 0 && (
+                    <Text style={{color: 'black', textAlign: 'right'}}>
+                      Abundance (Number)
+                    </Text>
+                  )}
+                </View>
+                <View style={{marginBottom: 20}}>
                   {observedTaxaList.map(observedTaxon => (
                     <TouchableOpacity
                       key={observedTaxon.taxon.id}

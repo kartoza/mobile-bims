@@ -100,7 +100,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
           onChangeText={text => setInputText(text)}
           onChange={e => {
             props.scrollViewRef?.current?.scrollTo({
-              y: Dimensions.get('window').height,
+              y: Dimensions.get('window').height + 450,
               animated: true,
             });
           }}

@@ -775,7 +775,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
       <View style={styles.SEARCH_BAR_CONTAINER}>
         <SearchBar
-          placeholder="Search Sites"
+          placeholder="Search site code"
           lightTheme
           round
           onChangeText={updateSearch}
