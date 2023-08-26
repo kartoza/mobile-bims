@@ -73,6 +73,7 @@ import {downloadTiles, getZoomLevel, riverLayer} from '../../utils/offline-map';
 import RNFS from 'react-native-fs';
 import {color} from '../../theme/color';
 import Site from '../../models/site/site';
+import { AuthContext } from '../../App';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -83,6 +84,7 @@ export interface MapScreenProps {
 
 export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   // const {navigation} = props;
+  const {signOut} = React.useContext(AuthContext);
   const [sites, setSites] = useState<any[]>([]);
   const [markers, setMarkers] = useState<any[]>([]);
   const [newSiteMarker, setNewSiteMarker] = useState<any>(null);
@@ -675,7 +677,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       const _taxonGroups = await loadTaxonGroups();
       setTaxonGroups(_taxonGroups);
       if (!token) {
-        props.navigation.pop();
+        signOut();
       }
       if (isMounted) {
         delay(500).then(() => {
@@ -775,7 +777,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
       <View style={styles.SEARCH_BAR_CONTAINER}>
         <SearchBar
-          placeholder="Search Sites"
+          placeholder="Search site code"
           lightTheme
           round
           onChangeText={updateSearch}

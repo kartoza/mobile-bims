@@ -204,7 +204,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const goToPreviousScreen = React.useMemo(
     () => () => {
       props.navigation.pop();
-      route.params.onBack();
+      if (typeof route.params.onBack !== 'undefined') {
+        route.params.onBack();
+      }
     },
     [props.navigation, route.params],
   );
@@ -359,6 +361,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       </Dialog>
       <ScrollView
         style={styles.CONTAINER}
+        scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
         ref={scrollViewRef}>
         <Formik
@@ -565,8 +568,11 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     placeholder={'Find species here'}
                     value={taxonQuery}
                     onChange={e => {
-                      scrollViewRef?.current?.scrollTo({
-                        y: Dimensions.get('window').height,
+                      scrollViewRef.current?.scrollTo({
+                        y:
+                          Dimensions.get('window').height / 2 +
+                          (siteImageData ? 450 : 0) +
+                          50,
                         animated: true,
                       });
                     }}
@@ -594,7 +600,14 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     }}
                   />
                 </View>
-                <View style={{marginTop: 50, marginBottom: 20}}>
+                <View style={{marginTop: 50}}>
+                  {observedTaxaList.length > 0 && (
+                    <Text style={{color: 'black', textAlign: 'right'}}>
+                      Abundance (Number)
+                    </Text>
+                  )}
+                </View>
+                <View style={{marginBottom: 20}}>
                   {observedTaxaList.map(observedTaxon => (
                     <TouchableOpacity
                       key={observedTaxon.taxon.id}
