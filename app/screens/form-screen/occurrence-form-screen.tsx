@@ -569,10 +569,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     value={taxonQuery}
                     onChange={e => {
                       scrollViewRef.current?.scrollTo({
-                        y:
-                          Dimensions.get('window').height / 2 +
-                          (siteImageData ? 450 : 0) +
-                          50,
+                        y: 600 + (siteImageData ? 450 : 0) + 50,
                         animated: true,
                       });
                     }}

@@ -39,7 +39,7 @@ export default class Site {
     if (this.newData && typeof this.synced === 'undefined') {
       this.synced = false;
     }
-    this.name = data.name;
+    this.name = data.name ? data.name : '';
     this.id = data.id;
     if (data.site_code) {
       this.siteCode = data.site_code;

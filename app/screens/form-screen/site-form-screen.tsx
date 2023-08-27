@@ -44,7 +44,11 @@ export const SiteFormScreen: React.FunctionComponent<
   const [fetchingRiverName, setFetchingRiverName] = useState<boolean>(false);
 
   const loadSiteData = useCallback(async () => {
+    console.log('LOAD', route.params.siteId);
     const _siteData = await getSiteByField('id', route.params.siteId);
+    if (!_siteData) {
+      props.navigation.pop();
+    }
     setUpdatedSiteData(_siteData);
     setSiteData(_siteData);
     setUsername(_siteData.id > 0 ? _siteData.owner : await load('user'));
@@ -54,7 +58,7 @@ export const SiteFormScreen: React.FunctionComponent<
     return function cleanup() {
       unsubscribe();
     };
-  }, [route.params.siteId]);
+  }, [props.navigation, route.params.siteId]);
 
   const goToMapScreen = React.useMemo(
     () =>
@@ -230,7 +234,7 @@ export const SiteFormScreen: React.FunctionComponent<
                 key="river_name"
                 editable={false}
                 title={'River'}
-                value={updatedSiteData.riverName}
+                value={updatedSiteData.riverName ? updatedSiteData.riverName : ''}
               />
               {editMode ? (
                 <Button
