@@ -58,12 +58,14 @@ export function PrimaryNavigator() {
             ...prevState,
             isSignout: false,
             userToken: action.token,
+            isLoading: false,
           };
         case 'SIGN_OUT':
           return {
             ...prevState,
             isSignout: true,
             userToken: null,
+            isLoading: false,
           };
       }
     },
@@ -84,7 +86,12 @@ export function PrimaryNavigator() {
       } catch (e) {
         // Restoring token failed
       }
-      dispatch({type: 'RESTORE_TOKEN', token: userToken});
+      console.log('userToken', userToken, state.userToken);
+      if (userToken) {
+        dispatch({type: 'RESTORE_TOKEN', token: userToken});
+      } else {
+        dispatch({type: 'SIGN_OUT'});
+      }
     };
 
     bootstrapAsync();
