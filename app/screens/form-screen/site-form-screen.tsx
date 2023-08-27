@@ -20,6 +20,7 @@ import { riverLayer } from "../../utils/offline-map"
 import { load } from "../../utils/storage"
 import { Api } from "../../services/api/api"
 import { ApiResponse } from "apisauce"
+import {Dialog} from '@rneui/themed';
 
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
@@ -131,6 +132,11 @@ export const SiteFormScreen: React.FunctionComponent<
         containerStyle={styles.HEADER_CONTAINER}
       />
       <ScrollView style={styles.CONTAINER}>
+        <Dialog
+          isVisible={fetchingRiverName}
+          overlayStyle={{backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00'}}>
+          <Dialog.Loading />
+        </Dialog>
         <Formik
           initialValues={{
             original_id: '-',
