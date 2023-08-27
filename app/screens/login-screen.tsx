@@ -17,6 +17,7 @@ import {Button} from '@rneui/themed';
 import {Wallpaper} from '../components/wallpaper/wallpaper';
 import axios from 'axios';
 import {Switch} from '@rneui/base';
+import { AuthContext } from '../App';
 
 const logo = require('../components/logo/fbis_v2_logo.png');
 
@@ -47,6 +48,7 @@ export const LoginScreenPage: React.FunctionComponent<
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const loginUrl = `${Config.API_URL}/mobile/api-token-auth/`;
+  const {signIn} = React.useContext(AuthContext);
 
   const goToMapScreen = React.useMemo(
     () => () => props.navigation.navigate('map'),
@@ -68,7 +70,7 @@ export const LoginScreenPage: React.FunctionComponent<
     (async () => {
       const token = await load('token');
       if (token) {
-        goToMapScreen();
+        signIn(token);
       }
     })();
   });

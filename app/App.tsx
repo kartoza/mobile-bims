@@ -28,6 +28,7 @@ import {
 } from 'react-native-safe-area-context';
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
+export const AuthContext = React.createContext({} as any);
 
 const App = () => {
   const navigationRef = useNavigationContainerRef();

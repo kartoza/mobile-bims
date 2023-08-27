@@ -256,7 +256,9 @@ export const UnsyncedScreen: React.FunctionComponent<
     () =>
       async (sync: boolean = false) => {
         props.navigation.pop();
-        await route.params.onBack();
+        if (typeof route.params.onBack !== 'undefined') {
+          await route.params.onBack();
+        }
         if (sync) {
           await route.params.syncRecord();
         }

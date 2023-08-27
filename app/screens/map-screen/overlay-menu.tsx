@@ -8,6 +8,7 @@ import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {saveSiteVisits} from '../../models/site_visit/site_visit.store';
 import {saveSites} from '../../models/site/site.store';
 import {saveSassSiteVisits} from '../../models/sass/sass.store';
+import { AuthContext } from '../../App';
 
 export interface OverlayMenuProps {
   visible: boolean;
@@ -20,6 +21,7 @@ export interface OverlayMenuProps {
 export function OverlayMenu(props: OverlayMenuProps) {
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [user, setUser] = useState({});
+  const {signOut} = React.useContext(AuthContext);
 
   useEffect(() => {
     (async () => {
@@ -28,11 +30,6 @@ export function OverlayMenu(props: OverlayMenuProps) {
       setUser(userData);
     })();
   }, [props.visible]);
-
-  const goToLoginScreen = React.useMemo(
-    () => () => props.navigation.navigate('login'),
-    [props.navigation],
-  );
 
   const goToUnsynced = React.useMemo(
     () => () => {
@@ -77,7 +74,7 @@ export function OverlayMenu(props: OverlayMenuProps) {
             await saveSiteVisits([]);
             await saveSassSiteVisits([]);
             await saveSites([]);
-            goToLoginScreen();
+            signOut();
           },
         },
       ],
