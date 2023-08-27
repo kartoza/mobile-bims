@@ -86,7 +86,6 @@ export function PrimaryNavigator() {
       } catch (e) {
         // Restoring token failed
       }
-      console.log('userToken', userToken, state.userToken);
       if (userToken) {
         dispatch({type: 'RESTORE_TOKEN', token: userToken});
       } else {
