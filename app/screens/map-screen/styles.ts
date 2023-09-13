@@ -189,6 +189,7 @@ const MID_BOTTOM_SUB_TEXT: TextStyle = {
 const MID_BOTTOM_BUTTON: ViewStyle = {
   backgroundColor: '#3ca290',
   borderColor: '#3ca290',
+  flex: 1,
 };
 
 const SASS_BUTTON: ViewStyle = {

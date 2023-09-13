@@ -364,10 +364,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setShowBiodiversityModule(true);
   };
 
-  const addNewSite = async () => {
+  const addNewSite = async (ecosystemType: string = 'river') => {
     const newSite = await createNewSite(
       newSiteMarker.coordinate.latitude,
       newSiteMarker.coordinate.longitude,
+      ecosystemType,
     );
     setFormStatus('site');
     props.navigation.navigate('siteForm', {
@@ -1151,6 +1152,50 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               </Text>
             ) : null}
             <View style={{flexDirection: 'row'}}>
+              {newSiteMarker ? (
+                <>
+                  <Button
+                    title="River"
+                    type="outline"
+                    raised
+                    buttonStyle={styles.MID_BOTTOM_BUTTON}
+                    titleStyle={{color: '#ffffff'}}
+                    containerStyle={{width: '30%'}}
+                    onPress={() => {
+                      addNewSite('river').then(err => console.log(err));
+                    }}
+                  />
+                  <Button
+                    title="Wetland"
+                    type="outline"
+                    raised
+                    buttonStyle={styles.MID_BOTTOM_BUTTON}
+                    titleStyle={{color: '#ffffff'}}
+                    containerStyle={{
+                      width: '30%',
+                      marginLeft: 5,
+                    }}
+                    onPress={() => {
+                      addNewSite('wetland').then(err => console.log(err));
+                    }}
+                  />
+                  <Button
+                    title={'Open\nWaterbody'}
+                    type="outline"
+                    raised
+                    buttonStyle={styles.MID_BOTTOM_BUTTON}
+                    titleStyle={{color: '#ffffff'}}
+                    containerStyle={{width: '30%', marginLeft: 5}}
+                    onPress={() => {
+                      addNewSite('open waterbody').then(err =>
+                        console.log(err),
+                      );
+                    }}
+                  />
+                </>
+              ) : null}
+            </View>
+            <View style={{ paddingTop: 10 }}>
               <Button
                 title="Cancel"
                 type="outline"
@@ -1163,19 +1208,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   setIsAddSite(false);
                 }}
               />
-              {newSiteMarker ? (
-                <Button
-                  title="Add"
-                  type="outline"
-                  raised
-                  buttonStyle={styles.MID_BOTTOM_BUTTON}
-                  titleStyle={{color: '#ffffff'}}
-                  containerStyle={{width: '30%', marginLeft: 10}}
-                  onPress={() => {
-                    addNewSite().then(err => console.log(err));
-                  }}
-                />
-              ) : null}
             </View>
           </View>
         </View>

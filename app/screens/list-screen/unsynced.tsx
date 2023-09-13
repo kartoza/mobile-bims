@@ -126,18 +126,36 @@ export const UnsyncedScreen: React.FunctionComponent<
   const [unsynced, setUnsynced] = useState<UnsyncedInterface[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const _capitalize = (word: string | undefined) => {
+    if (!word) {
+      return '';
+    }
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  };
+
   const parseSiteDesc = (siteData: Site) => {
     const siteCode = siteData.siteCode
       ? 'Site Code : ' + siteData.siteCode + '\n'
       : '';
-    return siteCode + 'Site Desc : ' + (siteData.description ? siteData.description : '-');
+    return (
+      siteCode +
+      'Site Desc : ' +
+      (siteData.description ? siteData.description : '-') +
+      '\nEcosystem : ' +
+      _capitalize(siteData.ecosystemType)
+    );
   };
 
   const parseSiteVisitDesc = (siteVisit: SiteVisit) => {
     const locationSite = siteVisit.site.siteCode
       ? siteVisit.site.siteCode
       : siteVisit.site.description;
-    return 'Location Site : ' + locationSite + ' Module : ' + siteVisit.taxonGroup.name;
+    return (
+      'Location Site : ' +
+      locationSite +
+      ' Module : ' +
+      siteVisit.taxonGroup.name
+    );
   };
 
   const parseSassSiteVisitDesc = async (sassSiteVisit: SassSiteVisit) => {
@@ -199,7 +217,7 @@ export const UnsyncedScreen: React.FunctionComponent<
         siteId: _id,
         title: 'Edit Site',
         editMode: true,
-        onBackToMap: async (newSiteId: Number | null = null) => {
+        onBackToMap: async (_newSiteId: Number | null = null) => {
           getUnsyncedData();
           return;
         },

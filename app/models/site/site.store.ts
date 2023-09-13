@@ -82,6 +82,7 @@ export const getSitesByField = async (
 export const createNewSite = async (
   latitude: number,
   longitude: number,
+  ecosystemType?: string,
 ): Promise<Site> => {
   const newSites = await getSitesByField('synced', false);
   let newId = -1;
@@ -96,6 +97,7 @@ export const createNewSite = async (
     newData: true,
     datetime: Math.floor(Date.now() / 1000),
     synced: false,
+    ecosystemType: ecosystemType,
   });
   const allSites = await loadSites();
   allSites.push(newSite);

@@ -14,6 +14,9 @@ export default class Site {
   owner?: string;
   userRiverName?: string;
   userSiteCode?: string;
+  ecosystemType?: string;
+  userWetlandName?: string;
+  wetlandName?: string;
 
   constructor(data: {
     id: number;
@@ -35,6 +38,9 @@ export default class Site {
     userSiteCode?: string;
     synced: boolean;
     owner?: string;
+    ecosystemType?: string;
+    userWetlandName?: string;
+    wetlandName?: string;
   }) {
     if (this.newData && typeof this.synced === 'undefined') {
       this.synced = false;
@@ -48,15 +54,13 @@ export default class Site {
     } else {
       this.siteCode = '-';
     }
-    if (data.geometry) {
-      const geometry = JSON.parse(data.geometry);
-      this.longitude = geometry.coordinates[0];
-      this.latitude = geometry.coordinates[1];
-    }
-    if (data.latitude && data.longitude) {
-      this.longitude = data.longitude;
-      this.latitude = data.latitude;
-    }
+    this.latitude =
+      data.latitude ||
+      (data.geometry ? JSON.parse(data.geometry).coordinates[1] : 0);
+    this.longitude =
+      data.longitude ||
+      (data.geometry ? JSON.parse(data.geometry).coordinates[0] : 0);
+
     if (data.datetime) {
       this.datetime = data.datetime;
     }
@@ -93,6 +97,12 @@ export default class Site {
     if (data.owner) {
       this.owner = data.owner;
     }
+    if (data.ecosystemType) {
+      this.ecosystemType = data.ecosystemType;
+    }
+    this.wetlandName = data.wetlandName;
+    this.userWetlandName = data.userWetlandName;
+
     return this;
   }
 }
