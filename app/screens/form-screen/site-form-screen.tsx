@@ -1,9 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import RNFS from "react-native-fs"
-
-{
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-}
+import RNFS from 'react-native-fs';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import React, {createRef, useCallback, useEffect, useState} from 'react';
@@ -15,11 +11,11 @@ import {Formik, isNaN} from 'formik';
 import MapView, {LocalTile, Marker, WMSTile} from 'react-native-maps';
 import {FormInput} from '../../components/form-input/form-input';
 import {LogBox} from 'react-native';
-import NetInfo from "@react-native-community/netinfo"
-import { riverLayer } from "../../utils/offline-map"
-import { load } from "../../utils/storage"
-import { Api } from "../../services/api/api"
-import { ApiResponse } from "apisauce"
+import NetInfo from '@react-native-community/netinfo';
+import {riverLayer} from '../../utils/offline-map';
+import {load} from '../../utils/storage';
+import {Api} from '../../services/api/api';
+import {ApiResponse} from 'apisauce';
 import {Dialog} from '@rneui/themed';
 
 LogBox.ignoreLogs([
@@ -45,7 +41,6 @@ export const SiteFormScreen: React.FunctionComponent<
   const [fetchingRiverName, setFetchingRiverName] = useState<boolean>(false);
 
   const loadSiteData = useCallback(async () => {
-    console.log('LOAD', route.params.siteId);
     const _siteData = await getSiteByField('id', route.params.siteId);
     if (!_siteData) {
       props.navigation.pop();
@@ -99,6 +94,18 @@ export const SiteFormScreen: React.FunctionComponent<
     }
   };
 
+  const fetchWetlandData = async (lat: Number, lon: Number) => {
+    const url = `/mobile/wetland/?lon=${lon}&lat=${lat}`;
+    const api = new Api();
+    await api.setup();
+    const response: ApiResponse<any> = await api.apisauce.get(url);
+    if (response.data) {
+      return response.data.name || '-';
+    } else {
+      return '-';
+    }
+  };
+
   const submitForm = async () => {
     if (!updatedSiteData.latitude || !updatedSiteData.longitude) {
       Alert.alert('Error', 'You must have correct coordinates.', [
@@ -126,7 +133,9 @@ export const SiteFormScreen: React.FunctionComponent<
           onPress: () => goToMapScreen(),
         }}
         centerComponent={{
-          text: route.params.title ? route.params.title : 'ADD SITE',
+          text: route.params.title
+            ? route.params.title
+            : `ADD ${siteData.ecosystemType?.toUpperCase()} SITE`,
           style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
         }}
         containerStyle={styles.HEADER_CONTAINER}
@@ -134,7 +143,10 @@ export const SiteFormScreen: React.FunctionComponent<
       <ScrollView style={styles.CONTAINER}>
         <Dialog
           isVisible={fetchingRiverName}
-          overlayStyle={{backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00'}}>
+          overlayStyle={{
+            backgroundColor: '#FFFFFF00',
+            shadowColor: '#FFFFFF00',
+          }}>
           <Dialog.Loading />
         </Dialog>
         <Formik
@@ -236,41 +248,91 @@ export const SiteFormScreen: React.FunctionComponent<
                   formOnChange(parseFloat(val), 'longitude')
                 }
               />
-              <FormInput
-                key="river_name"
-                editable={false}
-                title={'River'}
-                value={updatedSiteData.riverName ? updatedSiteData.riverName : ''}
-              />
-              {editMode ? (
-                <Button
-                  title={'Fetch River Name'}
-                  buttonStyle={{borderRadius: 5, marginTop: 5}}
-                  disabled={fetchingRiverName}
-                  loading={fetchingRiverName}
-                  onPress={async () => {
-                    setFetchingRiverName(true);
-                    const riverName = await fetchRiverName(
-                      updatedSiteData.latitude,
-                      updatedSiteData.longitude,
-                    );
-                    setUpdatedSiteData({
-                      ...updatedSiteData,
-                      ...{
-                        riverName: riverName,
-                      },
-                    });
-                    setFetchingRiverName(false);
-                  }}
+              {siteData.ecosystemType === 'wetland' ? (
+                <FormInput
+                  key="wetland_name"
+                  editable={false}
+                  title={'Wetland'}
+                  value={
+                    updatedSiteData.wetlandName
+                      ? updatedSiteData.wetlandName
+                      : ''
+                  }
                 />
+              ) : (
+                <FormInput
+                  key="river_name"
+                  editable={false}
+                  title={'River'}
+                  value={
+                    updatedSiteData.riverName ? updatedSiteData.riverName : ''
+                  }
+                />
+              )}
+              {editMode ? (
+                siteData.ecosystemType === 'wetland' ? (
+                  <Button
+                    title={'Fetch Wetland'}
+                    buttonStyle={{borderRadius: 5, marginTop: 5}}
+                    disabled={fetchingRiverName}
+                    loading={fetchingRiverName}
+                    onPress={async () => {
+                      setFetchingRiverName(true);
+                      const wetlandName = await fetchWetlandData(
+                        updatedSiteData.latitude,
+                        updatedSiteData.longitude,
+                      );
+                      setUpdatedSiteData({
+                        ...updatedSiteData,
+                        ...{
+                          wetlandName: wetlandName,
+                        },
+                      });
+                      setFetchingRiverName(false);
+                    }}
+                  />
+                ) : (
+                  <Button
+                    title={'Fetch River Name'}
+                    buttonStyle={{borderRadius: 5, marginTop: 5}}
+                    disabled={fetchingRiverName}
+                    loading={fetchingRiverName}
+                    onPress={async () => {
+                      setFetchingRiverName(true);
+                      const riverName = await fetchRiverName(
+                        updatedSiteData.latitude,
+                        updatedSiteData.longitude,
+                      );
+                      setUpdatedSiteData({
+                        ...updatedSiteData,
+                        ...{
+                          riverName: riverName,
+                        },
+                      });
+                      setFetchingRiverName(false);
+                    }}
+                  />
+                )
               ) : null}
-              <FormInput
-                key="user_river_name"
-                editable={editMode}
-                title={'User River Name'}
-                value={updatedSiteData ? updatedSiteData.userRiverName : ''}
-                onChange={(val: string) => formOnChange(val, 'userRiverName')}
-              />
+              {siteData.ecosystemType === 'wetland' ? (
+                <FormInput
+                  key="user_wetland_name"
+                  editable={editMode}
+                  title={'User Wetland Name'}
+                  value={updatedSiteData ? updatedSiteData.userWetlandName : ''}
+                  onChange={(val: string) =>
+                    formOnChange(val, 'userWetlandName')
+                  }
+                />
+              ) : (
+                <FormInput
+                  key="user_river_name"
+                  editable={editMode}
+                  title={'User River Name'}
+                  value={updatedSiteData ? updatedSiteData.userRiverName : ''}
+                  onChange={(val: string) => formOnChange(val, 'userRiverName')}
+                />
+              )}
               <FormInput
                 editable={editMode}
                 key="site_description"
