@@ -1,5 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect, useRef} from 'react';
+import RNFS from 'react-native-fs';
 import {
   View,
   ScrollView,
@@ -12,9 +13,10 @@ import {
   Alert,
   Platform,
   StyleSheet,
-  Dimensions, Keyboard,
-} from "react-native"
-import {Button, Header, CheckBox, Dialog} from '@rneui/themed';
+  Keyboard,
+  BackHandler,
+} from 'react-native';
+import {Button, Header, CheckBox, Dialog, Icon} from '@rneui/themed';
 import {Formik} from 'formik';
 import {Picker} from '@react-native-picker/picker';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -22,6 +24,7 @@ import {ParamListBase} from '@react-navigation/native';
 import Autocomplete from 'react-native-autocomplete-input';
 import {styles} from './styles';
 import {Camera} from '../../components/camera/camera';
+import {Camera as CameraVision, useCameraDevices} from 'react-native-vision-camera';
 import {
   loadTaxonGroups,
   loadTaxa,
@@ -44,7 +47,8 @@ import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
-import { spacing } from "../../theme/spacing"
+import {spacing} from '../../theme/spacing';
+import { ButtonGroup } from '@rneui/base';
 
 const keyboardStyles = StyleSheet.create({
   container: {
@@ -60,6 +64,10 @@ interface ObservedTaxonInterface {
   taxon: Taxon;
   checked: boolean;
   value: string;
+}
+
+interface Photo {
+  path: string;
 }
 
 export const OccurrenceFormScreen: React.FunctionComponent<
@@ -97,7 +105,15 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   >([]);
   const [username, setUsername] = useState('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
+  const [takingOccurrencePicture, setTakingOccurrencePicture] = useState<boolean>(false);
+  const [capturedPhotos, setCapturedPhotos] = useState<Photo[]>([]);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
+  const [lastYPosition, setLastYPosition] = useState<number>(0);
+
   let scrollViewRef = useRef();
+  const devices = useCameraDevices();
+  const device = devices.back;
+  let cameraRef = useRef<CameraVision | null>(null);
 
   const recordTypeOptions = [
     'Visual observation',
@@ -106,6 +122,36 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     'Acoustic record',
     'DNA sample',
   ];
+
+  const onScroll = (e: any) => {
+    setLastYPosition(e.nativeEvent.contentOffset.y);
+  };
+
+  const handleBackPress = () => {
+    if (takingOccurrencePicture) {
+      setTakingOccurrencePicture(false);
+      return true; // prevent default behavior (exit app)
+    }
+    return false; // execute default behavior
+  };
+
+  useEffect(() => {
+    if (!takingOccurrencePicture) {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({y: lastYPosition, animated: false});
+      }
+    }
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, [takingOccurrencePicture]);
+
+  useEffect(() => {
+    if (capturedPhotos.length > currentPhotoIndex + 1) {
+      setCurrentPhotoIndex(capturedPhotos.length - 1);
+    }
+  }, [capturedPhotos]);
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -336,6 +382,93 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     setSiteImageData(pictureData.base64);
   };
 
+  const openCamera = async () => {
+    // Open the camera
+    const cameraPermission = await CameraVision.requestCameraPermission();
+    if (cameraPermission === 'authorized') {
+      setTakingOccurrencePicture(true);
+    }
+  };
+
+  const capturePhoto = async () => {
+    if (cameraRef !== null && cameraRef.current) {
+      const photo: Photo = await cameraRef.current.takePhoto();
+      console.log('photo : ', photo.path);
+      setTakingOccurrencePicture(false);
+      setCapturedPhotos(prevPhotos => [...prevPhotos, photo]);
+    }
+  };
+
+  const nextPhoto = () => {
+    if (currentPhotoIndex < capturedPhotos.length - 1) {
+      setCurrentPhotoIndex(currentPhotoIndex + 1);
+    }
+  };
+
+  const prevPhoto = () => {
+    if (currentPhotoIndex > 0) {
+      setCurrentPhotoIndex(currentPhotoIndex - 1);
+    }
+  };
+
+  const deletePhoto = () => {
+    // Delete file from storage
+    const fileUri = capturedPhotos[currentPhotoIndex].path;
+    RNFS.unlink(fileUri)
+      .then(() => {
+        console.log('File deleted');
+      })
+      .catch(err => {
+        console.error('Failed to delete file:', err);
+        return;
+      });
+    // Remove from state
+    const newPhotos = capturedPhotos.filter(
+      (_, index) => index !== currentPhotoIndex,
+    );
+    setCapturedPhotos(newPhotos);
+    if (currentPhotoIndex >= newPhotos.length && newPhotos.length > 0) {
+      setCurrentPhotoIndex(newPhotos.length - 1);
+    } else {
+      setCurrentPhotoIndex(0);
+    }
+  };
+
+  const updatePhotoIndex = (selectedIndex: number) => {
+    if (selectedIndex === 0) {
+      prevPhoto();
+    } else if (selectedIndex === 2) {
+      nextPhoto();
+    } else {
+      deletePhoto();
+    }
+  };
+
+  if (takingOccurrencePicture && device) {
+    return (
+      <View style={{flex: 1}}>
+        <CameraVision
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={true}
+          ref={cameraRef}
+          photo={true}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            padding: 16,
+          }}>
+          <Button title="Capture" onPress={capturePhoto} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -363,6 +496,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         style={styles.CONTAINER}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
         ref={scrollViewRef}>
         <Formik
           initialValues={{
@@ -628,9 +762,47 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                           );
                         }}
                       />
+                      <Button
+                        buttonStyle={{
+                          height: 43,
+                        }}
+                        containerStyle={{
+                          marginRight: 5,
+                          backgroundColor: 'red',
+                        }}
+                        onPress={openCamera}
+                        radius={5}>
+                        <Icon
+                          size={13}
+                          name="camera"
+                          color="white"
+                          type="font-awesome"
+                        />
+                      </Button>
                     </TouchableOpacity>
                   ))}
                 </View>
+                <ScrollView
+                  style={{
+                    padding: 5,
+                  }}>
+                  {capturedPhotos.length > 0 ? (
+                    <>
+                      <Image
+                        key={currentPhotoIndex}
+                        source={{
+                          uri: 'file://' + capturedPhotos[currentPhotoIndex].path,
+                        }}
+                        style={{
+                          height: 400,
+                          resizeMode: 'contain',
+                          marginBottom: 20,
+                        }}
+                      />
+                      <ButtonGroup buttons={['<', 'Delete', '>']} onPress={updatePhotoIndex}/>
+                    </>
+                  ) : null}
+                </ScrollView>
               </View>
 
               {/* Abiotic */}
