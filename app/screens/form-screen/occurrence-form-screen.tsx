@@ -66,8 +66,10 @@ interface ObservedTaxonInterface {
   value: string;
 }
 
-interface Photo {
+interface OccurrencePhoto {
   path: string;
+  id?: number;
+  name?: string;
 }
 
 export const OccurrenceFormScreen: React.FunctionComponent<
@@ -106,9 +108,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [username, setUsername] = useState('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   const [takingOccurrencePicture, setTakingOccurrencePicture] = useState<boolean>(false);
-  const [capturedPhotos, setCapturedPhotos] = useState<Photo[]>([]);
+  const [capturedPhotos, setCapturedPhotos] = useState<OccurrencePhoto[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
   const [lastYPosition, setLastYPosition] = useState<number>(0);
+  const [selectedTaxon, setSelectedTaxon] = useState<Taxon | null>(null);
 
   let scrollViewRef = useRef();
   const devices = useCameraDevices();
@@ -140,6 +143,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({y: lastYPosition, animated: false});
       }
+      setSelectedTaxon(null);
     }
     BackHandler.addEventListener('hardwareBackPress', handleBackPress);
     return () => {
@@ -382,18 +386,23 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     setSiteImageData(pictureData.base64);
   };
 
-  const openCamera = async () => {
+  const openCamera = async (observedTaxon: Taxon) => {
     // Open the camera
     const cameraPermission = await CameraVision.requestCameraPermission();
     if (cameraPermission === 'authorized') {
+      setSelectedTaxon(observedTaxon);
       setTakingOccurrencePicture(true);
     }
   };
 
   const capturePhoto = async () => {
     if (cameraRef !== null && cameraRef.current) {
-      const photo: Photo = await cameraRef.current.takePhoto();
-      console.log('photo : ', photo.path);
+      const _photo = await cameraRef.current.takePhoto();
+      const photo: OccurrencePhoto = {
+        path: _photo.path,
+        id: selectedTaxon?.id,
+        name: selectedTaxon?.canonicalName,
+      };
       setTakingOccurrencePicture(false);
       setCapturedPhotos(prevPhotos => [...prevPhotos, photo]);
     }
@@ -770,7 +779,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                           marginRight: 5,
                           backgroundColor: 'red',
                         }}
-                        onPress={openCamera}
+                        onPress={async () =>
+                          await openCamera(observedTaxon.taxon)
+                        }
                         radius={5}>
                         <Icon
                           size={13}
@@ -782,16 +793,22 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     </TouchableOpacity>
                   ))}
                 </View>
-                <ScrollView
-                  style={{
-                    padding: 5,
-                  }}>
+                <ScrollView>
                   {capturedPhotos.length > 0 ? (
                     <>
+                      <Text
+                        style={{
+                          textAlign: 'center',
+                          marginBottom: 5,
+                          fontSize: 14,
+                        }}>
+                        {capturedPhotos[currentPhotoIndex].name}
+                      </Text>
                       <Image
                         key={currentPhotoIndex}
                         source={{
-                          uri: 'file://' + capturedPhotos[currentPhotoIndex].path,
+                          uri:
+                            'file://' + capturedPhotos[currentPhotoIndex].path,
                         }}
                         style={{
                           height: 400,
@@ -799,7 +816,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                           marginBottom: 20,
                         }}
                       />
-                      <ButtonGroup buttons={['<', 'Delete', '>']} onPress={updatePhotoIndex}/>
+                      <ButtonGroup
+                        buttons={['<', 'Delete', '>']}
+                        onPress={updatePhotoIndex}
+                      />
                     </>
                   ) : null}
                 </ScrollView>
@@ -814,9 +834,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               />
 
               {/* Source References */}
-              <View style={{marginTop: spacing[8]}}></View>
+              <View style={{marginTop: spacing[8]}} />
               <Text style={styles.LABEL}>Source Reference</Text>
-              <View style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
+              <View
+                style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
                 <Picker
                   selectedValue={sourceReference}
                   numberOfLines={4}
