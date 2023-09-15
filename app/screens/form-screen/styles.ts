@@ -110,7 +110,7 @@ const TEXT_INPUT_TAXA: TextStyle = {
   borderWidth: 1,
   borderColor: '#BDBDBD',
   height: '80%',
-  fontSize: 10,
+  fontSize: 12,
   marginLeft: 'auto',
   marginRight: 10,
   borderRadius: 4,

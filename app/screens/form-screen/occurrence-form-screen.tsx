@@ -1,5 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect, useRef} from 'react';
+import RNFS from 'react-native-fs';
 import {
   View,
   ScrollView,
@@ -12,16 +13,17 @@ import {
   Alert,
   Platform,
   StyleSheet,
-  Dimensions, Keyboard,
-} from "react-native"
-import {Button, Header, CheckBox, Dialog} from '@rneui/themed';
+  Keyboard,
+  BackHandler,
+} from 'react-native';
+import {Button, Header, CheckBox, Dialog, Icon} from '@rneui/themed';
 import {Formik} from 'formik';
 import {Picker} from '@react-native-picker/picker';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import Autocomplete from 'react-native-autocomplete-input';
 import {styles} from './styles';
-import {Camera} from '../../components/camera/camera';
+import {Camera as CameraVision, useCameraDevices} from 'react-native-vision-camera';
 import {
   loadTaxonGroups,
   loadTaxa,
@@ -30,7 +32,7 @@ import {
 import {loadOptions} from '../../models/options/option.store';
 import Taxon from '../../models/taxon/taxon';
 import {load} from '../../utils/storage';
-import SiteVisit from '../../models/site_visit/site_visit';
+import SiteVisit, {OccurrencePhoto} from '../../models/site_visit/site_visit';
 import {getSiteByField} from '../../models/site/site.store';
 import {
   saveSiteVisitByField,
@@ -44,7 +46,8 @@ import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
-import { spacing } from "../../theme/spacing"
+import {spacing} from '../../theme/spacing';
+import {ButtonGroup} from '@rneui/base';
 
 const keyboardStyles = StyleSheet.create({
   container: {
@@ -88,7 +91,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [samplingMethodOptions, setSamplingMethodOptions] = useState<Option[]>(
     [],
   );
-  const [takingPicture, setTakingPicture] = useState(false);
   const [siteImageData, setSiteImageData] = useState<string>('');
   const [taxonQuery, setTaxonQuery] = useState('');
   const [taxaList, setTaxaList] = useState([]);
@@ -97,7 +99,17 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   >([]);
   const [username, setUsername] = useState('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
+  const [takingPicture, setTakingPicture] = useState<boolean>(false);
+  const [capturedPhotos, setCapturedPhotos] = useState<OccurrencePhoto[]>([]);
+  const [deletedPhotos, setDeletedPhotos] = useState<string[]>([]);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
+  const [lastYPosition, setLastYPosition] = useState<number>(0);
+  const [selectedTaxon, setSelectedTaxon] = useState<Taxon | null>(null);
+
   let scrollViewRef = useRef();
+  const devices = useCameraDevices();
+  const device = devices.back;
+  let cameraRef = useRef<CameraVision | null>(null);
 
   const recordTypeOptions = [
     'Visual observation',
@@ -106,6 +118,50 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     'Acoustic record',
     'DNA sample',
   ];
+
+  const onScroll = (e: any) => {
+    setLastYPosition(e.nativeEvent.contentOffset.y);
+  };
+
+  const handleBackPress = () => {
+    if (takingPicture) {
+      setTakingPicture(false);
+      return true; // prevent default behavior (exit app)
+    }
+    if (deletedPhotos) {
+      for (const deletedPhoto of deletedPhotos) {
+        RNFS.unlink(deletedPhoto)
+          .then(() => {
+            console.log('File deleted');
+          })
+          .catch(err => {
+            console.error('Failed to delete file:', err);
+            return;
+          });
+      }
+    }
+
+    return false; // execute default behavior
+  };
+
+  useEffect(() => {
+    if (!takingPicture) {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({y: lastYPosition, animated: false});
+      }
+      setSelectedTaxon(null);
+    }
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, [takingPicture]);
+
+  useEffect(() => {
+    if (capturedPhotos.length > currentPhotoIndex + 1) {
+      setCurrentPhotoIndex(capturedPhotos.length - 1);
+    }
+  }, [takingPicture, capturedPhotos]);
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -172,6 +228,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }
         if (_siteVisit.recordType) {
           setRecordType(_siteVisit.recordType);
+        }
+        if (_siteVisit.occurrencePhotos) {
+          setCapturedPhotos(_siteVisit.occurrencePhotos);
         }
         setDate(new Date(_siteVisit.date));
         setAbioticData(_siteVisit.abiotic);
@@ -247,6 +306,19 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       _modulePK = siteVisit.taxonGroup.id;
     }
 
+    if (deletedPhotos) {
+      for (const deletedPhoto of deletedPhotos) {
+        RNFS.unlink(deletedPhoto)
+          .then(() => {
+            console.log('File deleted');
+          })
+          .catch(err => {
+            console.error('Failed to delete file:', err);
+            return;
+          });
+      }
+    }
+
     const site = await getSiteByField('id', _sitePk);
     const taxonGroup = await getTaxonGroupByField('id', parseInt(_modulePK));
     const allSiteVisitsData = await allSiteVisits();
@@ -256,7 +328,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       _siteVisitId = siteVisit.id;
     }
 
-    const siteVisitData = {
+    const siteVisitData: SiteVisit = {
       id: _siteVisitId,
       site: site,
       taxonGroup: taxonGroup,
@@ -271,6 +343,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       biotope: broadBiotope,
       owner: username,
       abiotic: abioticDataPayload,
+      occurrencePhotos: capturedPhotos,
       newData: true,
       synced: false,
     };
@@ -331,10 +404,113 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     setObservedTaxaList(updatedObservedTaxa);
   };
 
-  const pictureTaken = (pictureData: {base64: string}) => {
-    setTakingPicture(false);
-    setSiteImageData(pictureData.base64);
+  const blobToBase64 = (blob: any): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        resolve(String(reader.result));
+      };
+      reader.readAsDataURL(blob);
+    });
   };
+
+  const fetchImage = async (uri: string) => {
+    const imageResponse = await fetch(uri);
+    const imageBlob = await imageResponse.blob();
+    const base64Data = await blobToBase64(imageBlob);
+    setSiteImageData(base64Data.split(',')[1]);
+  };
+
+  const openCamera = async (observedTaxon: Taxon) => {
+    // Open the camera
+    const cameraPermission = await CameraVision.requestCameraPermission();
+    if (cameraPermission === 'authorized') {
+      setSelectedTaxon(observedTaxon);
+      setTakingPicture(true);
+    }
+  };
+
+  const capturePhoto = async () => {
+    if (cameraRef !== null && cameraRef.current) {
+      const _photo = await cameraRef.current.takePhoto();
+      if (!selectedTaxon) {
+        await fetchImage(`file://${_photo.path}`);
+        await RNFS.unlink(_photo.path);
+      } else {
+        const photo: OccurrencePhoto = {
+          path: _photo.path,
+          id: new Date().getTime(),
+          taxonId: selectedTaxon?.id,
+          name: selectedTaxon?.canonicalName,
+        };
+        setCapturedPhotos(prevPhotos => [...prevPhotos, photo]);
+      }
+      setTakingPicture(false);
+    }
+  };
+
+  const nextPhoto = () => {
+    if (currentPhotoIndex < capturedPhotos.length - 1) {
+      setCurrentPhotoIndex(currentPhotoIndex + 1);
+    }
+  };
+
+  const prevPhoto = () => {
+    if (currentPhotoIndex > 0) {
+      setCurrentPhotoIndex(currentPhotoIndex - 1);
+    }
+  };
+
+  const deletePhoto = () => {
+    // Delete file from storage
+    const fileUri = capturedPhotos[currentPhotoIndex].path;
+    setDeletedPhotos(_deletedPhoto => [..._deletedPhoto, fileUri]);
+    const newPhotos = capturedPhotos.filter(
+      (_, index) => index !== currentPhotoIndex,
+    );
+    setCapturedPhotos(newPhotos);
+    if (currentPhotoIndex >= newPhotos.length && newPhotos.length > 0) {
+      setCurrentPhotoIndex(newPhotos.length - 1);
+    } else {
+      setCurrentPhotoIndex(0);
+    }
+  };
+
+  const updatePhotoIndex = (selectedIndex: number) => {
+    if (selectedIndex === 0) {
+      prevPhoto();
+    } else if (selectedIndex === 2) {
+      nextPhoto();
+    } else {
+      deletePhoto();
+    }
+  };
+
+  if (takingPicture && device) {
+    return (
+      <View style={{flex: 1}}>
+        <CameraVision
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={true}
+          ref={cameraRef}
+          photo={true}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            padding: 16,
+          }}>
+          <Button title="Capture" onPress={capturePhoto} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -363,6 +539,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         style={styles.CONTAINER}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
         ref={scrollViewRef}>
         <Formik
           initialValues={{
@@ -523,25 +700,17 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               <View style={{marginTop: 10, marginBottom: 10}}>
                 <Text style={styles.LABEL}>Site Image</Text>
                 <Button
-                  title={takingPicture ? 'Close Camera' : 'Capture Site Image'}
+                  icon={
+                    <Icon name="camera" type="font-awesome" color={'#008BE3'} />
+                  }
+                  title={' Capture Site Image'}
                   type="outline"
                   raised
                   containerStyle={{width: '100%'}}
                   onPress={() => {
-                    if (!takingPicture) {
-                      scrollViewRef?.current?.scrollTo({
-                        y: 450 + 100,
-                        animated: true,
-                      });
-                    }
-                    setTakingPicture(!takingPicture);
+                    setTakingPicture(true);
                   }}
                 />
-                {takingPicture ? (
-                  <View style={{height: 450, marginTop: 20, marginBottom: 20}}>
-                    <Camera pictureTaken={pictureTaken} />
-                  </View>
-                ) : null}
                 {siteImageData ? (
                   <View
                     onLayout={event => console.log(event.nativeEvent.layout)}>
@@ -604,7 +773,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     </Text>
                   )}
                 </View>
-                <View style={{marginBottom: 20}}>
+                <View>
                   {observedTaxaList.map(observedTaxon => (
                     <TouchableOpacity
                       key={observedTaxon.taxon.id}
@@ -628,13 +797,63 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                           );
                         }}
                       />
+                      <Button
+                        buttonStyle={{
+                          height: 43,
+                        }}
+                        containerStyle={{
+                          marginRight: 5,
+                          backgroundColor: 'red',
+                        }}
+                        onPress={async () =>
+                          await openCamera(observedTaxon.taxon)
+                        }
+                        radius={5}>
+                        <Icon
+                          size={13}
+                          name="camera"
+                          color="white"
+                          type="font-awesome"
+                        />
+                      </Button>
                     </TouchableOpacity>
                   ))}
                 </View>
+                {capturedPhotos.length > 0 ? (
+                  <ScrollView style={{backgroundColor: '#FFF', borderRadius: 5, padding: 10}}>
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        marginBottom: 5,
+                        fontSize: 14,
+                      }}>
+                      {capturedPhotos[currentPhotoIndex].name}
+                    </Text>
+                    <Image
+                      key={currentPhotoIndex}
+                      source={{
+                        uri:
+                          'file://' + capturedPhotos[currentPhotoIndex].path,
+                      }}
+                      style={{
+                        height: 400,
+                        resizeMode: 'contain',
+                        marginBottom: 5,
+                      }}
+                    />
+                    <Text style={{textAlign: 'center'}}>
+                      {currentPhotoIndex + 1} / {capturedPhotos.length}
+                    </Text>
+                    <ButtonGroup
+                      buttons={['<', 'Delete', '>']}
+                      onPress={updatePhotoIndex}
+                    />
+                  </ScrollView>
+                ) : null}
               </View>
 
               {/* Abiotic */}
-              <Text style={styles.REQUIRED_LABEL}>Add abiotic data</Text>
+              <Text style={{...styles.REQUIRED_LABEL, marginTop: 20}}>Add abiotic data</Text>
               <AbioticForm
                 abioticData={abioticData}
                 scrollViewRef={scrollViewRef}
@@ -642,9 +861,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               />
 
               {/* Source References */}
-              <View style={{marginTop: spacing[8]}}></View>
+              <View style={{marginTop: spacing[8]}} />
               <Text style={styles.LABEL}>Source Reference</Text>
-              <View style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
+              <View
+                style={{marginBottom: spacing[5], ...styles.TEXT_INPUT_STYLE}}>
                 <Picker
                   selectedValue={sourceReference}
                   numberOfLines={4}
