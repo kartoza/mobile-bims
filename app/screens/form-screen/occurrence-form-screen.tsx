@@ -92,7 +92,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [samplingMethodOptions, setSamplingMethodOptions] = useState<Option[]>(
     [],
   );
-  const [takingPicture, setTakingPicture] = useState(false);
   const [siteImageData, setSiteImageData] = useState<string>('');
   const [taxonQuery, setTaxonQuery] = useState('');
   const [taxaList, setTaxaList] = useState([]);
@@ -101,7 +100,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   >([]);
   const [username, setUsername] = useState('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
-  const [takingOccurrencePicture, setTakingOccurrencePicture] = useState<boolean>(false);
+  const [takingPicture, setTakingPicture] = useState<boolean>(false);
   const [capturedPhotos, setCapturedPhotos] = useState<OccurrencePhoto[]>([]);
   const [deletedPhotos, setDeletedPhotos] = useState<string[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
@@ -126,8 +125,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   };
 
   const handleBackPress = () => {
-    if (takingOccurrencePicture) {
-      setTakingOccurrencePicture(false);
+    if (takingPicture) {
+      setTakingPicture(false);
       return true; // prevent default behavior (exit app)
     }
     if (deletedPhotos) {
@@ -147,7 +146,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   };
 
   useEffect(() => {
-    if (!takingOccurrencePicture) {
+    if (!takingPicture) {
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({y: lastYPosition, animated: false});
       }
@@ -157,13 +156,13 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     return () => {
       BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
     };
-  }, [takingOccurrencePicture]);
+  }, [takingPicture]);
 
   useEffect(() => {
     if (capturedPhotos.length > currentPhotoIndex + 1) {
       setCurrentPhotoIndex(capturedPhotos.length - 1);
     }
-  }, [takingOccurrencePicture,capturedPhotos]);
+  }, [takingPicture, capturedPhotos]);
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -406,9 +405,22 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     setObservedTaxaList(updatedObservedTaxa);
   };
 
-  const pictureTaken = (pictureData: {base64: string}) => {
-    setTakingPicture(false);
-    setSiteImageData(pictureData.base64);
+  const blobToBase64 = (blob: any): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        resolve(String(reader.result));
+      };
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const fetchImage = async (uri: string) => {
+    const imageResponse = await fetch(uri);
+    const imageBlob = await imageResponse.blob();
+    const base64Data = await blobToBase64(imageBlob);
+    setSiteImageData(base64Data.split(',')[1]);
   };
 
   const openCamera = async (observedTaxon: Taxon) => {
@@ -416,21 +428,26 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     const cameraPermission = await CameraVision.requestCameraPermission();
     if (cameraPermission === 'authorized') {
       setSelectedTaxon(observedTaxon);
-      setTakingOccurrencePicture(true);
+      setTakingPicture(true);
     }
   };
 
   const capturePhoto = async () => {
     if (cameraRef !== null && cameraRef.current) {
       const _photo = await cameraRef.current.takePhoto();
-      const photo: OccurrencePhoto = {
-        path: _photo.path,
-        id: new Date().getTime(),
-        taxonId: selectedTaxon?.id,
-        name: selectedTaxon?.canonicalName,
-      };
-      setTakingOccurrencePicture(false);
-      setCapturedPhotos(prevPhotos => [...prevPhotos, photo]);
+      if (!selectedTaxon) {
+        await fetchImage(`file://${_photo.path}`);
+        await RNFS.unlink(_photo.path);
+      } else {
+        const photo: OccurrencePhoto = {
+          path: _photo.path,
+          id: new Date().getTime(),
+          taxonId: selectedTaxon?.id,
+          name: selectedTaxon?.canonicalName,
+        };
+        setCapturedPhotos(prevPhotos => [...prevPhotos, photo]);
+      }
+      setTakingPicture(false);
     }
   };
 
@@ -471,7 +488,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     }
   };
 
-  if (takingOccurrencePicture && device) {
+  if (takingPicture && device) {
     return (
       <View style={{flex: 1}}>
         <CameraVision
@@ -684,25 +701,17 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               <View style={{marginTop: 10, marginBottom: 10}}>
                 <Text style={styles.LABEL}>Site Image</Text>
                 <Button
-                  title={takingPicture ? 'Close Camera' : 'Capture Site Image'}
+                  icon={
+                    <Icon name="camera" type="font-awesome" color={'#008BE3'} />
+                  }
+                  title={' Capture Site Image'}
                   type="outline"
                   raised
                   containerStyle={{width: '100%'}}
                   onPress={() => {
-                    if (!takingPicture) {
-                      scrollViewRef?.current?.scrollTo({
-                        y: 450 + 100,
-                        animated: true,
-                      });
-                    }
-                    setTakingPicture(!takingPicture);
+                    setTakingPicture(true);
                   }}
                 />
-                {takingPicture ? (
-                  <View style={{height: 450, marginTop: 20, marginBottom: 20}}>
-                    <Camera pictureTaken={pictureTaken} />
-                  </View>
-                ) : null}
                 {siteImageData ? (
                   <View
                     onLayout={event => console.log(event.nativeEvent.layout)}>
