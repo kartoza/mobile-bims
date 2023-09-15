@@ -1,6 +1,13 @@
 import Site from '../site/site';
 import {TaxonGroup} from '../taxon/taxon';
 
+export interface OccurrencePhoto {
+  path: string;
+  id: number;
+  name?: string;
+  taxonId?: number;
+}
+
 export default class SiteVisit {
   id?: number;
   site!: Site;
@@ -12,12 +19,13 @@ export default class SiteVisit {
   specificBiotope?: string;
   substratum?: string;
   sourceReferenceId?: string;
-  date!: string;
+  date!: string | Date;
   owner!: string;
   siteImage: any;
   synced?: boolean;
   newData?: boolean;
   recordType?: string;
+  occurrencePhotos?: OccurrencePhoto[];
 
   constructor(siteVisit: any) {
     if (siteVisit) {

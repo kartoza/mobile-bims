@@ -33,7 +33,7 @@ import {
 import {loadOptions} from '../../models/options/option.store';
 import Taxon from '../../models/taxon/taxon';
 import {load} from '../../utils/storage';
-import SiteVisit from '../../models/site_visit/site_visit';
+import SiteVisit, { OccurrencePhoto } from '../../models/site_visit/site_visit';
 import {getSiteByField} from '../../models/site/site.store';
 import {
   saveSiteVisitByField,
@@ -48,7 +48,7 @@ import AbioticForm, {
 } from '../../components/abiotic/abiotic-form';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {spacing} from '../../theme/spacing';
-import { ButtonGroup } from '@rneui/base';
+import {ButtonGroup} from '@rneui/base';
 
 const keyboardStyles = StyleSheet.create({
   container: {
@@ -64,12 +64,6 @@ interface ObservedTaxonInterface {
   taxon: Taxon;
   checked: boolean;
   value: string;
-}
-
-interface OccurrencePhoto {
-  path: string;
-  id?: number;
-  name?: string;
 }
 
 export const OccurrenceFormScreen: React.FunctionComponent<
@@ -109,6 +103,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   const [takingOccurrencePicture, setTakingOccurrencePicture] = useState<boolean>(false);
   const [capturedPhotos, setCapturedPhotos] = useState<OccurrencePhoto[]>([]);
+  const [deletedPhotos, setDeletedPhotos] = useState<string[]>([]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
   const [lastYPosition, setLastYPosition] = useState<number>(0);
   const [selectedTaxon, setSelectedTaxon] = useState<Taxon | null>(null);
@@ -135,6 +130,19 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       setTakingOccurrencePicture(false);
       return true; // prevent default behavior (exit app)
     }
+    if (deletedPhotos) {
+      for (const deletedPhoto of deletedPhotos) {
+        RNFS.unlink(deletedPhoto)
+          .then(() => {
+            console.log('File deleted');
+          })
+          .catch(err => {
+            console.error('Failed to delete file:', err);
+            return;
+          });
+      }
+    }
+
     return false; // execute default behavior
   };
 
@@ -155,7 +163,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     if (capturedPhotos.length > currentPhotoIndex + 1) {
       setCurrentPhotoIndex(capturedPhotos.length - 1);
     }
-  }, [capturedPhotos]);
+  }, [takingOccurrencePicture,capturedPhotos]);
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -222,6 +230,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }
         if (_siteVisit.recordType) {
           setRecordType(_siteVisit.recordType);
+        }
+        if (_siteVisit.occurrencePhotos) {
+          setCapturedPhotos(_siteVisit.occurrencePhotos);
         }
         setDate(new Date(_siteVisit.date));
         setAbioticData(_siteVisit.abiotic);
@@ -297,6 +308,19 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       _modulePK = siteVisit.taxonGroup.id;
     }
 
+    if (deletedPhotos) {
+      for (const deletedPhoto of deletedPhotos) {
+        RNFS.unlink(deletedPhoto)
+          .then(() => {
+            console.log('File deleted');
+          })
+          .catch(err => {
+            console.error('Failed to delete file:', err);
+            return;
+          });
+      }
+    }
+
     const site = await getSiteByField('id', _sitePk);
     const taxonGroup = await getTaxonGroupByField('id', parseInt(_modulePK));
     const allSiteVisitsData = await allSiteVisits();
@@ -306,7 +330,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       _siteVisitId = siteVisit.id;
     }
 
-    const siteVisitData = {
+    const siteVisitData: SiteVisit = {
       id: _siteVisitId,
       site: site,
       taxonGroup: taxonGroup,
@@ -321,6 +345,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       biotope: broadBiotope,
       owner: username,
       abiotic: abioticDataPayload,
+      occurrencePhotos: capturedPhotos,
       newData: true,
       synced: false,
     };
@@ -400,7 +425,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       const _photo = await cameraRef.current.takePhoto();
       const photo: OccurrencePhoto = {
         path: _photo.path,
-        id: selectedTaxon?.id,
+        id: new Date().getTime(),
+        taxonId: selectedTaxon?.id,
         name: selectedTaxon?.canonicalName,
       };
       setTakingOccurrencePicture(false);
@@ -423,15 +449,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const deletePhoto = () => {
     // Delete file from storage
     const fileUri = capturedPhotos[currentPhotoIndex].path;
-    RNFS.unlink(fileUri)
-      .then(() => {
-        console.log('File deleted');
-      })
-      .catch(err => {
-        console.error('Failed to delete file:', err);
-        return;
-      });
-    // Remove from state
+    setDeletedPhotos(_deletedPhoto => [..._deletedPhoto, fileUri]);
     const newPhotos = capturedPhotos.filter(
       (_, index) => index !== currentPhotoIndex,
     );
