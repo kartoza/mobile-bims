@@ -1,9 +1,20 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
-import {Alert, Image, ScrollView, Text, TextInput, View, Switch, TouchableOpacity} from 'react-native';
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+  Switch,
+  TouchableOpacity,
+  BackHandler,
+  StyleSheet,
+} from "react-native";
 import {styles} from './styles';
-import {Button, Header, Dialog} from '@rneui/themed';
+import { Button, Header, Dialog, Icon } from "@rneui/themed";
 import {Formik} from 'formik';
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {List, RadioButton} from 'react-native-paper';
@@ -21,7 +32,6 @@ import {
   saveSassSiteVisitByField,
 } from '../../models/sass/sass.store';
 import {load} from '../../utils/storage';
-import {Camera} from '../../components/camera/camera';
 import {Picker} from '@react-native-picker/picker';
 import SourceReference from '../../models/source-reference/source-reference';
 import {loadSourceReferences} from '../../models/source-reference/source-reference.store';
@@ -30,6 +40,11 @@ import AbioticForm, {
   AbioticDataInterface,
 } from '../../components/abiotic/abiotic-form';
 import {spacing} from '../../theme/spacing';
+import RNFS from 'react-native-fs';
+import {
+  Camera as CameraVision,
+  useCameraDevices,
+} from 'react-native-vision-camera';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -122,7 +137,12 @@ export const SassFormScreen: React.FunctionComponent<
     comments: '',
   });
   const [accredited, setAccredited] = useState<boolean>(false);
+  const [lastYPosition, setLastYPosition] = useState<number>(0);
   const formikRef = useRef();
+  const scrollViewRef = useRef();
+  const cameraRef = useRef();
+  const devices = useCameraDevices();
+  const device = devices.back;
 
   useEffect(() => {
     if (
@@ -132,6 +152,30 @@ export const SassFormScreen: React.FunctionComponent<
       formikRef.current?.resetForm();
     }
   }, [formInitialValues]);
+
+  const onScroll = (e: any) => {
+    setLastYPosition(e.nativeEvent.contentOffset.y);
+  };
+
+  const handleBackPress = () => {
+    if (takingPicture) {
+      setTakingPicture(false);
+      return true; // prevent default behavior (exit app)
+    }
+    return false; // execute default behavior
+  };
+
+  useEffect(() => {
+    if (!takingPicture) {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({y: lastYPosition, animated: false});
+      }
+    }
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
+  }, [takingPicture]);
 
   useEffect(() => {
     (async () => {
@@ -187,11 +231,6 @@ export const SassFormScreen: React.FunctionComponent<
     })();
   }, [sassTaxaFormOpen]);
 
-  const pictureTaken = (pictureData: {base64: string}) => {
-    setTakingPicture(false);
-    setSiteImageData(pictureData.base64);
-  };
-
   const goToPreviousScreen = React.useMemo(
     () => () => {
       props.navigation.pop();
@@ -242,6 +281,58 @@ export const SassFormScreen: React.FunctionComponent<
     goToPreviousScreen();
   };
 
+  const blobToBase64 = (blob: any): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        resolve(String(reader.result));
+      };
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const fetchImage = async (uri: string) => {
+    const imageResponse = await fetch(uri);
+    const imageBlob = await imageResponse.blob();
+    const base64Data = await blobToBase64(imageBlob);
+    setSiteImageData(base64Data.split(',')[1]);
+  };
+
+  const capturePhoto = async () => {
+    if (cameraRef !== null && cameraRef.current) {
+      const _photo = await cameraRef.current.takePhoto();
+      await fetchImage(`file://${_photo.path}`);
+      await RNFS.unlink(_photo.path);
+      setTakingPicture(false);
+    }
+  };
+
+  if (takingPicture && device) {
+    return (
+      <View style={{flex: 1}}>
+        <CameraVision
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={true}
+          ref={cameraRef}
+          photo={true}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            padding: 16,
+          }}>
+          <Button title="Capture" onPress={capturePhoto} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View>
       <Dialog
@@ -264,7 +355,11 @@ export const SassFormScreen: React.FunctionComponent<
         containerStyle={styles.HEADER_CONTAINER}
       />
 
-      <ScrollView style={styles.CONTAINER} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={styles.CONTAINER}
+        keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
+        ref={scrollViewRef}>
         <Formik
           enableReinitialize={true}
           innerRef={formikRef}
@@ -362,19 +457,17 @@ export const SassFormScreen: React.FunctionComponent<
               <View style={{marginTop: 10, marginBottom: 10}}>
                 <Text style={styles.LABEL}>Site Image</Text>
                 <Button
-                  title={takingPicture ? 'Close Camera' : 'Capture Site Image'}
+                  icon={
+                    <Icon name="camera" type="font-awesome" color={'#008BE3'} />
+                  }
+                  title={' Capture Site Image'}
                   type="outline"
                   raised
                   containerStyle={{width: '100%', marginBottom: 20}}
                   onPress={() => {
-                    setTakingPicture(!takingPicture);
+                    setTakingPicture(true);
                   }}
                 />
-                {takingPicture ? (
-                  <View style={{height: 450}}>
-                    <Camera pictureTaken={pictureTaken} />
-                  </View>
-                ) : null}
                 {siteImageData ? (
                   <View
                     onLayout={event => console.log(event.nativeEvent.layout)}>

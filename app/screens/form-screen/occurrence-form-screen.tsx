@@ -23,7 +23,6 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import Autocomplete from 'react-native-autocomplete-input';
 import {styles} from './styles';
-import {Camera} from '../../components/camera/camera';
 import {Camera as CameraVision, useCameraDevices} from 'react-native-vision-camera';
 import {
   loadTaxonGroups,
@@ -33,7 +32,7 @@ import {
 import {loadOptions} from '../../models/options/option.store';
 import Taxon from '../../models/taxon/taxon';
 import {load} from '../../utils/storage';
-import SiteVisit, { OccurrencePhoto } from '../../models/site_visit/site_visit';
+import SiteVisit, {OccurrencePhoto} from '../../models/site_visit/site_visit';
 import {getSiteByField} from '../../models/site/site.store';
 import {
   saveSiteVisitByField,
