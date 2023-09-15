@@ -765,7 +765,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     </Text>
                   )}
                 </View>
-                <View style={{marginBottom: 20}}>
+                <View>
                   {observedTaxaList.map(observedTaxon => (
                     <TouchableOpacity
                       key={observedTaxon.taxon.id}
@@ -811,40 +811,41 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     </TouchableOpacity>
                   ))}
                 </View>
-                <ScrollView>
-                  {capturedPhotos.length > 0 ? (
-                    <>
-                      <Text
-                        style={{
-                          textAlign: 'center',
-                          marginBottom: 5,
-                          fontSize: 14,
-                        }}>
-                        {capturedPhotos[currentPhotoIndex].name}
-                      </Text>
-                      <Image
-                        key={currentPhotoIndex}
-                        source={{
-                          uri:
-                            'file://' + capturedPhotos[currentPhotoIndex].path,
-                        }}
-                        style={{
-                          height: 400,
-                          resizeMode: 'contain',
-                          marginBottom: 20,
-                        }}
-                      />
-                      <ButtonGroup
-                        buttons={['<', 'Delete', '>']}
-                        onPress={updatePhotoIndex}
-                      />
-                    </>
-                  ) : null}
-                </ScrollView>
+                {capturedPhotos.length > 0 ? (
+                  <ScrollView style={{backgroundColor: '#FFF', borderRadius: 5, padding: 10}}>
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        marginBottom: 5,
+                        fontSize: 14,
+                      }}>
+                      {capturedPhotos[currentPhotoIndex].name}
+                    </Text>
+                    <Image
+                      key={currentPhotoIndex}
+                      source={{
+                        uri:
+                          'file://' + capturedPhotos[currentPhotoIndex].path,
+                      }}
+                      style={{
+                        height: 400,
+                        resizeMode: 'contain',
+                        marginBottom: 5,
+                      }}
+                    />
+                    <Text style={{textAlign: 'center'}}>
+                      {currentPhotoIndex + 1} / {capturedPhotos.length}
+                    </Text>
+                    <ButtonGroup
+                      buttons={['<', 'Delete', '>']}
+                      onPress={updatePhotoIndex}
+                    />
+                  </ScrollView>
+                ) : null}
               </View>
 
               {/* Abiotic */}
-              <Text style={styles.REQUIRED_LABEL}>Add abiotic data</Text>
+              <Text style={{...styles.REQUIRED_LABEL, marginTop: 20}}>Add abiotic data</Text>
               <AbioticForm
                 abioticData={abioticData}
                 scrollViewRef={scrollViewRef}
