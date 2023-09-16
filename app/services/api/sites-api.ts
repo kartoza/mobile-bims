@@ -24,6 +24,7 @@ export class SitesApi extends Api {
       ecosystem_type: site.ecosystemType,
       wetland_name: site.wetlandName,
       user_wetland_name: site.userWetlandName,
+      wetland_data: site.wetlandData,
     };
     const url = '/mobile/add-location-site/';
     const response: ApiResponse<any> = await this.apisauce.post(url, postData);

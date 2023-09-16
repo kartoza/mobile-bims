@@ -528,7 +528,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         let apiResultSites = apiResult.sites;
         let newSites = await loadSites();
         if (sites.length > 0) {
-          const existingSiteIds = new Set(sites.map(site => site.id));
+          const existingSiteIds = new Set(
+            newSites.map((site: Site) => site.id),
+          );
           for (const site of apiResultSites) {
             if (!existingSiteIds.has(site.id)) {
               newSites.push(site);
@@ -537,7 +539,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               for (const index in sites) {
                 const _site = sites[index];
                 if (_site.id === site.id) {
-                  sites[index] = site;
+                  newSites[index] = site;
                 }
               }
             }
@@ -1033,6 +1035,26 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   : selectedSite.userSiteCode}{' '}
               </Text>
             </TouchableOpacity>
+            <View
+              style={{
+                width: '100%',
+                marginBottom: 10,
+              }}>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  fontSize: 12,
+                }}>
+                Ecosystem Type :{' '}
+                {selectedSite.ecosystemType
+                  ? selectedSite.ecosystemType[0].toUpperCase() +
+                    selectedSite.ecosystemType.substring(
+                      1,
+                      selectedSite.ecosystemType.length,
+                    )
+                  : '-'}
+              </Text>
+            </View>
             <View
               style={{
                 display: 'flex',

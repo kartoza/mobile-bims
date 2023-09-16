@@ -12,7 +12,7 @@ import MapView, {LocalTile, Marker, WMSTile} from 'react-native-maps';
 import {FormInput} from '../../components/form-input/form-input';
 import {LogBox} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import {riverLayer} from '../../utils/offline-map';
+import { riverLayer, wetlandLayer } from "../../utils/offline-map";
 import {load} from '../../utils/storage';
 import {Api} from '../../services/api/api';
 import {ApiResponse} from 'apisauce';
@@ -79,7 +79,7 @@ export const SiteFormScreen: React.FunctionComponent<
       value = '';
     }
     updatedSiteData[key] = value;
-    await setUpdatedSiteData({...updatedSiteData, [key]: value});
+    setUpdatedSiteData({...updatedSiteData, [key]: value});
   };
 
   const fetchRiverName = async (lat: Number, lon: Number) => {
@@ -100,9 +100,18 @@ export const SiteFormScreen: React.FunctionComponent<
     await api.setup();
     const response: ApiResponse<any> = await api.apisauce.get(url);
     if (response.data) {
-      return response.data.name || '-';
+      return response.data;
     } else {
-      return '-';
+      Alert.alert(
+        'Error',
+        'Wetland data not found.\n' + 'Please use a different location.',
+        [
+          {
+            text: 'OK',
+          },
+        ],
+      );
+      return {};
     }
   };
 
@@ -115,9 +124,23 @@ export const SiteFormScreen: React.FunctionComponent<
       ]);
       return;
     }
+    if (updatedSiteData.ecosystemType === 'wetland') {
+      if (Object.keys(updatedSiteData.wetlandData).length === 0) {
+        Alert.alert(
+          'Error',
+          'Wetland site cannot be located outside of the wetland area.',
+          [
+            {
+              text: 'OK',
+            },
+          ],
+        );
+        return;
+      }
+    }
     updatedSiteData.newData = false;
     updatedSiteData.synced = false;
-    await setUpdatedSiteData(updatedSiteData);
+    setUpdatedSiteData(updatedSiteData);
     await saveSiteByField('id', updatedSiteData.id, updatedSiteData);
     goToMapScreen(updatedSiteData.id);
   };
@@ -188,14 +211,22 @@ export const SiteFormScreen: React.FunctionComponent<
                         },
                       });
                     }}>
-                    {!isConnected ? (
-                      <LocalTile
-                        pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
-                        tileSize={256}
-                      />
+                    {siteData.ecosystemType !== 'wetland' ? (
+                      !isConnected ? (
+                        <LocalTile
+                          pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
+                          tileSize={256}
+                        />
+                      ) : (
+                        <WMSTile
+                          urlTemplate={riverLayer}
+                          zIndex={99}
+                          tileSize={256}
+                        />
+                      )
                     ) : (
                       <WMSTile
-                        urlTemplate={riverLayer}
+                        urlTemplate={wetlandLayer}
                         zIndex={99}
                         tileSize={256}
                       />
@@ -278,14 +309,20 @@ export const SiteFormScreen: React.FunctionComponent<
                     loading={fetchingRiverName}
                     onPress={async () => {
                       setFetchingRiverName(true);
-                      const wetlandName = await fetchWetlandData(
+                      const wetlandData = await fetchWetlandData(
                         updatedSiteData.latitude,
                         updatedSiteData.longitude,
                       );
+                      let wetlandName = '';
+                      if (wetlandData) {
+                        wetlandName = wetlandData['name'] || '-';
+                      }
+                      console.log(wetlandData, wetlandName)
                       setUpdatedSiteData({
                         ...updatedSiteData,
                         ...{
                           wetlandName: wetlandName,
+                          wetlandData: wetlandData,
                         },
                       });
                       setFetchingRiverName(false);

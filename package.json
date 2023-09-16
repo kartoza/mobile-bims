@@ -5,7 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start",
+    "start": "react-native start --reset-cache",
     "upgrade": "react-native upgrade",
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
@@ -24,12 +24,12 @@
     "axios": "^0.27.2",
     "deprecated-react-native-prop-types": "^2.3.0",
     "formik": "^2.2.9",
+    "mobx": "^6.10.0",
     "mobx-state-tree": "^5.1.5",
     "moment": "^2.29.4",
     "react": "^18.0.0",
     "react-native": "^0.69.1",
     "react-native-autocomplete-input": "^5.2.0",
-    "react-native-camera": "github:dimasciput/react-native-camera#18",
     "react-native-config": "^1.4.6",
     "react-native-encrypted-storage": "^4.0.3",
     "react-native-fs": "^2.20.0",
@@ -41,8 +41,10 @@
     "react-native-progress": "^5.0.0",
     "react-native-safe-area-context": "^4.3.1",
     "react-native-screens": "^3.15.0",
+    "react-native-svg": "^13.11.0",
     "react-native-vector-icons": "^9.2.0",
     "react-native-vector-image": "^0.3.3",
+    "react-native-vision-camera": "^2.15.5",
     "rn-fetch-blob": "^0.12.0"
   },
   "devDependencies": {
