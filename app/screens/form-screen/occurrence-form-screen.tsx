@@ -578,7 +578,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                 value={username}
               />
               {/* Broad biotope */}
-              <Text style={styles.LABEL}>Broad Biotope</Text>
+              <Text style={styles.LABEL}>Broad Biotope / Habitat</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
                 <Picker
                   selectedValue={broadBiotope}
