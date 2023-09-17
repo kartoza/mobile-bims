@@ -72,9 +72,13 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const {route} = props;
   const {modulePk, sitePk} = route.params;
   const [siteVisit, setSiteVisit] = useState<SiteVisit | null>(null);
+  const [ecosystemType, setEcosystemType] = useState<string>(
+    route.params.ecosystemType || '',
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [date, setDate] = useState(new Date());
   const [broadBiotope, setBroadBiotope] = useState('');
+  const [hydroperiod, setHydroperiod] = useState('');
   const [specificBiotope, setSpecificBiotope] = useState('');
   const [substratum, setSubstratum] = useState('');
   const [samplingMethod, setSamplingMethod] = useState('');
@@ -84,6 +88,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     SourceReference[]
   >([]);
   const [broadBiotopeOptions, setBroadBiotopeOptions] = useState<Option[]>([]);
+  const [hydroperiodOptions, setHydroperiodOptions] = useState<Option[]>([]);
   const [specificBiotopeOptions, setSpecificBiotopeOptions] = useState<
     Option[]
   >([]);
@@ -176,6 +181,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         if (_siteVisits.length > 0) {
           _siteVisit = _siteVisits[0];
           _modulePK = _siteVisit.taxonGroup.id;
+          setEcosystemType(_siteVisit.site.ecosystemType || '');
         }
       }
       const _taxonGroups = await loadTaxonGroups();
@@ -184,6 +190,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       );
       if (taxonGroup) {
         const _options = await loadOptions(taxonGroup.id);
+        const _hydroperiodOptions = _options.filter(
+          (_option: {key: string}) => _option.key === 'hydroperiod',
+        );
+        setHydroperiodOptions(_hydroperiodOptions);
         const _broadBiotopeOptions = _options.filter(
           (_option: {key: string}) => _option.key === 'broad_biotope',
         );
@@ -219,6 +229,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }
         if (_siteVisit.biotope) {
           setBroadBiotope(_siteVisit.biotope);
+        }
+        if (_siteVisit.hydroperiod) {
+          setHydroperiod(_siteVisit.hydroperiod);
         }
         if (_siteVisit.sourceReferenceId) {
           setSourceReference(_siteVisit.sourceReferenceId);
@@ -346,6 +359,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       occurrencePhotos: capturedPhotos,
       newData: true,
       synced: false,
+      hydroperiod: hydroperiod,
     };
     const _siteVisit = new SiteVisit(siteVisitData);
     await saveSiteVisitByField('id', _siteVisit.id, _siteVisit);
@@ -543,6 +557,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         ref={scrollViewRef}>
         <Formik
           initialValues={{
+            hydroperiod: '',
             broadBiotope: '',
             specificBiotope: '',
             samplingMethod: '',
@@ -577,6 +592,33 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                 style={styles.UNEDITABLE_TEXT_INPUT_STYLE}
                 value={username}
               />
+              {ecosystemType && ecosystemType.toLowerCase() === 'wetland' ? (
+                <>
+                  <Text style={styles.LABEL}>Hydroperiod</Text>
+                  <View style={styles.TEXT_INPUT_STYLE}>
+                    <Picker
+                      selectedValue={hydroperiod}
+                      style={styles.PICKER_INPUT_STYLE}
+                      onValueChange={itemValue => {
+                        setHydroperiod(itemValue);
+                        values.hydroperiod = itemValue;
+                      }}>
+                      <Picker.Item
+                        key="not_specified"
+                        label="Not specified"
+                        value=""
+                      />
+                      {hydroperiodOptions.map(hydroperiodOption => (
+                        <Picker.Item
+                          key={hydroperiodOption.id}
+                          label={hydroperiodOption.name}
+                          value={hydroperiodOption.id}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </>
+              ) : null}
               {/* Broad biotope */}
               <Text style={styles.LABEL}>Broad Biotope / Habitat</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
