@@ -314,6 +314,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         name: 'OccurrenceForm',
         params: {
           sitePk: selectedSite.id,
+          ecosystemType: selectedSite.ecosystemType,
           modulePk: moduleId,
           onBack: async () => {
             await refreshMap();

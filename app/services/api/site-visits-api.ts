@@ -38,6 +38,7 @@ export class SiteVisitsApi extends Api {
     const postData: any = {
       date: date,
       owner: siteVisit.owner,
+      hydroperiod: siteVisit.hydroperiod,
       record_type: siteVisit.recordType,
       abundance_type: 'number',
       biotope: siteVisit.biotope,

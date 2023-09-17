@@ -25,6 +25,7 @@ export default class SiteVisit {
   synced?: boolean;
   newData?: boolean;
   recordType?: string;
+  hydroperiod?: string;
   occurrencePhotos?: OccurrencePhoto[];
 
   constructor(siteVisit: any) {
