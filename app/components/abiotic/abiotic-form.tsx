@@ -96,7 +96,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
         <Autocomplete
           data={inputText.length >= 2 ? filteredOptions : []}
           value={inputText}
-          placeholder={'Find abiotic here'}
+          placeholder={'Type parameter name'}
           onChangeText={text => setInputText(text)}
           onChange={e => {
             props.scrollViewRef?.current?.scrollTo({

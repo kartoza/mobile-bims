@@ -776,7 +776,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                 <View style={[styles.AUTOCOMPLETE_CONTAINER, {zIndex: 2}]}>
                   <Autocomplete
                     data={filterTaxonList(taxonQuery)}
-                    placeholder={'Find species here'}
+                    placeholder={'Type taxon name here'}
                     value={taxonQuery}
                     onChange={e => {
                       scrollViewRef.current?.scrollTo({
