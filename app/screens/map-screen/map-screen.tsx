@@ -1148,17 +1148,19 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 ),
               )}
           </View>
-          <View style={{width: '43%', paddingBottom: spacing[2]}}>
-            <Button
-              title="Add SASS"
-              type="outline"
-              raised
-              buttonStyle={styles.SASS_BUTTON}
-              titleStyle={{color: '#ffffff'}}
-              containerStyle={{width: '100%'}}
-              onPress={() => addSassClicked()}
-            />
-          </View>
+          {selectedSite.ecosystemType === 'River' ? (
+            <View style={{width: '43%', paddingBottom: spacing[2]}}>
+              <Button
+                title="Add SASS"
+                type="outline"
+                raised
+                buttonStyle={styles.SASS_BUTTON}
+                titleStyle={{color: '#ffffff'}}
+                containerStyle={{width: '100%'}}
+                onPress={() => addSassClicked()}
+              />
+            </View>
+          ) : null}
         </View>
       ) : null}
 
