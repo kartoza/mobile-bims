@@ -122,6 +122,7 @@ export const SiteFormScreen: React.FunctionComponent<
     }
     updatedSiteData.newData = false;
     updatedSiteData.synced = false;
+    updatedSiteData.owner = await load('user');
     setUpdatedSiteData(updatedSiteData);
     await saveSiteByField('id', updatedSiteData.id, updatedSiteData);
     goToMapScreen(updatedSiteData.id);

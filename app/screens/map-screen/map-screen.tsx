@@ -1079,7 +1079,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   color={'grey'}
                 />
                 <Text style={{paddingLeft: spacing[1], fontSize: 11}}>
-                  {selectedSite.owner ? selectedSite.owner : '-'}
+                  {selectedSite.siteCode ? selectedSite.owner : '-'}
                 </Text>
               </View>
               <View
