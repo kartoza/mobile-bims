@@ -102,15 +102,11 @@ export const SiteFormScreen: React.FunctionComponent<
     if (response.data) {
       return response.data;
     } else {
-      Alert.alert(
-        'Error',
-        'Wetland data not found.\n' + 'Please use a different location.',
-        [
-          {
-            text: 'OK',
-          },
-        ],
-      );
+      Alert.alert('Error', 'Wetland data not found.', [
+        {
+          text: 'OK',
+        },
+      ]);
       return {};
     }
   };
@@ -124,22 +120,9 @@ export const SiteFormScreen: React.FunctionComponent<
       ]);
       return;
     }
-    if (updatedSiteData.ecosystemType === 'wetland') {
-      if (Object.keys(updatedSiteData.wetlandData).length === 0) {
-        Alert.alert(
-          'Error',
-          'Wetland site cannot be located outside of the wetland area.',
-          [
-            {
-              text: 'OK',
-            },
-          ],
-        );
-        return;
-      }
-    }
     updatedSiteData.newData = false;
     updatedSiteData.synced = false;
+    updatedSiteData.owner = await load('user');
     setUpdatedSiteData(updatedSiteData);
     await saveSiteByField('id', updatedSiteData.id, updatedSiteData);
     goToMapScreen(updatedSiteData.id);

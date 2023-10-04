@@ -1079,7 +1079,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   color={'grey'}
                 />
                 <Text style={{paddingLeft: spacing[1], fontSize: 11}}>
-                  {selectedSite.owner ? selectedSite.owner : '-'}
+                  {selectedSite.siteCode ? selectedSite.owner : '-'}
                 </Text>
               </View>
               <View
@@ -1148,17 +1148,19 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 ),
               )}
           </View>
-          <View style={{width: '43%', paddingBottom: spacing[2]}}>
-            <Button
-              title="Add SASS"
-              type="outline"
-              raised
-              buttonStyle={styles.SASS_BUTTON}
-              titleStyle={{color: '#ffffff'}}
-              containerStyle={{width: '100%'}}
-              onPress={() => addSassClicked()}
-            />
-          </View>
+          {selectedSite.ecosystemType === 'River' ? (
+            <View style={{width: '43%', paddingBottom: spacing[2]}}>
+              <Button
+                title="Add SASS"
+                type="outline"
+                raised
+                buttonStyle={styles.SASS_BUTTON}
+                titleStyle={{color: '#ffffff'}}
+                containerStyle={{width: '100%'}}
+                onPress={() => addSassClicked()}
+              />
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -1182,7 +1184,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     type="outline"
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
-                    titleStyle={{color: '#ffffff'}}
+                    titleStyle={{color: '#ffffff', fontSize: 13}}
                     containerStyle={{width: '30%'}}
                     onPress={() => {
                       addNewSite('river').then(err => console.log(err));
@@ -1193,7 +1195,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     type="outline"
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
-                    titleStyle={{color: '#ffffff'}}
+                    titleStyle={{color: '#ffffff', fontSize: 13}}
                     containerStyle={{
                       width: '30%',
                       marginLeft: 5,
@@ -1207,7 +1209,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     type="outline"
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
-                    titleStyle={{color: '#ffffff'}}
+                    titleStyle={{color: '#ffffff', fontSize: 13}}
                     containerStyle={{width: '30%', marginLeft: 5}}
                     onPress={() => {
                       addNewSite('open waterbody').then(err =>
@@ -1224,7 +1226,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 type="outline"
                 raised
                 buttonStyle={styles.MID_BOTTOM_BUTTON}
-                titleStyle={{color: '#ffffff'}}
+                titleStyle={{color: '#ffffff', fontSize: 12}}
                 containerStyle={{width: '30%'}}
                 onPress={() => {
                   setNewSiteMarker(null);
