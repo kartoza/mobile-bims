@@ -1053,7 +1053,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                       1,
                       selectedSite.ecosystemType.length,
                     )
-                  : '-'}
+                  : 'Unspecified'}
               </Text>
             </View>
             <View
@@ -1148,7 +1148,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 ),
               )}
           </View>
-          {selectedSite.ecosystemType === 'River' ? (
+          {selectedSite.ecosystemType &&
+          selectedSite.ecosystemType.toLowerCase() === 'river' ? (
             <View style={{width: '43%', paddingBottom: spacing[2]}}>
               <Button
                 title="Add SASS"

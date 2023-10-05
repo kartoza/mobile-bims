@@ -749,8 +749,12 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   type="outline"
                   raised
                   containerStyle={{width: '100%'}}
-                  onPress={() => {
-                    setTakingPicture(true);
+                  onPress={async () => {
+                    const cameraPermission =
+                      await CameraVision.requestCameraPermission();
+                    if (cameraPermission === 'authorized') {
+                      setTakingPicture(true);
+                    }
                   }}
                 />
                 {siteImageData ? (
