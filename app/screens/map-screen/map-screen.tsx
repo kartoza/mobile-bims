@@ -106,6 +106,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [showBiodiversityModule, setShowBiodiversityModule] = useState(false);
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
   const [formStatus, setFormStatus] = useState<string>('closed');
+  const [riverLayerAvailable, setRiverLayerAvailable] = useState<boolean>(false);
   const [downloadLayerVisible, setDownloadLayerVisible] =
     useState<boolean>(false);
   const [downloadSiteVisible, setDownloadSiteVisible] =
@@ -133,6 +134,19 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     _markers.sort((a, b) => (a.newData ? 1 : b.newData ? -1 : 0));
     setMarkers(_markers);
   };
+
+  useEffect(() => {
+    if (isConnected) {
+      fetch('https://maps.kartoza.com/geoserver/web/', {method: 'HEAD'})
+        .then(result => result.ok)
+        .then(ok => {
+          setRiverLayerAvailable(ok);
+        })
+        .catch(error => {
+          setRiverLayerAvailable(false);
+        });
+    }
+  }, [isConnected]);
 
   const getSites = useCallback(
     async (_latitude?: Number | undefined, _longitude?: Number | undefined) => {
@@ -874,8 +888,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
               tileSize={256}
             />
-          ) : (
+          ) : riverLayerAvailable ? (
             <WMSTile urlTemplate={riverLayer} zIndex={99} tileSize={256} />
+          ) : (
+            <LocalTile
+              pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
+              tileSize={256}
+            />
           )}
           {markers.map(marker => {
             return (
