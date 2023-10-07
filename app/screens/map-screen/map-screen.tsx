@@ -1089,7 +1089,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
-                  minWidth: '30%',
+                  width: '33%',
                 }}>
                 <Icon
                   name="user"
@@ -1097,8 +1097,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   size={11}
                   color={'grey'}
                 />
-                <Text style={{paddingLeft: spacing[1], fontSize: 11}}>
-                  {selectedSite.siteCode ? selectedSite.owner : '-'}
+                <Text
+                  style={{paddingLeft: spacing[1], fontSize: 11, width: '90%'}}>
+                  {selectedSite.siteCode
+                    ? selectedSite.owner
+                      ? selectedSite.owner
+                      : 'Unspecified'
+                    : '-'}
                 </Text>
               </View>
               <View
@@ -1106,7 +1111,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
-                  minWidth: '30%',
+                  width: '33%',
                 }}>
                 <Icon
                   name="water"
@@ -1114,7 +1119,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   size={11}
                   color={'grey'}
                 />
-                <Text style={{paddingLeft: spacing[1], fontSize: 11}}>
+                <Text
+                  style={{paddingLeft: spacing[1], fontSize: 11, width: '90%'}}>
                   {selectedSite.riverName ? selectedSite.riverName : '-'}
                 </Text>
               </View>
@@ -1123,7 +1129,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
-                  minWidth: '30%',
+                  width: '33%',
                 }}>
                 <Icon
                   name="map-pin"
