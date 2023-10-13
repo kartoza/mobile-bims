@@ -495,10 +495,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     }
     let syncResult = true;
     for (let i = 0; i < _unsyncedData.length; i++) {
-      setSyncMessage(`${i + 1} records of ${unsyncedData.length} are synced`);
+      setSyncMessage(`${i} records of ${unsyncedData.length} are synced`);
       // Check if unsynced data is site visit or location site
       if (_unsyncedData[i].latitude) {
         syncResult = await postLocationSite(_unsyncedData[i]);
+        await delay(1000);
         if (syncResult) {
           sitesUpdated = true;
         }
@@ -513,6 +514,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         if (sitesUpdated) {
           await getSites();
         }
+
+        getUnsyncedData();
+
         return unsyncedData;
       } else {
         unsyncedData[i].synced = true;

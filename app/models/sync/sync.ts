@@ -77,7 +77,8 @@ export const postLocationSite = async (site: Site) => {
   await api.setup();
   const oldId = site.id;
   const apiResult = await api.postSite(site);
-  if (apiResult.kind === 'ok') {
+  console.log(apiResult);
+  if (apiResult.kind === 'ok' && apiResult.siteCode) {
     site.id = apiResult.siteId;
     site.siteCode = apiResult.siteCode;
     site.synced = true;
