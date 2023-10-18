@@ -605,7 +605,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                       }}>
                       <Picker.Item
                         key="not_specified"
-                        label="Not specified"
+                        label="Unspecified"
                         value=""
                       />
                       {hydroperiodOptions.map(hydroperiodOption => (
@@ -629,11 +629,15 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     setBroadBiotope(itemValue);
                     values.broadBiotope = itemValue;
                   }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
+                  {!broadBiotopeOptions?.some(
+                    option => option.name === 'Unspecified',
+                  ) && (
+                    <Picker.Item
+                      key="not_specified"
+                      label="Unspecified"
+                      value=""
+                    />
+                  )}
                   {broadBiotopeOptions.map(broadBiotopeOption => (
                     <Picker.Item
                       key={broadBiotopeOption.id}
@@ -653,11 +657,15 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     setSpecificBiotope(itemValue);
                     values.specificBiotope = itemValue;
                   }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
+                  {!specificBiotopeOptions?.some(
+                    option => option.name === 'Unspecified',
+                  ) && (
+                    <Picker.Item
+                      key="not_specified"
+                      label="Unspecified"
+                      value=""
+                    />
+                  )}
                   {specificBiotopeOptions.map(option => (
                     <Picker.Item
                       key={option.id}
@@ -677,11 +685,15 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     setSubstratum(itemValue);
                     values.substratum = itemValue;
                   }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
+                  {!substratumOptions?.some(
+                    option => option.name === 'Unspecified',
+                  ) && (
+                    <Picker.Item
+                      key="not_specified"
+                      label="Unspecified"
+                      value=""
+                    />
+                  )}
                   {substratumOptions.map(option => (
                     <Picker.Item
                       key={option.id}
@@ -701,11 +713,15 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     setSamplingMethod(itemValue);
                     values.samplingMethod = itemValue;
                   }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Not specified"
-                    value=""
-                  />
+                  {!samplingMethodOptions?.some(
+                    option => option.name === 'Unspecified',
+                  ) && (
+                    <Picker.Item
+                      key="not_specified"
+                      label="Unspecified"
+                      value=""
+                    />
+                  )}
                   {samplingMethodOptions.map(option => (
                     <Picker.Item
                       key={option.id}
@@ -727,11 +743,15 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                       setRecordType(itemValue);
                       values.recordType = itemValue;
                     }}>
-                    <Picker.Item
-                      key="not_specified"
-                      label="Not specified"
-                      value=""
-                    />
+                    {!recordTypeOptions?.some(
+                      option => option === 'Unspecified',
+                    ) && (
+                      <Picker.Item
+                        key="not_specified"
+                        label="Unspecified"
+                        value=""
+                      />
+                    )}
                     {recordTypeOptions.map(option => (
                       <Picker.Item key={option} label={option} value={option} />
                     ))}
@@ -921,7 +941,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   }}>
                   <Picker.Item
                     key="not_specified"
-                    label="Not specified"
+                    label="Unspecified"
                     value=""
                   />
                   {sourceReferenceOptions.map(option => (
