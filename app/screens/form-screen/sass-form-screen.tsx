@@ -441,7 +441,7 @@ export const SassFormScreen: React.FunctionComponent<
                   }}>
                   <Picker.Item
                     key="not_specified"
-                    label="Not specified"
+                    label="Unspecified"
                     value=""
                   />
                   {sourceReferenceOptions.map(option => (
