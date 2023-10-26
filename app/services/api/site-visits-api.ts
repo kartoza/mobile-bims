@@ -48,6 +48,8 @@ export class SiteVisitsApi extends Api {
       source_reference_id: siteVisit.sourceReferenceId,
       site_image: siteVisit.siteImage,
       abiotic: siteVisit.abiotic,
+      sampling_effort_type: siteVisit.samplingEffotMeasure,
+      sampling_effort: siteVisit.samplingEffortValue,
       'site-id': site.id,
       'taxa-id-list': '',
     };
