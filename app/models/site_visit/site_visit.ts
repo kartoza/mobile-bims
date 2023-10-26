@@ -26,6 +26,8 @@ export default class SiteVisit {
   newData?: boolean;
   recordType?: string;
   hydroperiod?: string;
+  samplingEffotMeasure?: string;
+  samplingEffortValue?: string;
   occurrencePhotos?: OccurrencePhoto[];
 
   constructor(siteVisit: any) {

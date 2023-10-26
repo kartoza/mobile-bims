@@ -83,6 +83,18 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [substratum, setSubstratum] = useState('');
   const [samplingMethod, setSamplingMethod] = useState('');
   const [recordType, setRecordType] = useState('');
+  const [initialFormValues, setInitialFormValues] = useState({
+    hydroperiod: '',
+    broadBiotope: '',
+    specificBiotope: '',
+    samplingMethod: '',
+    substratum: '',
+    sourceReference: '',
+    recordType: '',
+    samplingEffortMeasure: '',
+    samplingEffortValue: '',
+    abiotic: [],
+  });
   const [sourceReference, setSourceReference] = useState('');
   const [sourceReferenceOptions, setSourceReferenceOptions] = useState<
     SourceReference[]
@@ -94,6 +106,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   >([]);
   const [substratumOptions, setSubstratumOptions] = useState<Option[]>([]);
   const [samplingMethodOptions, setSamplingMethodOptions] = useState<Option[]>(
+    [],
+  );
+  const [samplingEffortOptions, setSamplingEffortOptions] = useState<Option[]>(
     [],
   );
   const [siteImageData, setSiteImageData] = useState<string>('');
@@ -210,6 +225,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
           (_option: {key: string}) => _option.key === 'sampling_method',
         );
         setSamplingMethodOptions(_samplingMethodOptions);
+        const _samplingEffortOptions = _options.filter(
+          (_option: {key: string}) => _option.key === 'sampling_effort_measure',
+        );
+        setSamplingEffortOptions(_samplingEffortOptions);
       }
       const _taxaList = await loadTaxa(_modulePK);
       setTaxaList(_taxaList);
@@ -247,6 +266,23 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }
         setDate(new Date(_siteVisit.date));
         setAbioticData(_siteVisit.abiotic);
+        console.log(_siteVisit);
+        setInitialFormValues({
+          hydroperiod: '',
+          broadBiotope: '',
+          specificBiotope: '',
+          samplingMethod: '',
+          substratum: '',
+          sourceReference: '',
+          recordType: '',
+          samplingEffortMeasure: _siteVisit.samplingEffotMeasure
+            ? _siteVisit.samplingEffotMeasure
+            : '',
+          samplingEffortValue: _siteVisit.samplingEffortValue
+            ? _siteVisit.samplingEffortValue
+            : '',
+          abiotic: [],
+        });
         const _observedTaxaList: any = [];
         for (const [taxonId, abundance] of Object.entries(
           _siteVisit.observedTaxa,
@@ -283,7 +319,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     [props.navigation, route.params],
   );
 
-  const submitForm = async () => {
+  const submitForm = async (values: any) => {
     const abioticDataPayload = abioticData.map(current => {
       if (current.value) {
         return {
@@ -360,6 +396,8 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       newData: true,
       synced: false,
       hydroperiod: hydroperiod,
+      samplingEffortValue: values.samplingEffortValue,
+      samplingEffotMeasure: values.samplingEffortMeasure,
     };
     const _siteVisit = new SiteVisit(siteVisitData);
     await saveSiteVisitByField('id', _siteVisit.id, _siteVisit);
@@ -556,17 +594,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         onScroll={onScroll}
         ref={scrollViewRef}>
         <Formik
-          initialValues={{
-            hydroperiod: '',
-            broadBiotope: '',
-            specificBiotope: '',
-            samplingMethod: '',
-            substratum: '',
-            sourceReference: '',
-            recordType: '',
-            abiotic: [],
-          }}
-          onSubmit={submitForm}>
+          initialValues={initialFormValues}
+          onSubmit={submitForm}
+          enableReinitialize>
           {({
             handleChange,
             handleBlur,
@@ -730,6 +760,45 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     />
                   ))}
                 </Picker>
+              </View>
+
+              {/* Sampling Effort */}
+              <Text style={styles.LABEL}>Sampling Effort</Text>
+              <View style={styles.TEXT_INPUT_STYLE}>
+                <Picker
+                  selectedValue={values.samplingEffortMeasure}
+                  style={styles.PICKER_INPUT_STYLE}
+                  onValueChange={itemValue => {
+                    setFieldValue('samplingEffortMeasure', itemValue);
+                  }}>
+                  {!samplingEffortOptions?.some(
+                    option => option.name === 'Unspecified',
+                  ) && (
+                    <Picker.Item
+                      key="not_specified"
+                      label="Unspecified"
+                      value=""
+                    />
+                  )}
+                  {samplingEffortOptions.map(option => (
+                    <Picker.Item
+                      key={option.id}
+                      label={option.name}
+                      value={option.id}
+                    />
+                  ))}
+                </Picker>
+              </View>
+              <View style={styles.TEXT_INPUT_STYLE}>
+                <TextInput
+                  keyboardType={'numeric'}
+                  editable={true}
+                  style={styles.TEXT_INPUT_STYLE}
+                  value={values.samplingEffortValue}
+                  onChange={e => {
+                    setFieldValue('samplingEffortValue', e.nativeEvent.text);
+                  }}
+                />
               </View>
 
               {/* Record Type */}
