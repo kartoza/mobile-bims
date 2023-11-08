@@ -153,7 +153,7 @@ export const UnsyncedScreen: React.FunctionComponent<
     return (
       'Location Site : ' +
       locationSite +
-      ' Module : ' +
+      '\nModule : ' +
       siteVisit.taxonGroup.name
     );
   };

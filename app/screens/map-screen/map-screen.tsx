@@ -94,6 +94,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
   const [isAddSite, setIsAddSite] = useState(false);
+  const [isFetchingSites, setIsFetchingSites] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>({});
   const [newCreatedSite, setNewCreatedSite] = useState<any>(null);
   const [unsyncedData, setUnsyncedData] = useState<any[any]>([]);
@@ -150,7 +151,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   const getSites = useCallback(
     async (_latitude?: Number | undefined, _longitude?: Number | undefined) => {
+      if (isFetchingSites) {
+        return;
+      }
       let _sites = await loadSites();
+      setIsFetchingSites(true);
       if (_sites.length === 0) {
         const userLatitude = _latitude || latitude;
         const userLongitude = _longitude || longitude;
@@ -173,6 +178,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           setShowBiodiversityModule(false);
         }
         setIsLoading(false);
+        await delay(500);
+        setIsFetchingSites(false);
       }
     },
     [latitude, longitude],
@@ -248,19 +255,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   // @ts-ignore
   const watchLocation = useCallback(async () => {
-    if (mapViewRef && mapViewRef.current && latitude && longitude) {
-      // @ts-ignore
-      mapViewRef.current.animateCamera({
-        center: {
-          latitude: latitude,
-          longitude: longitude,
-        },
-        heading: 0,
-        pitch: 0,
-        zoom: 12,
-      });
-      return;
-    }
     await Geolocation.getCurrentPosition(
       (position: {
         coords: {
@@ -271,7 +265,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         if (mapViewRef && mapViewRef.current) {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
-          if (sites.length === 0) {
+          if (
+            sites.length === 0 &&
+            latitude !== position.coords.latitude &&
+            longitude !== position.coords.longitude &&
+            !isFetchingSites
+          ) {
             getSites(position.coords.latitude, position.coords.longitude);
           }
           // @ts-ignore
@@ -314,9 +313,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       await clearTemporaryNewSites();
       await getUnsyncedData();
       await getSites();
-      watchLocation();
     },
-    [getSites, watchLocation],
+    [getSites],
   );
 
   const addSiteVisit = React.useMemo(
@@ -896,7 +894,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               tileSize={256}
             />
           )}
-          {markers.map(marker => {
+          {markers.map((marker, index) => {
             return (
               <Marker
                 key={marker.key}
@@ -927,7 +925,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             );
           })}
           {selectedMarker ? (
-            <Marker coordinate={selectedMarker.coordinate} pinColor={'blue'} />
+            <Marker
+              key="selectedMarker"
+              coordinate={selectedMarker.coordinate}
+              pinColor={'blue'}
+            />
           ) : null}
           {newSiteMarker ? (
             <Marker
