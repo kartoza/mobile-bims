@@ -74,6 +74,7 @@ import RNFS from 'react-native-fs';
 import {color} from '../../theme/color';
 import Site from '../../models/site/site';
 import {AuthContext} from '../../App';
+import { TaxonGroup } from '../../models/taxon/taxon';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -235,7 +236,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setShowBiodiversityModule(true);
   };
 
-  const markerDeselected = () => {
+  const deselectMarkers = () => {
     setSelectedMarker(null);
     setShowBiodiversityModule(false);
   };
@@ -246,7 +247,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         coordinate: e.nativeEvent.coordinate,
       });
     }
-    markerDeselected();
+    deselectMarkers();
   };
 
   const updateSearch = (_search: React.SetStateAction<string>) => {
@@ -304,15 +305,18 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   }, []);
 
   const refreshMap = useCallback(
-    async (deselectMarkers = false) => {
+    async (shouldDeselectMarkers = false) => {
       setMapViewKey(Math.floor(Math.random() * 100));
-      if (deselectMarkers) {
+      if (shouldDeselectMarkers) {
         setMarkers([]);
-        markerDeselected();
+        deselectMarkers();
       }
       await clearTemporaryNewSites();
       await getUnsyncedData();
       await getSites();
+      if (shouldDeselectMarkers) {
+        watchLocation();
+      }
     },
     [getSites],
   );
@@ -563,43 +567,33 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         await saveSites(newSites);
         setSites(newSites);
         setMarkers([]);
-        markerDeselected();
+        deselectMarkers();
         await getSites();
       }
     },
     [sites, getSites],
   );
 
-  const syncData = async (force: boolean = false) => {
-    if (isSyncing) {
-      return;
-    }
-    if (unsyncedData.length > 0 && !force) {
-      props.navigation.navigate({
-        name: 'UnsyncedList',
-        params: {
-          onBack: () => refreshMap(true),
-          syncRecord: () => syncData(true),
-        },
-        merge: true,
-      });
-      return;
-    }
-    const isConnected = await checkConnection();
-    if (!isConnected) {
-      showError('No internet connection available, please try again later');
-      return;
-    }
-    markerDeselected();
-    setSyncProgress(0);
-    setIsSyncing(true);
+  const navigateToUnsyncedList = () => {
+    props.navigation.navigate({
+      name: 'UnsyncedList',
+      params: {
+        onBack: () => refreshMap(true),
+        syncRecord: () => syncData(true),
+      },
+      merge: true,
+    });
+  };
 
-    setSyncMessage('Push data to server');
-    let currentUnsyncedData = unsyncedData;
-    if (currentUnsyncedData.length > 0) {
-      await pushUnsynced();
-    }
+  async function downloadData() {
+    await downloadNearestSites();
+    await downloadSourceReferences();
+    await downloadTaxaList();
+    await downloadSassTaxa();
+    await downloadAbiotic();
+  }
 
+  async function downloadNearestSites() {
     if (latitude && longitude) {
       setSyncMessage('Downloading Nearest Sites');
       setSyncProgress(0);
@@ -608,7 +602,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       });
       setSyncProgress(1);
     }
+  }
 
+  async function downloadSourceReferences() {
     setSyncMessage('Downloading Source References');
     setSyncProgress(1);
     const sourceReferenceApi = new SourceReferenceApi();
@@ -619,7 +615,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       await saveSourceReferences(sourceReferenceApiResult.sourceReferences);
     }
     setSyncProgress(1);
+  }
 
+  async function downloadTaxaList() {
     setSyncMessage('Downloading Taxa List');
     setSyncProgress(0);
     const api = new TaxaApi();
@@ -643,22 +641,27 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         setSyncProgress((i + 1) / storedTaxonGroups.length);
       }
 
-      // Options data
-      setSyncMessage('Downloading Options');
-      setSyncProgress(0);
-      const optionsApi = new OptionsApi();
-      await optionsApi.setup();
-      for (let i = 0; i < storedTaxonGroups.length; i++) {
-        const taxonGroup = storedTaxonGroups[i];
-        const apiResult = await optionsApi.getOptions(taxonGroup.id);
-        if (apiResult.kind === 'ok') {
-          await saveOptions(apiResult.options, taxonGroup.id);
-        }
-        setSyncProgress((i + 1) / storedTaxonGroups.length);
-      }
+      await downloadOptions(storedTaxonGroups);
     }
+  }
 
-    setSyncMessage('Fetching SASS Taxa');
+  async function downloadOptions(storedTaxonGroups: TaxonGroup[]) {
+    setSyncMessage('Downloading Options');
+    setSyncProgress(0);
+    const optionsApi = new OptionsApi();
+    await optionsApi.setup();
+    for (let i = 0; i < storedTaxonGroups.length; i++) {
+      const taxonGroup = storedTaxonGroups[i];
+      const apiResult = await optionsApi.getOptions(taxonGroup.id);
+      if (apiResult.kind === 'ok') {
+        await saveOptions(apiResult.options, taxonGroup.id);
+      }
+      setSyncProgress((i + 1) / storedTaxonGroups.length);
+    }
+  }
+
+  async function downloadSassTaxa() {
+    setSyncMessage('Downloading SASS Taxa');
     setSyncProgress(0);
     const sassApi = new SassApi();
     await sassApi.setup();
@@ -666,8 +669,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     await saveSassTaxa(sassTaxaList);
     setSyncProgress(1);
     setSyncMessage('');
+  }
 
-    setSyncMessage('Fetching Abiotic');
+  async function downloadAbiotic() {
+    setSyncMessage('Downloading Abiotic');
     setSyncProgress(0);
     const abioticApi = new AbioticApi();
     await abioticApi.setup();
@@ -675,8 +680,65 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     await saveAbioticData(abioticData);
     setSyncProgress(1);
     setSyncMessage('');
+  }
 
-    setIsSyncing(false);
+  const prepareForSync = () => {
+    deselectMarkers();
+    setSyncProgress(0);
+    setIsSyncing(true);
+    setSyncMessage('Push data to server');
+  };
+
+  function determineErrorMessage(error: Error) {
+    if (error.name === 'NetworkError') {
+      return 'Unable to connect to the server. Please check your internet connection and try again.';
+    }
+    if (error.name === 'TimeoutError') {
+      return 'The request timed out. Please try again later.';
+    }
+    if (error.name === 'AuthenticationError') {
+      return 'You have been logged out. Please log in and try again.';
+    }
+    return `An unexpected issue occurred: ${error.message}. Please try again or contact support if the problem persists.`;
+  }
+
+  async function pushDataIfUnsynced(data: any) {
+    if (data.length > 0) {
+      await pushUnsynced();
+    }
+  }
+
+  const syncData = async (force: boolean = false) => {
+    if (isSyncing) {
+      return;
+    }
+
+    if (unsyncedData.length > 0 && !force) {
+      navigateToUnsyncedList();
+      return;
+    }
+
+    if (!(await checkConnection())) {
+      showError('No internet connection available, please try again later');
+      return;
+    }
+
+    if (force) {
+      watchLocation();
+    }
+
+    try {
+      setIsSyncing(true);
+      prepareForSync();
+      await pushDataIfUnsynced(unsyncedData);
+      await downloadData();
+    } catch (error: any) {
+      if (error) {
+        showError(determineErrorMessage(error));
+      }
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -802,7 +864,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       <OverlayMenu
         visible={overlayVisible}
         navigation={props.navigation}
-        refreshMap={refreshMap}
+        refreshMap={() => {
+          watchLocation().catch(error => console.log(error));
+          refreshMap();
+        }}
         downloadRiverClicked={() => setDownloadLayerVisible(true)}
         downloadSiteClicked={() => setDownloadSiteVisible(true)}
       />
@@ -907,7 +972,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   markerSelected(marker);
                 }}
                 onDeselect={() => {
-                  markerDeselected();
+                  deselectMarkers();
                 }}
                 onSelect={() => {
                   markerSelected(marker);

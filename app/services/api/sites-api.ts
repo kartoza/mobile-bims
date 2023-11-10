@@ -69,7 +69,7 @@ export class SitesApi extends Api {
     if (!response.ok) {
       const problem = getGeneralApiProblem(response);
       if (problem) {
-        return problem;
+        throw new Error(problem.kind);
       }
     }
     // transform the data into the format we are expecting
@@ -78,7 +78,7 @@ export class SitesApi extends Api {
       const resultSites: Site[] = rawData.map((raw: any) => new Site(raw));
       return {kind: 'ok', sites: resultSites};
     } catch {
-      return {kind: 'bad-data'};
+      throw new Error('bad-data');
     }
   }
 }
