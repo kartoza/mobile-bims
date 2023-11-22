@@ -41,14 +41,14 @@ export class SassApi extends Api {
     if (!response.ok) {
       const problem = getGeneralApiProblem(response);
       if (problem) {
-        return problem;
+        throw new Error(problem.kind);
       }
     }
     try {
       const rawData = response.data;
       return {kind: 'ok', sassTaxa: rawData};
     } catch (e) {
-      return {kind: 'bad-data'};
+      throw new Error('bad-data');
     }
   }
 }

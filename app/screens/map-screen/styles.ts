@@ -5,8 +5,10 @@ import {
   TextStyle,
   Dimensions,
 } from 'react-native';
-import { spacing } from "../../theme/spacing"
-import { color } from "../../theme/color"
+import {spacing} from '../../theme/spacing';
+import {color} from '../../theme/color';
+import {StatusBar} from 'react-native';
+import { fontStyles } from '../../theme/font';
 
 const ACTIVITY_INDICATOR: ViewStyle = {
   top: 10,
@@ -47,7 +49,13 @@ const MAP_VIEW_DOWNLOAD_RIVER: ViewStyle = {
 };
 const MAP_VIEW_CONTAINER: ViewStyle = {
   height:
-    Dimensions.get('window').height - (Platform.OS === 'ios' ? 100 : 85) - 65,
+    Dimensions.get('window').height -
+    (Platform.OS === 'ios'
+      ? 100
+      : StatusBar.currentHeight
+      ? StatusBar.currentHeight
+      : 0) -
+    65,
 };
 const MAP: ViewStyle = {
   height:
@@ -109,8 +117,7 @@ const MID_BOTTOM_CONTAINER: ViewStyle = {
 
 const TOP_LEFT_CONTAINER: ViewStyle = {
   position: 'absolute',
-  width: 50,
-  height: 18,
+  width: 'auto',
   borderRadius: 3,
   display: 'flex',
   flexDirection: 'row',
@@ -119,6 +126,7 @@ const TOP_LEFT_CONTAINER: ViewStyle = {
   marginTop: 130,
   marginLeft: 5,
   paddingLeft: 5,
+  paddingRight: 5,
   backgroundColor: 'rgba(0,0,0,0.25)',
 };
 
@@ -168,7 +176,7 @@ const MID_BOTTOM_CONTENTS: ViewStyle = {
   alignContent: 'center',
   backgroundColor: 'white',
   paddingBottom: spacing[5],
-  width: '80%',
+  width: '95%',
   borderRadius: 5,
 };
 
@@ -186,10 +194,13 @@ const MID_BOTTOM_SUB_TEXT: TextStyle = {
 const MID_BOTTOM_BUTTON: ViewStyle = {
   backgroundColor: '#3ca290',
   borderColor: '#3ca290',
+  flex: 1,
 };
 
 const SASS_BUTTON: ViewStyle = {
   backgroundColor: '#aaa600',
+  paddingLeft: 20,
+  paddingRight: 20,
   borderColor: '#aaa600',
 };
 
@@ -200,13 +211,19 @@ const MODULE_TEXT_CONTAINER: ViewStyle = {
   paddingTop: 5,
 };
 
-const MODULE_TEXT: TextStyle = {
-  textAlign: 'center',
-  padding: 10,
-  fontWeight: 'bold',
+const MODULE_TEXT_COLOR: TextStyle = {
   color: '#525351',
-  fontSize: 15,
 };
+
+const MODULE_TEXT = [
+  MODULE_TEXT_COLOR,
+  fontStyles.medium,
+  {
+    textAlign: 'center',
+    padding: 10,
+    fontWeight: 'bold',
+  },
+];
 
 const MODULE_BUTTONS_CONTAINER: ViewStyle = {
   flexDirection: 'row',
@@ -248,6 +265,7 @@ export const styles = StyleSheet.create({
   MODULE_BUTTONS_CONTAINER,
   MODULE_TEXT,
   MODULE_TEXT_CONTAINER,
+  MODULE_TEXT_COLOR,
   SASS_BUTTON,
   SEARCH_BAR_CONTAINER,
   SYNC_BADGE,

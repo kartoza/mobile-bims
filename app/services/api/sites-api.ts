@@ -16,8 +16,15 @@ export class SitesApi extends Api {
       latitude: site.latitude,
       longitude: site.longitude,
       site_code: site.siteCode,
+      user_site_code: site.userSiteCode,
       description: site.description,
+      river_name: site.riverName,
+      user_river_name: site.userRiverName,
       additional_data: '{ "source": "mobile" }',
+      ecosystem_type: site.ecosystemType,
+      wetland_name: site.wetlandName,
+      user_wetland_name: site.userWetlandName,
+      wetland_data: site.wetlandData,
     };
     const url = '/mobile/add-location-site/';
     const response: ApiResponse<any> = await this.apisauce.post(url, postData);
@@ -39,14 +46,22 @@ export class SitesApi extends Api {
   }
 
   /**
-   * Get nearest sites
+   * Fetch nearest sites
    */
-  async getSites(latitude: Number, longitude: Number): Promise<GetSitesResult> {
+  async fetchSites(
+    latitude: Number,
+    longitude: Number,
+    extent: string = '',
+  ): Promise<GetSitesResult> {
     // make the api call
     const limit = SITES_LIMIT ? `limit=${SITES_LIMIT}` : '';
     let userCoordinate = '';
-    if (latitude && longitude) {
-      userCoordinate = `lat=${latitude}&lon=${longitude}`;
+    if (extent) {
+      userCoordinate = `extent=${extent}`;
+    } else {
+      if (latitude && longitude) {
+        userCoordinate = `lat=${latitude}&lon=${longitude}`;
+      }
     }
     const apiUrl = `/mobile/nearest-sites/?${userCoordinate}&${limit}`;
     const response: ApiResponse<any> = await this.apisauce.get(apiUrl);
@@ -54,7 +69,7 @@ export class SitesApi extends Api {
     if (!response.ok) {
       const problem = getGeneralApiProblem(response);
       if (problem) {
-        return problem;
+        throw new Error(problem.kind);
       }
     }
     // transform the data into the format we are expecting
@@ -63,7 +78,7 @@ export class SitesApi extends Api {
       const resultSites: Site[] = rawData.map((raw: any) => new Site(raw));
       return {kind: 'ok', sites: resultSites};
     } catch {
-      return {kind: 'bad-data'};
+      throw new Error('bad-data');
     }
   }
 }

@@ -25,7 +25,6 @@ import MapView, {
   Details,
   Marker,
   Region,
-  UrlTile,
   WMSTile,
   PROVIDER_GOOGLE,
   PROVIDER_DEFAULT,
@@ -48,6 +47,7 @@ import {
   clearTemporaryNewSites,
   createNewSite,
   getSitesByField,
+  saveSiteByField,
 } from '../../models/site/site.store';
 import {OverlayMenu} from './overlay-menu';
 import {load, save} from '../../utils/storage';
@@ -72,7 +72,10 @@ import {spacing} from '../../theme/spacing';
 import {downloadTiles, getZoomLevel, riverLayer} from '../../utils/offline-map';
 import RNFS from 'react-native-fs';
 import {color} from '../../theme/color';
-import Site from "../../models/site/site"
+import Site from '../../models/site/site';
+import {AuthContext} from '../../App';
+import { TaxonGroup } from '../../models/taxon/taxon';
+import { fontStyles } from '../../theme/font';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -83,6 +86,7 @@ export interface MapScreenProps {
 
 export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   // const {navigation} = props;
+  const {signOut} = React.useContext(AuthContext);
   const [sites, setSites] = useState<any[]>([]);
   const [markers, setMarkers] = useState<any[]>([]);
   const [newSiteMarker, setNewSiteMarker] = useState<any>(null);
@@ -92,6 +96,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
   const [isAddSite, setIsAddSite] = useState(false);
+  const [isFetchingSites, setIsFetchingSites] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>({});
   const [newCreatedSite, setNewCreatedSite] = useState<any>(null);
   const [unsyncedData, setUnsyncedData] = useState<any[any]>([]);
@@ -104,7 +109,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [showBiodiversityModule, setShowBiodiversityModule] = useState(false);
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
   const [formStatus, setFormStatus] = useState<string>('closed');
+  const [riverLayerAvailable, setRiverLayerAvailable] = useState<boolean>(false);
   const [downloadLayerVisible, setDownloadLayerVisible] =
+    useState<boolean>(false);
+  const [downloadSiteVisible, setDownloadSiteVisible] =
     useState<boolean>(false);
   const [mapViewKey, setMapViewKey] = useState<number>(
     Math.floor(Math.random() * 100),
@@ -130,16 +138,33 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setMarkers(_markers);
   };
 
+  useEffect(() => {
+    if (isConnected) {
+      fetch('https://maps.kartoza.com/geoserver/web/', {method: 'HEAD'})
+        .then(result => result.ok)
+        .then(ok => {
+          setRiverLayerAvailable(ok);
+        })
+        .catch(error => {
+          setRiverLayerAvailable(false);
+        });
+    }
+  }, [isConnected]);
+
   const getSites = useCallback(
     async (_latitude?: Number | undefined, _longitude?: Number | undefined) => {
+      if (isFetchingSites) {
+        return;
+      }
       let _sites = await loadSites();
+      setIsFetchingSites(true);
       if (_sites.length === 0) {
         const userLatitude = _latitude || latitude;
         const userLongitude = _longitude || longitude;
         if (userLatitude && userLongitude) {
           const api = new SitesApi();
           await api.setup();
-          const apiResult = await api.getSites(userLatitude, userLongitude);
+          const apiResult = await api.fetchSites(userLatitude, userLongitude);
           if (apiResult.kind === 'ok') {
             _sites = apiResult.sites;
           }
@@ -155,6 +180,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           setShowBiodiversityModule(false);
         }
         setIsLoading(false);
+        await delay(500);
+        setIsFetchingSites(false);
       }
     },
     [latitude, longitude],
@@ -192,7 +219,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const markerSelected = (marker: React.SetStateAction<any>) => {
-    console.log('select2');
     if (isAddSite) {
       return;
     }
@@ -202,16 +228,17 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           if (site.id === marker.key) {
             setSelectedSite(site);
             setSelectedMarker(marker);
+            setShowBiodiversityModule(true);
+            return;
           }
         } catch (e) {
           console.log(e);
         }
       }
     }
-    setShowBiodiversityModule(true);
   };
 
-  const markerDeselected = () => {
+  const deselectMarkers = () => {
     setSelectedMarker(null);
     setShowBiodiversityModule(false);
   };
@@ -222,7 +249,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         coordinate: e.nativeEvent.coordinate,
       });
     }
-    markerDeselected();
+    deselectMarkers();
   };
 
   const updateSearch = (_search: React.SetStateAction<string>) => {
@@ -231,19 +258,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   // @ts-ignore
   const watchLocation = useCallback(async () => {
-    if (mapViewRef && mapViewRef.current && latitude && longitude) {
-      // @ts-ignore
-      mapViewRef.current.animateCamera({
-        center: {
-          latitude: latitude,
-          longitude: longitude,
-        },
-        heading: 0,
-        pitch: 0,
-        zoom: 12,
-      });
-      return;
-    }
     await Geolocation.getCurrentPosition(
       (position: {
         coords: {
@@ -254,18 +268,20 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         if (mapViewRef && mapViewRef.current) {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
-          if (sites.length === 0) {
+          if (
+            sites.length === 0 &&
+            latitude !== position.coords.latitude &&
+            longitude !== position.coords.longitude &&
+            !isFetchingSites
+          ) {
             getSites(position.coords.latitude, position.coords.longitude);
           }
           // @ts-ignore
-          mapViewRef.current.animateCamera({
-            center: {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            },
-            heading: 0,
-            pitch: 0,
-            zoom: 12,
+          mapViewRef.current.animateToRegion({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            latitudeDelta: 0.25,
+            longitudeDelta: 0.25,
           });
         }
       },
@@ -288,18 +304,20 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   }, []);
 
   const refreshMap = useCallback(
-    async (deselectMarkers = false) => {
+    async (shouldDeselectMarkers = false) => {
       setMapViewKey(Math.floor(Math.random() * 100));
-      if (deselectMarkers) {
+      if (shouldDeselectMarkers) {
         setMarkers([]);
-        markerDeselected();
+        deselectMarkers();
       }
       await clearTemporaryNewSites();
       await getUnsyncedData();
       await getSites();
-      watchLocation();
+      if (shouldDeselectMarkers) {
+        watchLocation();
+      }
     },
-    [getSites, watchLocation],
+    [getSites],
   );
 
   const addSiteVisit = React.useMemo(
@@ -311,6 +329,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         name: 'OccurrenceForm',
         params: {
           sitePk: selectedSite.id,
+          ecosystemType: selectedSite.ecosystemType,
           modulePk: moduleId,
           onBack: async () => {
             await refreshMap();
@@ -361,10 +380,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setShowBiodiversityModule(true);
   };
 
-  const addNewSite = async () => {
+  const addNewSite = async (ecosystemType: string = 'river') => {
     const newSite = await createNewSite(
       newSiteMarker.coordinate.latitude,
       newSiteMarker.coordinate.longitude,
+      ecosystemType,
     );
     setFormStatus('site');
     props.navigation.navigate('siteForm', {
@@ -438,7 +458,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     if (sites) {
       for (const index in sites) {
         if (
-          sites[index].siteCode.toLowerCase().includes(search.toLowerCase())
+          sites[index].siteCode.toLowerCase().includes(search.toLowerCase()) ||
+          sites[index].userSiteCode
+            ?.toLowerCase()
+            .includes(search.toLowerCase())
         ) {
           results.push(sites[index]);
         }
@@ -467,6 +490,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   const pushUnsynced = async () => {
     const _unsyncedData = Object.assign([], await getUnsyncedData());
+    let sitesUpdated = false;
     if (_unsyncedData.length === 0) {
       return false;
     }
@@ -476,6 +500,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       // Check if unsynced data is site visit or location site
       if (_unsyncedData[i].latitude) {
         syncResult = await postLocationSite(_unsyncedData[i]);
+        if (syncResult) {
+          sitesUpdated = true;
+        }
       } else if (_unsyncedData[i].taxonGroup) {
         syncResult = await pushUnsyncedSiteVisit(_unsyncedData[i]);
       } else {
@@ -483,61 +510,100 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       }
       if (!syncResult) {
         showError("One of the data can't be synchronized");
+
+        if (sitesUpdated) {
+          await getSites();
+        }
         return unsyncedData;
       } else {
         unsyncedData[i].synced = true;
         setSyncProgress((i + 1) / unsyncedData.length);
       }
     }
+    if (sitesUpdated) {
+      await getSites();
+    }
     return await getUnsyncedData();
   };
 
-  const syncData = async (force: boolean = false) => {
-    if (isSyncing) {
-      return;
-    }
-    if (unsyncedData.length > 0 && !force) {
-      props.navigation.navigate({
-        name: 'UnsyncedList',
-        params: {
-          onBack: () => refreshMap(true),
-          syncRecord: () => syncData(true),
-        },
-        merge: true,
-      });
-      return;
-    }
-    const isConnected = await checkConnection();
-    if (!isConnected) {
-      showError('No internet connection available, please try again later');
-      return;
-    }
-    markerDeselected();
-    setSyncProgress(0);
-    setIsSyncing(true);
+  const fetchAndUpdateSites = useCallback(
+    async (
+      latitudeData: Number,
+      longitudeData: Number,
+      extent: string = '',
+    ) => {
+      // Fetch sites from server, and then update the existing ones
+      const sitesApi = new SitesApi();
+      await sitesApi.setup();
+      const apiResult = await sitesApi.fetchSites(
+        latitudeData,
+        longitudeData,
+        extent,
+      );
+      if (apiResult.kind === 'ok') {
+        let apiResultSites = apiResult.sites;
+        let newSites = await loadSites();
+        if (sites.length > 0) {
+          const existingSiteIds = new Set(
+            newSites.map((site: Site) => site.id),
+          );
+          for (const site of apiResultSites) {
+            if (!existingSiteIds.has(site.id)) {
+              newSites.push(site);
+              existingSiteIds.add(site.id);
+            } else {
+              for (const index in sites) {
+                const _site = sites[index];
+                if (_site.id === site.id) {
+                  newSites[index] = site;
+                }
+              }
+            }
+          }
+        } else {
+          newSites = apiResultSites;
+        }
+        await saveSites(newSites);
+        setSites(newSites);
+        setMarkers([]);
+        deselectMarkers();
+        await getSites();
+      }
+    },
+    [sites, getSites],
+  );
 
-    setSyncMessage('Push data to server');
-    let currentUnsyncedData = unsyncedData;
-    if (currentUnsyncedData.length > 0) {
-      await pushUnsynced();
-    }
+  const navigateToUnsyncedList = () => {
+    props.navigation.navigate({
+      name: 'UnsyncedList',
+      params: {
+        onBack: () => refreshMap(true),
+        syncRecord: () => syncData(true),
+      },
+      merge: true,
+    });
+  };
 
+  async function downloadData() {
+    await downloadNearestSites();
+    await downloadSourceReferences();
+    await downloadTaxaList();
+    await downloadSassTaxa();
+    await downloadAbiotic();
+  }
+
+  async function downloadNearestSites() {
     if (latitude && longitude) {
       setSyncMessage('Downloading Nearest Sites');
       setSyncProgress(0);
-      const sitesApi = new SitesApi();
-      await sitesApi.setup();
-      const apiResult = await sitesApi.getSites(latitude, longitude);
-      if (apiResult.kind === 'ok') {
-        await saveSites(apiResult.sites);
-        setSites(apiResult.sites);
-        setMarkers([]);
-        markerDeselected();
-        await getSites();
-      }
+      await delay(1000).then(async () => {
+        await fetchAndUpdateSites(latitude, longitude);
+      });
       setSyncProgress(1);
     }
+  }
 
+  async function downloadSourceReferences() {
     setSyncMessage('Downloading Source References');
     setSyncProgress(1);
     const sourceReferenceApi = new SourceReferenceApi();
@@ -548,7 +614,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       await saveSourceReferences(sourceReferenceApiResult.sourceReferences);
     }
     setSyncProgress(1);
+  }
 
+  async function downloadTaxaList() {
     setSyncMessage('Downloading Taxa List');
     setSyncProgress(0);
     const api = new TaxaApi();
@@ -572,22 +640,27 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         setSyncProgress((i + 1) / storedTaxonGroups.length);
       }
 
-      // Options data
-      setSyncMessage('Downloading Options');
-      setSyncProgress(0);
-      const optionsApi = new OptionsApi();
-      await optionsApi.setup();
-      for (let i = 0; i < storedTaxonGroups.length; i++) {
-        const taxonGroup = storedTaxonGroups[i];
-        const apiResult = await optionsApi.getOptions(taxonGroup.id);
-        if (apiResult.kind === 'ok') {
-          await saveOptions(apiResult.options, taxonGroup.id);
-        }
-        setSyncProgress((i + 1) / storedTaxonGroups.length);
-      }
+      await downloadOptions(storedTaxonGroups);
     }
+  }
 
-    setSyncMessage('Fetching SASS Taxa');
+  async function downloadOptions(storedTaxonGroups: TaxonGroup[]) {
+    setSyncMessage('Downloading Options');
+    setSyncProgress(0);
+    const optionsApi = new OptionsApi();
+    await optionsApi.setup();
+    for (let i = 0; i < storedTaxonGroups.length; i++) {
+      const taxonGroup = storedTaxonGroups[i];
+      const apiResult = await optionsApi.getOptions(taxonGroup.id);
+      if (apiResult.kind === 'ok') {
+        await saveOptions(apiResult.options, taxonGroup.id);
+      }
+      setSyncProgress((i + 1) / storedTaxonGroups.length);
+    }
+  }
+
+  async function downloadSassTaxa() {
+    setSyncMessage('Downloading SASS Taxa');
     setSyncProgress(0);
     const sassApi = new SassApi();
     await sassApi.setup();
@@ -595,8 +668,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     await saveSassTaxa(sassTaxaList);
     setSyncProgress(1);
     setSyncMessage('');
+  }
 
-    setSyncMessage('Fetching Abiotic');
+  async function downloadAbiotic() {
+    setSyncMessage('Downloading Abiotic');
     setSyncProgress(0);
     const abioticApi = new AbioticApi();
     await abioticApi.setup();
@@ -604,8 +679,65 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     await saveAbioticData(abioticData);
     setSyncProgress(1);
     setSyncMessage('');
+  }
 
-    setIsSyncing(false);
+  const prepareForSync = () => {
+    deselectMarkers();
+    setSyncProgress(0);
+    setIsSyncing(true);
+    setSyncMessage('Push data to server');
+  };
+
+  function determineErrorMessage(error: Error) {
+    if (error.name === 'NetworkError') {
+      return 'Unable to connect to the server. Please check your internet connection and try again.';
+    }
+    if (error.name === 'TimeoutError') {
+      return 'The request timed out. Please try again later.';
+    }
+    if (error.name === 'AuthenticationError') {
+      return 'You have been logged out. Please log in and try again.';
+    }
+    return `An unexpected issue occurred: ${error.message}. Please try again or contact support if the problem persists.`;
+  }
+
+  async function pushDataIfUnsynced(data: any) {
+    if (data.length > 0) {
+      await pushUnsynced();
+    }
+  }
+
+  const syncData = async (force: boolean = false) => {
+    if (isSyncing) {
+      return;
+    }
+
+    if (unsyncedData.length > 0 && !force) {
+      navigateToUnsyncedList();
+      return;
+    }
+
+    if (!(await checkConnection())) {
+      showError('No internet connection available, please try again later');
+      return;
+    }
+
+    if (force) {
+      watchLocation();
+    }
+
+    try {
+      setIsSyncing(true);
+      prepareForSync();
+      await pushDataIfUnsynced(unsyncedData);
+      await downloadData();
+    } catch (error: any) {
+      if (error) {
+        showError(determineErrorMessage(error));
+      }
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -638,7 +770,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       const _taxonGroups = await loadTaxonGroups();
       setTaxonGroups(_taxonGroups);
       if (!token) {
-        props.navigation.pop();
+        sign;
       }
       if (isMounted) {
         delay(500).then(() => {
@@ -695,19 +827,55 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     });
   };
 
+  const downloadSitesByExtent = async () => {
+    const currentRegion = region;
+    const zoomLevel = getZoomLevel(currentRegion.longitudeDelta);
+    if (zoomLevel <= 8) {
+      Alert.alert(
+        'Zoom Level Error',
+        'Zoom level too high. Please zoom in further.',
+      );
+      return;
+    }
+    setIsLoading(true);
+    // await downloadTiles(currentRegion, zoomLevel);
+    let _sites: any[] = [];
+    const api = new SitesApi();
+    await api.setup();
+    const minLongitude = region.longitude - region.longitudeDelta / 2;
+    const maxLongitude = region.longitude + region.longitudeDelta / 2;
+    const minLatitude = region.latitude - region.latitudeDelta / 2;
+    const maxLatitude = region.latitude + region.latitudeDelta / 2;
+    const extent = `${minLongitude},${minLatitude},${maxLongitude},${maxLatitude}`;
+    await fetchAndUpdateSites(0, 0, extent);
+    setMapViewKey(Math.floor(Math.random() * 100));
+    delay(500).then(() => {
+      if (mapViewRef && mapViewRef.current) {
+        // @ts-ignore
+        mapViewRef.current.animateToRegion(currentRegion, 1000);
+      }
+      setIsLoading(false);
+      setDownloadSiteVisible(false);
+    });
+  };
+
   // @ts-ignore
   return (
     <View style={styles.CONTAINER}>
       <OverlayMenu
         visible={overlayVisible}
         navigation={props.navigation}
-        refreshMap={refreshMap}
+        refreshMap={() => {
+          watchLocation().catch(error => console.log(error));
+          refreshMap();
+        }}
         downloadRiverClicked={() => setDownloadLayerVisible(true)}
+        downloadSiteClicked={() => setDownloadSiteVisible(true)}
       />
 
       <View style={styles.SEARCH_BAR_CONTAINER}>
         <SearchBar
-          placeholder="Search Sites"
+          placeholder="Search site code"
           lightTheme
           round
           onChangeText={updateSearch}
@@ -715,6 +883,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           onSubmitEditing={submitSearch}
           value={search}
           showLoading={isLoading}
+          inputStyle={fontStyles.medium}
           containerStyle={{width: '85%'}}
           clearIcon={
             <Icon
@@ -760,7 +929,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       <View
         style={[
           styles.MAP_VIEW_CONTAINER,
-          downloadLayerVisible ? styles.MAP_VIEW_DOWNLOAD_RIVER : {},
+          downloadLayerVisible || downloadSiteVisible
+            ? styles.MAP_VIEW_DOWNLOAD_RIVER
+            : {},
         ]}>
         <MapView
           // @ts-ignore
@@ -782,26 +953,37 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
               tileSize={256}
             />
-          ) : (
+          ) : riverLayerAvailable ? (
             <WMSTile urlTemplate={riverLayer} zIndex={99} tileSize={256} />
+          ) : (
+            <LocalTile
+              pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
+              tileSize={256}
+            />
           )}
-          {markers.map(marker => {
+          {markers.map((marker, index) => {
             return (
               <Marker
                 key={marker.key}
                 coordinate={marker.coordinate}
                 title={marker.siteCode}
+                pointerEvents="auto"
                 ref={(ref: any) => {
                   marker.ref = ref;
                 }}
                 onDeselect={() => {
-                  // markerDeselected();
+                  if (Platform.OS !== 'ios') {
+                    deselectMarkers();
+                  }
                 }}
-                onSelect={() => {
+                onPress={(e: any) => {
+                  e.stopPropagation();
                   markerSelected(marker);
                 }}
                 pinColor={
-                  marker.newData
+                  marker === selectedMarker
+                    ? 'blue'
+                    : marker.newData
                     ? 'yellow'
                     : typeof marker.synced !== 'undefined'
                     ? marker.synced
@@ -812,9 +994,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               />
             );
           })}
-          {selectedMarker ? (
-            <Marker coordinate={selectedMarker.coordinate} pinColor={'blue'} />
-          ) : null}
           {newSiteMarker ? (
             <Marker
               key={'newRecord'}
@@ -858,11 +1037,15 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         </Text>
       </View>
 
-      {downloadLayerVisible ? (
+      {downloadLayerVisible || downloadSiteVisible ? (
         <>
           <View style={styles.TOP_CENTER_CONTAINER}>
             <Text style={styles.TOP_CENTER_TEXT}>
-              Zoom into desired region to download river layer for offline use.
+              Zoom into desired region to
+              {downloadLayerVisible
+                ? ' download river layer '
+                : ' download sites '}
+              for offline use.
             </Text>
           </View>
           <View style={styles.MID_BOTTOM_CONTAINER}>
@@ -879,20 +1062,29 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               onPress={() => setDownloadLayerVisible(false)}
             />
             <Button
-              title={'Download River'}
+              title={downloadLayerVisible ? 'Download River' : 'Download Sites'}
               containerStyle={{
                 backgroundColor: 'rgb(225, 232, 238)',
                 justifyContent: 'center',
               }}
               type="clear"
-              onPress={() => downloadMap()}
+              onPress={() =>
+                downloadLayerVisible ? downloadMap() : downloadSitesByExtent()
+              }
             />
           </View>
         </>
       ) : null}
 
       {isSyncing ? (
-        <View style={{ position: 'absolute', backgroundColor: 'transparent', zIndex: 999, width: '100%', height: '100%' }}>
+        <View
+          style={{
+            position: 'absolute',
+            backgroundColor: 'transparent',
+            zIndex: 999,
+            width: '100%',
+            height: '100%',
+          }}>
           <View style={styles.MID_BOTTOM_CONTAINER}>
             <View style={styles.MID_BOTTOM_CONTENTS}>
               <Text style={styles.MID_BOTTOM_TEXT}>Sync is on</Text>
@@ -911,48 +1103,136 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       )}
 
       {showBiodiversityModule ? (
-        <View style={[styles.BOTTOM_CONTAINER, { backgroundColor: 'rgba(255,255,255,0.80)' }]}>
-          <View style={[styles.MODULE_TEXT_CONTAINER, { backgroundColor: 'transparent', width: '100%' }]}>
+        <View
+          style={[
+            styles.BOTTOM_CONTAINER,
+            {backgroundColor: 'rgba(255,255,255,0.80)'},
+          ]}>
+          <View
+            style={[
+              styles.MODULE_TEXT_CONTAINER,
+              {backgroundColor: 'transparent', width: '100%'},
+            ]}>
             <TouchableOpacity onPress={() => openSite(selectedSite.id)}>
               <Text style={[styles.MODULE_TEXT, {color: color.secondaryFBIS}]}>
                 Add Record to{' '}
                 {selectedSite.siteCode !== '-'
                   ? selectedSite.siteCode
-                  : selectedSite.description}{' '}
+                  : selectedSite.userSiteCode}{' '}
               </Text>
             </TouchableOpacity>
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly', paddingLeft: spacing[4], paddingRight: spacing[4]}}>
-              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+            <View
+              style={{
+                width: '100%',
+                marginBottom: 10,
+              }}>
+              <Text
+                style={[
+                  styles.MODULE_TEXT_COLOR,
+                  fontStyles.small,
+                  {
+                    textAlign: 'center',
+                  },
+                ]}>
+                Ecosystem Type :{' '}
+                {selectedSite.ecosystemType
+                  ? selectedSite.ecosystemType[0].toUpperCase() +
+                    selectedSite.ecosystemType.substring(
+                      1,
+                      selectedSite.ecosystemType.length,
+                    )
+                  : 'Unspecified'}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.MODULE_TEXT_COLOR,
+                {
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-evenly',
+                  paddingLeft: spacing[4],
+                  paddingRight: spacing[4],
+                },
+              ]}>
+              <View
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  width: '33%',
+                }}>
                 <Icon
                   name="user"
                   type="font-awesome-5"
                   size={11}
                   color={'grey'}
                 />
-                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>{ selectedSite.owner ? selectedSite.owner : '-' }</Text>
+                <Text
+                  style={[
+                    styles.MODULE_TEXT_COLOR,
+                    {paddingLeft: spacing[1], fontSize: 11, width: '90%'},
+                  ]}>
+                  {selectedSite.siteCode
+                    ? selectedSite.owner
+                      ? selectedSite.owner
+                      : 'Unspecified'
+                    : '-'}
+                </Text>
               </View>
-              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+              <View
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  width: '33%',
+                }}>
                 <Icon
                   name="water"
                   type="font-awesome-5"
                   size={11}
                   color={'grey'}
                 />
-                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>{ selectedSite.riverName ? selectedSite.riverName : '-' }</Text>
+                <Text
+                  style={[
+                    styles.MODULE_TEXT_COLOR,
+                    fontStyles.small,
+                    {paddingLeft: spacing[1], width: '90%'},
+                  ]}>
+                  {selectedSite.riverName ? selectedSite.riverName : '-'}
+                </Text>
               </View>
-              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: '30%' }}>
+              <View
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  width: '33%',
+                }}>
                 <Icon
                   name="map-pin"
                   type="font-awesome-5"
                   size={11}
                   color={'grey'}
                 />
-                <Text style={{ paddingLeft: spacing[1], fontSize: 11 }}>LAT: {selectedSite.latitude?.toFixed(2)} LON: {selectedSite.longitude?.toFixed(2)}</Text>
+                <Text
+                  style={[
+                    styles.MODULE_TEXT_COLOR,
+                    {paddingLeft: spacing[1], fontSize: 11},
+                  ]}>
+                  LAT: {selectedSite.latitude?.toFixed(2)} LON:{' '}
+                  {selectedSite.longitude?.toFixed(2)}
+                </Text>
               </View>
             </View>
             <Text style={styles.MODULE_TEXT}>Select Biodiversity Module</Text>
           </View>
-          <View style={[styles.MODULE_BUTTONS_CONTAINER, { backgroundColor: 'transparent'}]}>
+          <View
+            style={[
+              styles.MODULE_BUTTONS_CONTAINER,
+              {backgroundColor: 'transparent'},
+            ]}>
             {taxonGroups
               .filter(
                 (taxonGroup: any) =>
@@ -964,65 +1244,114 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
                   <View style={styles.MODULE_BUTTONS} key={taxonGroup.id}>
                     <Button
-                      title={taxonGroup.name}
                       type="outline"
                       raised
                       buttonStyle={styles.MID_BOTTOM_BUTTON}
                       titleStyle={{color: '#ffffff'}}
                       containerStyle={{width: '100%'}}
-                      onPress={() => addSiteVisit(taxonGroup.id as number)}
-                    />
+                      onPress={() => addSiteVisit(taxonGroup.id as number)}>
+                      <Text
+                        style={[
+                          fontStyles.mediumSmall,
+                          {color: '#ffffff', fontWeight: 'bold'},
+                        ]}>
+                        {taxonGroup.name}
+                      </Text>
+                    </Button>
                   </View>
                 ),
               )}
           </View>
-          <View style={{width: '43%', paddingBottom: spacing[2]}}>
-            <Button
-              title="Add SASS"
-              type="outline"
-              raised
-              buttonStyle={styles.SASS_BUTTON}
-              titleStyle={{color: '#ffffff'}}
-              containerStyle={{width: '100%'}}
-              onPress={() => addSassClicked()}
-            />
-          </View>
+          {selectedSite.ecosystemType &&
+          selectedSite.ecosystemType.toLowerCase() === 'river' ? (
+            <View
+              style={{
+                width: '100%',
+                paddingBottom: spacing[2],
+                alignItems: 'center',
+              }}>
+              <Button
+                title="Add SASS"
+                type="outline"
+                raised
+                buttonStyle={styles.SASS_BUTTON}
+                titleStyle={{color: '#ffffff'}}
+                onPress={() => addSassClicked()}
+              />
+            </View>
+          ) : null}
         </View>
       ) : null}
 
       {isAddSite ? (
         <View style={styles.MID_BOTTOM_CONTAINER}>
           <View style={styles.MID_BOTTOM_CONTENTS}>
-            <Text style={[styles.MID_BOTTOM_TEXT, { paddingBottom: spacing[2]}]}>Add Site</Text>
+            <Text style={[styles.MID_BOTTOM_TEXT, {paddingBottom: spacing[2]}]}>
+              Add Site
+            </Text>
             {newSiteMarker ? (
-              <Text style={{ paddingBottom: spacing[3], fontSize: 11 }}>LAT: {newSiteMarker.coordinate.latitude?.toFixed(2)} LON: {newSiteMarker.coordinate.longitude?.toFixed(2)}</Text>
+              <Text style={{paddingBottom: spacing[3], fontSize: 11}}>
+                LAT: {newSiteMarker.coordinate.latitude?.toFixed(2)} LON:{' '}
+                {newSiteMarker.coordinate.longitude?.toFixed(2)}
+              </Text>
             ) : null}
             <View style={{flexDirection: 'row'}}>
+              {newSiteMarker ? (
+                <>
+                  <Button
+                    title="River"
+                    type="outline"
+                    raised
+                    buttonStyle={styles.MID_BOTTOM_BUTTON}
+                    titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
+                    containerStyle={{width: '30%'}}
+                    onPress={() => {
+                      addNewSite('river').then(err => console.log(err));
+                    }}
+                  />
+                  <Button
+                    title="Wetland"
+                    type="outline"
+                    raised
+                    buttonStyle={styles.MID_BOTTOM_BUTTON}
+                    titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
+                    containerStyle={{
+                      width: '30%',
+                      marginLeft: 5,
+                    }}
+                    onPress={() => {
+                      addNewSite('wetland').then(err => console.log(err));
+                    }}
+                  />
+                  <Button
+                    title={'Open\nWaterbody'}
+                    type="outline"
+                    raised
+                    buttonStyle={styles.MID_BOTTOM_BUTTON}
+                    titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
+                    containerStyle={{width: '30%', marginLeft: 5}}
+                    onPress={() => {
+                      addNewSite('open waterbody').then(err =>
+                        console.log(err),
+                      );
+                    }}
+                  />
+                </>
+              ) : null}
+            </View>
+            <View style={{ paddingTop: 10 }}>
               <Button
                 title="Cancel"
                 type="outline"
                 raised
-                buttonStyle={styles.MID_BOTTOM_BUTTON}
-                titleStyle={{color: '#ffffff'}}
-                containerStyle={{width: '30%'}}
+                buttonStyle={[styles.MID_BOTTOM_BUTTON, {backgroundColor: '#58595B'}]}
+                titleStyle={{color: '#ffffff', fontSize: 12}}
+                containerStyle={{width: '50%'}}
                 onPress={() => {
                   setNewSiteMarker(null);
                   setIsAddSite(false);
                 }}
               />
-              {newSiteMarker ? (
-                <Button
-                  title="Add"
-                  type="outline"
-                  raised
-                  buttonStyle={styles.MID_BOTTOM_BUTTON}
-                  titleStyle={{color: '#ffffff'}}
-                  containerStyle={{width: '30%', marginLeft: 10}}
-                  onPress={() => {
-                    addNewSite().then(err => console.log(err));
-                  }}
-                />
-              ) : null}
             </View>
           </View>
         </View>
@@ -1031,7 +1360,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       <View style={styles.BOTTOM_VIEW}>
         <Button
           icon={
-            <View style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+            <View
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
               <Icon
                 name="map-marker"
                 type="font-awesome-5"
@@ -1043,7 +1377,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 type="font-awesome-5"
                 size={22}
                 color={'#FFF'}
-                containerStyle={{ position: 'absolute', zIndex: 99, height: '100%', paddingTop: spacing[1] }}
+                containerStyle={{
+                  position: 'absolute',
+                  zIndex: 99,
+                  height: '100%',
+                  paddingTop: spacing[1],
+                }}
               />
             </View>
           }

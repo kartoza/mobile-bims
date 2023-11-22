@@ -1,4 +1,10 @@
-import {TextStyle, ViewStyle, Platform, StyleSheet} from 'react-native';
+import {
+  TextStyle,
+  ViewStyle,
+  Platform,
+  StyleSheet,
+  StatusBar,
+} from 'react-native';
 
 const CONTAINER: ViewStyle = {
   height: '100%',
@@ -104,7 +110,7 @@ const TEXT_INPUT_TAXA: TextStyle = {
   borderWidth: 1,
   borderColor: '#BDBDBD',
   height: '80%',
-  fontSize: 10,
+  fontSize: 12,
   marginLeft: 'auto',
   marginRight: 10,
   borderRadius: 4,
@@ -137,8 +143,15 @@ const MULTIPLE_INPUT_STYLE: ViewStyle = {
 
 const HEADER_CONTAINER: ViewStyle = {
   backgroundColor: '#005198',
-  height: Platform.OS === 'ios' ? 120 : 80,
+  height:
+    80 +
+    (Platform.OS === 'ios'
+      ? 120
+      : StatusBar.currentHeight
+      ? StatusBar.currentHeight
+      : 0),
   paddingTop: Platform.OS === 'ios' ? 0 : 0,
+  marginTop: Platform.OS === 'ios' ? -25 : 0,
 };
 
 const SUBMIT_BUTTON: ViewStyle = {

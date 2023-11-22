@@ -4,7 +4,7 @@
  *
  * You'll likely spend most of your time in this file.
  */
-import React from 'react';
+import React, {useEffect} from 'react';
 
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {LoginScreenPage} from '../screens/login-screen';
@@ -13,6 +13,9 @@ import {OccurrenceFormScreen} from '../screens/form-screen/occurrence-form-scree
 import {SiteFormScreen} from '../screens/form-screen/site-form-screen';
 import {SassFormScreen} from '../screens/form-screen/sass-form-screen';
 import {UnsyncedScreen} from '../screens/list-screen/unsynced';
+import {load} from '../utils/storage';
+import {ActivityIndicator} from 'react-native';
+import {AuthContext} from '../App';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -41,18 +44,94 @@ export type PrimaryParamList = {
 const Stack = createNativeStackNavigator<any>();
 
 export function PrimaryNavigator() {
+  const [state, dispatch] = React.useReducer(
+    (prevState, action) => {
+      switch (action.type) {
+        case 'RESTORE_TOKEN':
+          return {
+            ...prevState,
+            userToken: action.token,
+            isLoading: false,
+          };
+        case 'SIGN_IN':
+          return {
+            ...prevState,
+            isSignout: false,
+            userToken: action.token,
+            isLoading: false,
+          };
+        case 'SIGN_OUT':
+          return {
+            ...prevState,
+            isSignout: true,
+            userToken: null,
+            isLoading: false,
+          };
+      }
+    },
+    {
+      isLoading: true,
+      isSignout: false,
+      userToken: null,
+    },
+  );
+
+  useEffect(() => {
+    // Load token from storage and then navigate to our appropriate place
+    const bootstrapAsync = async () => {
+      let userToken;
+
+      try {
+        userToken = await load('token');
+      } catch (e) {
+        // Restoring token failed
+      }
+      if (userToken) {
+        dispatch({type: 'RESTORE_TOKEN', token: userToken});
+      } else {
+        dispatch({type: 'SIGN_OUT'});
+      }
+    };
+
+    bootstrapAsync();
+  }, []);
+
+  const authContext = React.useMemo(
+    () => ({
+      signIn: async (token: string) => {
+        dispatch({type: 'SIGN_IN', token: token});
+      },
+      signOut: () => dispatch({type: 'SIGN_OUT'}),
+    }),
+    [],
+  );
+
+  if (state.isLoading) {
+    return <ActivityIndicator />;
+  }
+
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}>
-      <Stack.Screen name="login" component={LoginScreenPage} />
-      <Stack.Screen name="map" component={MapScreen} />
-      <Stack.Screen name="OccurrenceForm" component={OccurrenceFormScreen} />
-      <Stack.Screen name="SASSForm" component={SassFormScreen} />
-      <Stack.Screen name="siteForm" component={SiteFormScreen} />
-      <Stack.Screen name="UnsyncedList" component={UnsyncedScreen} />
-    </Stack.Navigator>
+    <AuthContext.Provider value={authContext}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}>
+        {state.userToken == null ? (
+          <Stack.Screen name="login" component={LoginScreenPage} />
+        ) : (
+          <>
+            <Stack.Screen name="map" component={MapScreen} />
+            <Stack.Screen
+              name="OccurrenceForm"
+              component={OccurrenceFormScreen}
+            />
+            <Stack.Screen name="SASSForm" component={SassFormScreen} />
+            <Stack.Screen name="siteForm" component={SiteFormScreen} />
+            <Stack.Screen name="UnsyncedList" component={UnsyncedScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </AuthContext.Provider>
   );
 }
 

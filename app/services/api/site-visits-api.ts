@@ -4,6 +4,23 @@ import {PostSiteVisitResult} from './api.types';
 import {ApiResponse} from 'apisauce';
 import {getGeneralApiProblem} from './api-problem';
 import {getSiteByField} from '../../models/site/site.store';
+import RNFS from "react-native-fs";
+
+const imageToBase64 = async (imageUri: string) => {
+  const response = await fetch('file://' + imageUri);
+  const blob = await response.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => {
+      reader.abort();
+      reject(new Error('Problem parsing input file.'));
+    };
+    reader.onload = () => {
+      resolve(reader.result as string);
+    };
+    reader.readAsDataURL(blob);
+  });
+};
 
 export class SiteVisitsApi extends Api {
   /**
@@ -14,9 +31,14 @@ export class SiteVisitsApi extends Api {
     if (!site) {
       site = siteVisit.site;
     }
+    let date = siteVisit.date;
+    if (typeof siteVisit.date === 'string') {
+      date = siteVisit.date.split('T')[0];
+    }
     const postData: any = {
-      date: siteVisit.date.split('T')[0],
+      date: date,
       owner: siteVisit.owner,
+      hydroperiod: siteVisit.hydroperiod,
       record_type: siteVisit.recordType,
       abundance_type: 'number',
       biotope: siteVisit.biotope,
@@ -26,6 +48,8 @@ export class SiteVisitsApi extends Api {
       source_reference_id: siteVisit.sourceReferenceId,
       site_image: siteVisit.siteImage,
       abiotic: siteVisit.abiotic,
+      sampling_effort_type: siteVisit.samplingEffotMeasure,
+      sampling_effort: siteVisit.samplingEffortValue,
       'site-id': site.id,
       'taxa-id-list': '',
     };
@@ -37,6 +61,17 @@ export class SiteVisitsApi extends Api {
         postData[`${taxonId}-abundance`] = siteVisit.observedTaxa[taxonId];
       }
       postData['taxa-id-list'] = taxaIdList.join(',');
+    }
+    if (siteVisit.occurrencePhotos) {
+      let base64Images = [];
+      for (const occurrencePhoto of siteVisit.occurrencePhotos) {
+        const base64Image = await imageToBase64(occurrencePhoto.path);
+        base64Images.push({
+          id: occurrencePhoto.taxonId,
+          base64Image: base64Image,
+        });
+      }
+      postData.occurrence_photos = base64Images;
     }
     return postData;
   }
@@ -54,6 +89,20 @@ export class SiteVisitsApi extends Api {
       const problem = getGeneralApiProblem(response);
       if (problem) {
         return problem;
+      }
+    } else {
+      // delete images from the local storage if exist
+      if (siteVisit.occurrencePhotos) {
+        for (const occurrencePhoto of siteVisit.occurrencePhotos) {
+          RNFS.unlink(occurrencePhoto.path)
+            .then(() => {
+              console.log('File deleted');
+            })
+            .catch(err => {
+              console.error('Failed to delete file:', err);
+              return;
+            });
+        }
       }
     }
     try {

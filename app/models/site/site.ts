@@ -12,12 +12,21 @@ export default class Site {
   river_name?: string;
   riverName?: string;
   owner?: string;
+  userRiverName?: string;
+  userSiteCode?: string;
+  ecosystemType?: string;
+  ecosystem_type?: string;
+  userWetlandName?: string;
+  wetlandName?: string;
+  wetlandData?: object;
 
   constructor(data: {
     id: number;
     localId?: number;
     site_code?: string;
     siteCode?: string;
+    user_site_code?: string;
+    user_river_name?: string;
     name?: string;
     geometry?: any | null;
     latitude?: number | null;
@@ -27,13 +36,20 @@ export default class Site {
     description?: string;
     riverName?: string;
     river_name?: string;
+    userRiverName?: string;
+    userSiteCode?: string;
     synced: boolean;
     owner?: string;
+    ecosystemType?: string;
+    ecosystem_type?: string;
+    userWetlandName?: string;
+    wetlandName?: string;
+    wetlandData?: object;
   }) {
     if (this.newData && typeof this.synced === 'undefined') {
       this.synced = false;
     }
-    this.name = data.name;
+    this.name = data.name ? data.name : '';
     this.id = data.id;
     if (data.site_code) {
       this.siteCode = data.site_code;
@@ -42,15 +58,13 @@ export default class Site {
     } else {
       this.siteCode = '-';
     }
-    if (data.geometry) {
-      const geometry = JSON.parse(data.geometry);
-      this.longitude = geometry.coordinates[0];
-      this.latitude = geometry.coordinates[1];
-    }
-    if (data.latitude && data.longitude) {
-      this.longitude = data.longitude;
-      this.latitude = data.latitude;
-    }
+    this.latitude =
+      data.latitude ||
+      (data.geometry ? JSON.parse(data.geometry).coordinates[1] : 0);
+    this.longitude =
+      data.longitude ||
+      (data.geometry ? JSON.parse(data.geometry).coordinates[0] : 0);
+
     if (data.datetime) {
       this.datetime = data.datetime;
     }
@@ -74,9 +88,30 @@ export default class Site {
     } else if (data.riverName) {
       this.riverName = data.riverName;
     }
+    if (data.userRiverName) {
+      this.userRiverName = data.userRiverName;
+    } else if (data.user_river_name) {
+      this.userRiverName = data.user_river_name;
+    }
+    if (data.userSiteCode) {
+      this.userSiteCode = data.userSiteCode;
+    } else if (data.user_site_code) {
+      this.userSiteCode = data.user_site_code;
+    }
     if (data.owner) {
       this.owner = data.owner;
     }
+    if (data.ecosystem_type) {
+      this.ecosystemType = data.ecosystem_type;
+    }
+    if (data.ecosystemType) {
+      this.ecosystemType = data.ecosystemType;
+    }
+    // @ts-ignore
+    this.wetlandName = data.wetlandName || data.wetland_name || '';
+    // @ts-ignore
+    this.userWetlandName = data.userWetlandName || data.user_wetland_name || '';
+    this.wetlandData = data.wetlandData || {};
     return this;
   }
 }
