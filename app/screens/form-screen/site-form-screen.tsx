@@ -102,7 +102,7 @@ export const SiteFormScreen: React.FunctionComponent<
     if (response.data) {
       return response.data;
     } else {
-      Alert.alert('Error', 'Wetland data not found.', [
+      Alert.alert('', 'Please add User Wetland Name.', [
         {
           text: 'OK',
         },
@@ -300,7 +300,6 @@ export const SiteFormScreen: React.FunctionComponent<
                       if (wetlandData) {
                         wetlandName = wetlandData['name'] || '-';
                       }
-                      console.log(wetlandData, wetlandName)
                       setUpdatedSiteData({
                         ...updatedSiteData,
                         ...{

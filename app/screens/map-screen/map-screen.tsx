@@ -24,7 +24,6 @@ import MapView, {
   Details,
   Marker,
   Region,
-  UrlTile,
   WMSTile,
   PROVIDER_GOOGLE,
   PROVIDER_DEFAULT,
@@ -75,6 +74,7 @@ import {color} from '../../theme/color';
 import Site from '../../models/site/site';
 import {AuthContext} from '../../App';
 import { TaxonGroup } from '../../models/taxon/taxon';
+import { fontStyles } from '../../theme/font';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -882,6 +882,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           onSubmitEditing={submitSearch}
           value={search}
           showLoading={isLoading}
+          inputStyle={fontStyles.medium}
           containerStyle={{width: '85%'}}
           clearIcon={
             <Icon
@@ -1128,10 +1129,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 marginBottom: 10,
               }}>
               <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 12,
-                }}>
+                style={[
+                  styles.MODULE_TEXT_COLOR,
+                  fontStyles.small,
+                  {
+                    textAlign: 'center',
+                  },
+                ]}>
                 Ecosystem Type :{' '}
                 {selectedSite.ecosystemType
                   ? selectedSite.ecosystemType[0].toUpperCase() +
@@ -1143,14 +1147,17 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               </Text>
             </View>
             <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-evenly',
-                paddingLeft: spacing[4],
-                paddingRight: spacing[4],
-              }}>
+              style={[
+                styles.MODULE_TEXT_COLOR,
+                {
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-evenly',
+                  paddingLeft: spacing[4],
+                  paddingRight: spacing[4],
+                },
+              ]}>
               <View
                 style={{
                   display: 'flex',
@@ -1165,7 +1172,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   color={'grey'}
                 />
                 <Text
-                  style={{paddingLeft: spacing[1], fontSize: 11, width: '90%'}}>
+                  style={[
+                    styles.MODULE_TEXT_COLOR,
+                    {paddingLeft: spacing[1], fontSize: 11, width: '90%'},
+                  ]}>
                   {selectedSite.siteCode
                     ? selectedSite.owner
                       ? selectedSite.owner
@@ -1187,7 +1197,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   color={'grey'}
                 />
                 <Text
-                  style={{paddingLeft: spacing[1], fontSize: 11, width: '90%'}}>
+                  style={[
+                    styles.MODULE_TEXT_COLOR,
+                    fontStyles.small,
+                    {paddingLeft: spacing[1], width: '90%'},
+                  ]}>
                   {selectedSite.riverName ? selectedSite.riverName : '-'}
                 </Text>
               </View>
@@ -1204,7 +1218,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   size={11}
                   color={'grey'}
                 />
-                <Text style={{paddingLeft: spacing[1], fontSize: 11}}>
+                <Text
+                  style={[
+                    styles.MODULE_TEXT_COLOR,
+                    {paddingLeft: spacing[1], fontSize: 11},
+                  ]}>
                   LAT: {selectedSite.latitude?.toFixed(2)} LON:{' '}
                   {selectedSite.longitude?.toFixed(2)}
                 </Text>
@@ -1228,28 +1246,38 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
                   <View style={styles.MODULE_BUTTONS} key={taxonGroup.id}>
                     <Button
-                      title={taxonGroup.name}
                       type="outline"
                       raised
                       buttonStyle={styles.MID_BOTTOM_BUTTON}
                       titleStyle={{color: '#ffffff'}}
                       containerStyle={{width: '100%'}}
-                      onPress={() => addSiteVisit(taxonGroup.id as number)}
-                    />
+                      onPress={() => addSiteVisit(taxonGroup.id as number)}>
+                      <Text
+                        style={[
+                          fontStyles.mediumSmall,
+                          {color: '#ffffff', fontWeight: 'bold'},
+                        ]}>
+                        {taxonGroup.name}
+                      </Text>
+                    </Button>
                   </View>
                 ),
               )}
           </View>
           {selectedSite.ecosystemType &&
           selectedSite.ecosystemType.toLowerCase() === 'river' ? (
-            <View style={{width: '43%', paddingBottom: spacing[2]}}>
+            <View
+              style={{
+                width: '100%',
+                paddingBottom: spacing[2],
+                alignItems: 'center',
+              }}>
               <Button
                 title="Add SASS"
                 type="outline"
                 raised
                 buttonStyle={styles.SASS_BUTTON}
                 titleStyle={{color: '#ffffff'}}
-                containerStyle={{width: '100%'}}
                 onPress={() => addSassClicked()}
               />
             </View>
@@ -1277,7 +1305,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     type="outline"
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
-                    titleStyle={{color: '#ffffff', fontSize: 13}}
+                    titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
                     containerStyle={{width: '30%'}}
                     onPress={() => {
                       addNewSite('river').then(err => console.log(err));
@@ -1288,7 +1316,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     type="outline"
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
-                    titleStyle={{color: '#ffffff', fontSize: 13}}
+                    titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
                     containerStyle={{
                       width: '30%',
                       marginLeft: 5,
@@ -1302,7 +1330,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     type="outline"
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
-                    titleStyle={{color: '#ffffff', fontSize: 13}}
+                    titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
                     containerStyle={{width: '30%', marginLeft: 5}}
                     onPress={() => {
                       addNewSite('open waterbody').then(err =>
@@ -1318,9 +1346,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 title="Cancel"
                 type="outline"
                 raised
-                buttonStyle={styles.MID_BOTTOM_BUTTON}
+                buttonStyle={[styles.MID_BOTTOM_BUTTON, {backgroundColor: '#58595B'}]}
                 titleStyle={{color: '#ffffff', fontSize: 12}}
-                containerStyle={{width: '30%'}}
+                containerStyle={{width: '50%'}}
                 onPress={() => {
                   setNewSiteMarker(null);
                   setIsAddSite(false);
