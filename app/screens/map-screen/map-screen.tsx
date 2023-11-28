@@ -138,6 +138,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   useEffect(() => {
+    if (downloadLayerVisible || downloadSiteVisible) {
+      setIsAddSite(false);
+      setShowBiodiversityModule(false);
+    }
+  }, [downloadLayerVisible, downloadSiteVisible]);
+
+  useEffect(() => {
     if (isConnected) {
       fetch('https://maps.kartoza.com/geoserver/web/', {method: 'HEAD'})
         .then(result => result.ok)
@@ -430,6 +437,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const addNewSiteMode = async () => {
+    setShowBiodiversityModule(false);
     setIsAddSite(true);
     if (latitude && longitude) {
       setNewSiteMarker({
@@ -938,7 +946,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           provider={PROVIDER_DEFAULT}
           ref={mapViewRef}
           onRegionChange={onRegionChange}
-          followsUserLocation
           style={styles.MAP}
           loadingEnabled={true}
           showsUserLocation={true}
@@ -1061,7 +1068,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   color="white"
                 />
               }
-              onPress={() => setDownloadLayerVisible(false)}
+              onPress={() => {
+                setDownloadSiteVisible(false);
+                setDownloadLayerVisible(false);
+              }}
             />
             <Button
               title={downloadLayerVisible ? 'Download River' : 'Download Sites'}
