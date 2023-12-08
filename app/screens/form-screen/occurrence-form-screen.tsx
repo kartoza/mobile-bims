@@ -17,7 +17,7 @@ import {
   BackHandler,
   Dimensions,
 } from 'react-native';
-import {Button, Header, CheckBox, Dialog, Icon} from '@rneui/themed';
+import {Button, CheckBox, Dialog, Icon} from '@rneui/themed';
 import {Formik} from 'formik';
 import {Picker} from '@react-native-picker/picker';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -49,6 +49,8 @@ import AbioticForm, {
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {spacing} from '../../theme/spacing';
 import {ButtonGroup} from '@rneui/base';
+import { fontStyles } from '../../theme/font';
+import CustomHeader from '../../components/header/header';
 
 const keyboardStyles = StyleSheet.create({
   container: {
@@ -587,19 +589,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={keyboardStyles.container}>
-      <Header
-        placement="center"
-        leftComponent={{
-          icon: 'chevron-left',
-          type: 'font-awesome',
-          color: '#fff',
-          onPress: goToPreviousScreen,
-        }}
-        centerComponent={{
-          text: route.params.title ? route.params.title : 'Add Record',
-          style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
-        }}
-        containerStyle={styles.HEADER_CONTAINER}
+      <CustomHeader
+        title={route.params.title ? route.params.title : 'Add Record'}
+        onBackPress={goToPreviousScreen}
       />
       <Dialog
         isVisible={loading}

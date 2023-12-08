@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useRef, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
@@ -45,6 +46,7 @@ import {
   Camera as CameraVision,
   useCameraDevices,
 } from 'react-native-vision-camera';
+import CustomHeader from '../../components/header/header';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -340,21 +342,10 @@ export const SassFormScreen: React.FunctionComponent<
         overlayStyle={{backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00'}}>
         <Dialog.Loading />
       </Dialog>
-      <Header
-        placement="center"
-        leftComponent={{
-          icon: 'chevron-left',
-          type: 'font-awesome',
-          color: '#fff',
-          onPress: goToPreviousScreen,
-        }}
-        centerComponent={{
-          text: route.params.title ? route.params.title : 'Add SASS Record',
-          style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
-        }}
-        containerStyle={styles.HEADER_CONTAINER}
+      <CustomHeader
+        title={route.params.title ? route.params.title : 'Add SASS Record'}
+        onBackPress={goToPreviousScreen}
       />
-
       <ScrollView
         style={styles.CONTAINER}
         keyboardShouldPersistTaps="handled"
