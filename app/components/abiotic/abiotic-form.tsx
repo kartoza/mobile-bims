@@ -99,12 +99,6 @@ export default function AbioticForm(props: AbioticFormInterface) {
           style={{ height: 'auto' }}
           placeholder={'Type parameter name'}
           onChangeText={text => setInputText(text)}
-          onChange={e => {
-            props.scrollViewRef?.current?.scrollTo({
-              y: Dimensions.get('window').height + 450,
-              animated: true,
-            });
-          }}
           flatListProps={{
             keyboardShouldPersistTaps: 'always',
             horizontal: false,
@@ -131,12 +125,14 @@ export default function AbioticForm(props: AbioticFormInterface) {
         />
       </View>
       <View style={{ marginTop: spacing[7], marginBottom: -spacing[7] }}>
-        {abioticData.map(abioticSingleData => (
+        {abioticData.map((abioticSingleData, index) => (
           <TextInput
+            focusable={true}
             key={abioticSingleData.abiotic.id}
             label={`${abioticSingleData.abiotic.description} (${abioticSingleData.abiotic.unit})`}
             keyboardType={'numeric'}
             value={abioticSingleData.value}
+            autoFocus={index === abioticData.length - 1}
             right={
               <TextInput.Icon
                 icon="delete"

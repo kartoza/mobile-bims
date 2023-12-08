@@ -919,10 +919,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                       onContentSizeChange: () => {
                         let y = taxaListBuffer;
                         if (taxaListBuffer === 0) {
-                          y =
-                            scrollViewHeight / 2 +
-                            keyboardHeight / 2 +
-                            (siteImageData ? 150 : 0);
+                          y = scrollViewHeight / 2 + keyboardHeight / 2;
                           setTaxaListBuffer(y);
                         }
                         if (siteImageData) {
