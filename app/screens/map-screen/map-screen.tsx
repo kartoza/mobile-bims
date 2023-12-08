@@ -18,6 +18,7 @@ import {
   Modal,
   Alert,
   TouchableOpacity,
+  BackHandler,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {
@@ -405,10 +406,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             if (site.id === newSiteId) {
               setSelectedSite(site);
               addRecordClicked();
+              setIsAddSite(false);
             }
-            delay(500).then(() => {
-              setSelectedMarker(newSiteMarker);
-            });
           }
         }
         setFormStatus('map');
@@ -1173,32 +1172,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
-                  width: '33%',
-                }}>
-                <Icon
-                  name="user"
-                  type="font-awesome-5"
-                  size={11}
-                  color={'grey'}
-                />
-                <Text
-                  style={[
-                    styles.MODULE_TEXT_COLOR,
-                    {paddingLeft: spacing[1], fontSize: 11, width: '90%'},
-                  ]}>
-                  {selectedSite.siteCode
-                    ? selectedSite.owner
-                      ? selectedSite.owner
-                      : 'Unspecified'
-                    : '-'}
-                </Text>
-              </View>
-              <View
-                style={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  width: '33%',
+                  width: '50%',
                 }}>
                 <Icon
                   name="water"
@@ -1220,7 +1194,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
-                  width: '33%',
+                  width: '50%',
                 }}>
                 <Icon
                   name="map-pin"

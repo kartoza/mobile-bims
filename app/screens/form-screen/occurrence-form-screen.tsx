@@ -15,6 +15,7 @@ import {
   StyleSheet,
   Keyboard,
   BackHandler,
+  Dimensions,
 } from 'react-native';
 import {Button, Header, CheckBox, Dialog, Icon} from '@rneui/themed';
 import {Formik} from 'formik';
@@ -125,6 +126,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<number>(0);
   const [lastYPosition, setLastYPosition] = useState<number>(0);
   const [selectedTaxon, setSelectedTaxon] = useState<Taxon | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [scrollViewHeight, setScrollViewHeight] = useState(0);
+  const [taxaListBuffer, setTaxaListBuffer] = useState(0);
 
   let scrollViewRef = useRef();
   const devices = useCameraDevices();
@@ -160,9 +164,25 @@ export const OccurrenceFormScreen: React.FunctionComponent<
           });
       }
     }
-
+    if (typeof route.params.onBack !== 'undefined') {
+      route.params.onBack();
+    }
     return false; // execute default behavior
   };
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', e =>
+      setKeyboardHeight(e.endCoordinates.height),
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardHeight(0),
+    );
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!takingPicture) {
@@ -266,7 +286,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         }
         setDate(new Date(_siteVisit.date));
         setAbioticData(_siteVisit.abiotic);
-        console.log(_siteVisit);
         setInitialFormValues({
           hydroperiod: '',
           broadBiotope: '',
@@ -592,6 +611,10 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
         onScroll={onScroll}
+        onContentSizeChange={(contentWidth, contentHeight) => {
+          setScrollViewHeight(contentHeight);
+        }}
+        overScrollMode={Platform.OS === 'ios' ? 'auto' : 'never'}
         ref={scrollViewRef}>
         <Formik
           initialValues={initialFormValues}
@@ -871,12 +894,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     data={filterTaxonList(taxonQuery)}
                     placeholder={'Type taxon name here'}
                     value={taxonQuery}
-                    onChange={e => {
-                      scrollViewRef.current?.scrollTo({
-                        y: 600 + (siteImageData ? 450 : 0) + 50,
-                        animated: true,
-                      });
-                    }}
+                    style={{height: 'auto'}}
                     onChangeText={setTaxonQuery}
                     flatListProps={{
                       horizontal: false,
@@ -897,6 +915,23 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                             </Text>
                           </TouchableOpacity>
                         );
+                      },
+                      onContentSizeChange: () => {
+                        let y = taxaListBuffer;
+                        if (taxaListBuffer === 0) {
+                          y =
+                            scrollViewHeight / 2 +
+                            keyboardHeight / 2 +
+                            (siteImageData ? 150 : 0);
+                          setTaxaListBuffer(y);
+                        }
+                        if (siteImageData) {
+                          y += 500; // from image height
+                        }
+                        scrollViewRef.current?.scrollTo({
+                          y: y,
+                          animated: true,
+                        });
                       },
                     }}
                   />
@@ -919,7 +954,13 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                         checked={observedTaxon.checked}
                         onPress={() => checkObservedTaxon(observedTaxon.taxon)}
                       />
-                      <Text>{observedTaxon.taxon.canonicalName}</Text>
+                      <Text
+                        style={{
+                          width: '50%',
+                          height: 'auto',
+                        }}>
+                        {observedTaxon.taxon.canonicalName}
+                      </Text>
                       <TextInput
                         keyboardType={'numeric'}
                         editable={true}
@@ -955,7 +996,12 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   ))}
                 </View>
                 {capturedPhotos.length > 0 ? (
-                  <ScrollView style={{backgroundColor: '#FFF', borderRadius: 5, padding: 10}}>
+                  <ScrollView
+                    style={{
+                      backgroundColor: '#FFF',
+                      borderRadius: 5,
+                      padding: 10,
+                    }}>
                     <Text
                       style={{
                         textAlign: 'center',
@@ -967,8 +1013,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     <Image
                       key={currentPhotoIndex}
                       source={{
-                        uri:
-                          'file://' + capturedPhotos[currentPhotoIndex].path,
+                        uri: 'file://' + capturedPhotos[currentPhotoIndex].path,
                       }}
                       style={{
                         height: 400,
@@ -988,7 +1033,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               </View>
 
               {/* Abiotic */}
-              <Text style={{...styles.REQUIRED_LABEL, marginTop: 20}}>Add abiotic data</Text>
+              <Text style={{...styles.REQUIRED_LABEL, marginTop: 20}}>
+                Add abiotic data
+              </Text>
               <AbioticForm
                 abioticData={abioticData}
                 scrollViewRef={scrollViewRef}

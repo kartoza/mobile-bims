@@ -4,7 +4,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import React, {createRef, useCallback, useEffect, useState} from 'react';
 import {getSiteByField, saveSiteByField} from '../../models/site/site.store';
-import {Alert, ScrollView, View} from 'react-native';
+import {Alert, Platform, ScrollView, View} from 'react-native';
 import {Button, Header} from '@rneui/base';
 import {styles} from './styles';
 import {Formik, isNaN} from 'formik';
@@ -146,7 +146,9 @@ export const SiteFormScreen: React.FunctionComponent<
         }}
         containerStyle={styles.HEADER_CONTAINER}
       />
-      <ScrollView style={styles.CONTAINER}>
+      <ScrollView
+        style={styles.CONTAINER}
+        overScrollMode={Platform.OS === 'ios' ? 'auto' : 'never'}>
         <Dialog
           isVisible={fetchingRiverName}
           overlayStyle={{

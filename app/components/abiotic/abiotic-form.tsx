@@ -96,6 +96,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
         <Autocomplete
           data={inputText.length >= 2 ? filteredOptions : []}
           value={inputText}
+          style={{ height: 'auto' }}
           placeholder={'Type parameter name'}
           onChangeText={text => setInputText(text)}
           onChange={e => {
@@ -129,7 +130,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
           }}
         />
       </View>
-      <View style={{ marginTop: spacing[6], marginBottom: -spacing[7] }}>
+      <View style={{ marginTop: spacing[7], marginBottom: -spacing[7] }}>
         {abioticData.map(abioticSingleData => (
           <TextInput
             key={abioticSingleData.abiotic.id}
