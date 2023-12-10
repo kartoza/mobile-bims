@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, TouchableOpacity, Text, Dimensions, Keyboard} from 'react-native';
+import {View, TouchableOpacity, Text, Keyboard} from 'react-native';
 import {TextInput} from 'react-native-paper';
 import Abiotic from '../../models/abiotic/abiotic';
 import {loadAbioticData} from '../../models/abiotic/abiotic.store';
