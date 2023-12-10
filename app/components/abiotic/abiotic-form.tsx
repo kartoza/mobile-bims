@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, TouchableOpacity, Text, Dimensions, Keyboard} from 'react-native';
+import {View, TouchableOpacity, Text, Keyboard} from 'react-native';
 import {TextInput} from 'react-native-paper';
 import Abiotic from '../../models/abiotic/abiotic';
 import {loadAbioticData} from '../../models/abiotic/abiotic.store';
@@ -96,14 +96,9 @@ export default function AbioticForm(props: AbioticFormInterface) {
         <Autocomplete
           data={inputText.length >= 2 ? filteredOptions : []}
           value={inputText}
+          style={{ height: 'auto' }}
           placeholder={'Type parameter name'}
           onChangeText={text => setInputText(text)}
-          onChange={e => {
-            props.scrollViewRef?.current?.scrollTo({
-              y: Dimensions.get('window').height + 450,
-              animated: true,
-            });
-          }}
           flatListProps={{
             keyboardShouldPersistTaps: 'always',
             horizontal: false,
@@ -129,13 +124,15 @@ export default function AbioticForm(props: AbioticFormInterface) {
           }}
         />
       </View>
-      <View style={{ marginTop: spacing[6], marginBottom: -spacing[7] }}>
-        {abioticData.map(abioticSingleData => (
+      <View style={{ marginTop: spacing[7], marginBottom: -spacing[7] }}>
+        {abioticData.map((abioticSingleData, index) => (
           <TextInput
+            focusable={true}
             key={abioticSingleData.abiotic.id}
             label={`${abioticSingleData.abiotic.description} (${abioticSingleData.abiotic.unit})`}
             keyboardType={'numeric'}
             value={abioticSingleData.value}
+            autoFocus={index === abioticData.length - 1}
             right={
               <TextInput.Icon
                 icon="delete"

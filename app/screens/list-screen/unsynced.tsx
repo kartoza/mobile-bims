@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
@@ -21,6 +22,7 @@ import Site from '../../models/site/site';
 import SiteVisit from '../../models/site_visit/site_visit';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
 import {ScrollView} from 'react-native-gesture-handler';
+import CustomHeader from '../../components/header/header';
 
 export interface UnsyncedScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -306,21 +308,11 @@ export const UnsyncedScreen: React.FunctionComponent<
 
   return (
     <View style={{minHeight: '100%', marginBottom: 100}}>
-      <Header
-        placement="center"
-        leftComponent={{
-          icon: 'chevron-left',
-          type: 'font-awesome',
-          color: '#fff',
-          onPress: () => goToPreviousScreen(false),
-        }}
-        centerComponent={{
-          text: 'Unsynced Data',
-          style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
-        }}
-        containerStyle={styles.HEADER_CONTAINER}
+      <CustomHeader
+        title={'Unsynced Data'}
+        onBackPress={() => goToPreviousScreen(false)}
       />
-      <ScrollView style={{ marginBottom: 60, height: 1 }}>
+      <ScrollView style={{marginBottom: 60, height: 1}}>
         {unsynced.map((_unsynced: UnsyncedInterface, index: number) => (
           <UnsyncedItem
             key={'unsynced_' + index}

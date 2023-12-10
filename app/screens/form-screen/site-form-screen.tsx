@@ -4,19 +4,20 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import React, {createRef, useCallback, useEffect, useState} from 'react';
 import {getSiteByField, saveSiteByField} from '../../models/site/site.store';
-import {Alert, ScrollView, View} from 'react-native';
-import {Button, Header} from '@rneui/base';
+import {Alert, Platform, ScrollView, View} from 'react-native';
+import {Button} from '@rneui/base';
 import {styles} from './styles';
 import {Formik, isNaN} from 'formik';
 import MapView, {LocalTile, Marker, WMSTile} from 'react-native-maps';
 import {FormInput} from '../../components/form-input/form-input';
 import {LogBox} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import { riverLayer, wetlandLayer } from "../../utils/offline-map";
+import {riverLayer, wetlandLayer} from '../../utils/offline-map';
 import {load} from '../../utils/storage';
 import {Api} from '../../services/api/api';
 import {ApiResponse} from 'apisauce';
 import {Dialog} from '@rneui/themed';
+import CustomHeader from '../../components/header/header';
 
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
@@ -130,23 +131,17 @@ export const SiteFormScreen: React.FunctionComponent<
 
   return (
     <View style={{height: '100%'}}>
-      <Header
-        placement="center"
-        leftComponent={{
-          icon: 'chevron-left',
-          type: 'font-awesome',
-          color: '#fff',
-          onPress: () => goToMapScreen(),
-        }}
-        centerComponent={{
-          text: route.params.title
+      <CustomHeader
+        title={
+          route.params.title
             ? route.params.title
-            : `ADD ${siteData.ecosystemType?.toUpperCase()} SITE`,
-          style: {fontSize: 18, color: '#fff', fontWeight: 'bold'},
-        }}
-        containerStyle={styles.HEADER_CONTAINER}
+            : `ADD ${siteData.ecosystemType?.toUpperCase()} SITE`
+        }
+        onBackPress={() => goToMapScreen()}
       />
-      <ScrollView style={styles.CONTAINER}>
+      <ScrollView
+        style={styles.CONTAINER}
+        overScrollMode={Platform.OS === 'ios' ? 'auto' : 'never'}>
         <Dialog
           isVisible={fetchingRiverName}
           overlayStyle={{
