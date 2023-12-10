@@ -4,7 +4,7 @@ import {GetSitesResult, PostLocationSiteResult} from './api.types';
 import {getGeneralApiProblem} from './api-problem';
 import {ApiResponse} from 'apisauce';
 
-const SITES_LIMIT = 100;
+const SITES_LIMIT = 50;
 
 export class SitesApi extends Api {
   /**

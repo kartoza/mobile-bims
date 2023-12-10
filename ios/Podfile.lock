@@ -266,13 +266,7 @@ PODS:
   - React-jsinspector (0.71.12)
   - React-logger (0.71.12):
     - glog
-  - react-native-camera (4.2.1):
-    - React-Core
-    - react-native-camera/RCT (= 4.2.1)
-    - react-native-camera/RN (= 4.2.1)
-  - react-native-camera/RCT (4.2.1):
-    - React-Core
-  - react-native-camera/RN (4.2.1):
+  - react-native-clusterer (1.3.0):
     - React-Core
   - react-native-config (1.5.1):
     - react-native-config/App (= 1.5.1)
@@ -282,7 +276,7 @@ PODS:
     - React-Core
   - react-native-geolocation-service (5.3.1):
     - React
-  - react-native-maps (1.7.1):
+  - react-native-maps (1.8.0):
     - React-Core
   - react-native-netinfo (9.4.1):
     - React-Core
@@ -393,6 +387,10 @@ PODS:
     - React-Core
   - RNVectorIcons (9.2.0):
     - React-Core
+  - VisionCamera (2.15.5):
+    - React
+    - React-callinvoker
+    - React-Core
   - Yoga (1.14.0)
 
 DEPENDENCIES:
@@ -418,7 +416,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
-  - react-native-camera (from `../node_modules/react-native-camera`)
+  - react-native-clusterer (from `../node_modules/react-native-clusterer`)
   - react-native-config (from `../node_modules/react-native-config`)
   - react-native-encrypted-storage (from `../node_modules/react-native-encrypted-storage`)
   - react-native-geolocation-service (from `../node_modules/react-native-geolocation-service`)
@@ -448,6 +446,7 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
+  - VisionCamera (from `../node_modules/react-native-vision-camera`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -496,8 +495,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
-  react-native-camera:
-    :path: "../node_modules/react-native-camera"
+  react-native-clusterer:
+    :path: "../node_modules/react-native-clusterer"
   react-native-config:
     :path: "../node_modules/react-native-config"
   react-native-encrypted-storage:
@@ -556,6 +555,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNVectorIcons:
     :path: "../node_modules/react-native-vector-icons"
+  VisionCamera:
+    :path: "../node_modules/react-native-vision-camera"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -582,11 +583,11 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 509cd947c28834614808ce056ee8eb700a0662aa
   React-jsinspector: ec4dcbfb1f4e72f04f826a0301eceee5fa7ca540
   React-logger: 35538accacf2583693fbc3ee8b53e69a1776fcee
-  react-native-camera: 210a872c84d3aa0982a9223047ef9e743ed694fa
+  react-native-clusterer: 08c6a41be6cbbe9a21cc21f7193e9ba7ffef2d2a
   react-native-config: 86038147314e2e6d10ea9972022aa171e6b1d4d8
   react-native-encrypted-storage: 9220c8a959b2abe4231466bb504158a572168729
   react-native-geolocation-service: 608e1da71a1ac31b4de64d9ef2815f697978c55b
-  react-native-maps: 1a4a33e8141cf1062c794a1cfc26612606dd8cd2
+  react-native-maps: f699e0753c22c4d5c3a44d03895b193a4dbca6c2
   react-native-netinfo: d62a8cf4744228e76aed6e5042ca200441ba40af
   react-native-safe-area-context: 6b96402d0550d0109942d3fffbc14b5933c7bdc7
   React-perflogger: 75b0e25075c67565a830985f3c373e2eae5389e0
@@ -612,8 +613,9 @@ SPEC CHECKSUMS:
   RNScreens: 4a1af06327774490d97342c00aee0c2bafb497b7
   RNSVG: 03e4d258ca355d7836a0a5dd4d4dc63c1eb49cbb
   RNVectorIcons: fcc2f6cb32f5735b586e66d14103a74ce6ad61f8
+  VisionCamera: a510a31cf8eaa037cda618c3f4b741a4cfac45f0
   Yoga: 39310a10944fc864a7550700de349183450f8aaa
 
-PODFILE CHECKSUM: 6acb2457e31cfc634b6e04647d7a7ef15889a967
+PODFILE CHECKSUM: bf805a24b8cca59f047e871350b2fa06de57df5c
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.14.2

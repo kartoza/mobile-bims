@@ -8,7 +8,7 @@ import {
 import {spacing} from '../../theme/spacing';
 import {color} from '../../theme/color';
 import {StatusBar} from 'react-native';
-import { fontStyles } from '../../theme/font';
+import {fontStyles} from '../../theme/font';
 
 const ACTIVITY_INDICATOR: ViewStyle = {
   top: 10,
@@ -40,7 +40,7 @@ const CONTAINER: ViewStyle = {
 };
 const SEARCH_BAR_CONTAINER: ViewStyle = {
   height: 65,
-  marginTop: 60,
+  marginTop: Platform.OS === 'ios' ? 0 : 60,
   flexDirection: 'row',
 };
 const MAP_VIEW_DOWNLOAD_RIVER: ViewStyle = {
@@ -139,7 +139,7 @@ const TOP_CENTER_CONTAINER: ViewStyle = {
   alignItems: 'center',
   backgroundColor: 'rgba(0,0,0,0.25)',
   top: 0,
-  marginTop: 70,
+  marginTop: Platform.OS === 'ios' ? 140 : 70,
   borderRadius: 5,
   alignSelf: 'center',
   padding: 15,
@@ -161,14 +161,14 @@ const ONLINE_STATUS: TextStyle = {
 const BOTTOM_CONTAINER: ViewStyle = {
   alignItems: 'center',
   alignContent: 'center',
-  bottom: Platform.OS === 'ios' ? 80 : 0,
+  bottom: Platform.OS === 'ios' ? 0 : 0,
   paddingBottom: Platform.OS === 'ios' ? 20 : 10,
   width: '100%',
   position: 'absolute',
   justifyContent: 'center',
   flexDirection: 'column',
   backgroundColor: '#ffffff',
-  zIndex: 99,
+  zIndex: 9999,
 };
 
 const MID_BOTTOM_CONTENTS: ViewStyle = {
@@ -195,6 +195,13 @@ const MID_BOTTOM_BUTTON: ViewStyle = {
   backgroundColor: '#3ca290',
   borderColor: '#3ca290',
   flex: 1,
+  height: Platform.OS === 'ios' ? 60 : 'auto',
+};
+
+const MID_BOTTOM_BUTTON_CONTAINER = {
+  width: '30%',
+  display: 'flex',
+  justifyContent: 'center',
 };
 
 const SASS_BUTTON: ViewStyle = {
@@ -251,6 +258,7 @@ export const styles = StyleSheet.create({
   MAP_VIEW_CONTAINER,
   MAP_VIEW_DOWNLOAD_RIVER,
   MID_BOTTOM_BUTTON,
+  MID_BOTTOM_BUTTON_CONTAINER,
   MID_BOTTOM_CONTAINER,
   MID_BOTTOM_CONTENTS,
   MID_BOTTOM_SUB_TEXT,

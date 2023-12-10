@@ -50,6 +50,7 @@ import AbioticForm, {
 import {DatetimePicker} from '../../components/form-input/datetime-picker';
 import {spacing} from '../../theme/spacing';
 import {ButtonGroup} from '@rneui/base';
+import { CustomPicker } from '../../components/form-input/custom-picker';
 
 const keyboardStyles = StyleSheet.create({
   container: {
@@ -66,48 +67,6 @@ interface ObservedTaxonInterface {
   checked: boolean;
   value: string;
 }
-
-const CustomPicker = (props: any) => {
-  return Platform.OS === 'ios' ? (
-    <TouchableOpacity
-      style={styles.ACTION_SHEETS_STYLE}
-      onPress={() => {
-        ActionSheetIOS.showActionSheetWithOptions(
-          {
-            options: [
-              'Cancel',
-              ...props.options.map((option: any) => option.name),
-            ],
-            cancelButtonIndex: 0,
-          },
-          buttonIndex => {
-            if (buttonIndex !== 0) {
-              const selectedOption: any = props.options[buttonIndex - 1];
-              props.onValueChange(selectedOption.id);
-            }
-          },
-        );
-      }}>
-      <Text>
-        {props.options.find(
-          (_option: any) => _option.id === props.selectedValue,
-        )?.name || 'Not specified'}
-      </Text>
-    </TouchableOpacity>
-  ) : (
-    <Picker
-      selectedValue={props.selectedValue}
-      style={styles.PICKER_INPUT_STYLE}
-      onValueChange={itemValue => {
-        props.onValueChange(itemValue);
-      }}>
-      <Picker.Item key="not_specified" label="Not specified" value="" />
-      {props.options.map((option: any) => (
-        <Picker.Item key={option.id} label={option.name} value={option.id} />
-      ))}
-    </Picker>
-  );
-};
 
 export const OccurrenceFormScreen: React.FunctionComponent<
   FormScreenProps
@@ -711,56 +670,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               {/* Broad biotope */}
               <Text style={styles.LABEL}>Broad Biotope / Habitat</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
-                <TouchableOpacity
-                  style={styles.ACTION_SHEETS_STYLE}
-                  onPress={() => {
-                    ActionSheetIOS.showActionSheetWithOptions(
-                      {
-                        options: [
-                          'Cancel',
-                          ...broadBiotopeOptions.map(option => option.name),
-                        ],
-                        cancelButtonIndex: 0,
-                      },
-                      buttonIndex => {
-                        if (buttonIndex !== 0) {
-                          const selectedOption: any =
-                            broadBiotopeOptions[buttonIndex - 1];
-                          setBroadBiotope(selectedOption.id);
-                          values.broadBiotope = selectedOption.name;
-                        }
-                      },
-                    );
-                  }}>
-
-                  <Text>
-                    {broadBiotopeOptions.find(
-                      (_broadBiotope: any) => _broadBiotope.id === broadBiotope,
-                    )?.name || 'Not specified'}
-                  </Text>
-                </TouchableOpacity>
-                  <Picker>
-                  {!broadBiotopeOptions?.some(
-                    option => option.name === 'Unspecified',
-                  ) && (
-                    <Picker.Item
-                      key="not_specified"
-                      label="Unspecified"
-                      value=""
-                    />
-                  )}
-                  {broadBiotopeOptions.map(broadBiotopeOption => (
-                    <Picker.Item
-                      key={broadBiotopeOption.id}
-                      label={broadBiotopeOption.name}
-                      value={broadBiotopeOption.id}
-                    />
-                  ))}
-                  </Picker>
-              </View>
-              {/* Specific biotope */}
-              <Text style={styles.LABEL}>Specific Biotope</Text>
-              <View style={styles.TEXT_INPUT_STYLE}>
                 <CustomPicker
                   selectedValue={specificBiotope}
                   options={specificBiotopeOptions}
@@ -769,24 +678,18 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     values.specificBiotope = itemValue;
                   }}
                 />
-                <Picker>
-                  {!specificBiotopeOptions?.some(
-                    option => option.name === 'Unspecified',
-                  ) && (
-                    <Picker.Item
-                      key="not_specified"
-                      label="Unspecified"
-                      value=""
-                    />
-                  )}
-                  {specificBiotopeOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.name}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
+              </View>
+              {/* Specific biotope */}
+              <Text style={styles.LABEL}>Specific Biotope</Text>
+              <View style={styles.TEXT_INPUT_STYLE}>
+                <CustomPicker
+                  selectedValue={broadBiotope}
+                  options={broadBiotopeOptions}
+                  onValueChange={(itemValue: any) => {
+                    setBroadBiotope(itemValue);
+                    values.broadBiotope = itemValue;
+                  }}
+                />
               </View>
               {/* Substratum */}
               <Text style={styles.LABEL}>Substratum</Text>
@@ -799,24 +702,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     values.substratum = itemValue;
                   }}
                 />
-                <Picker>
-                  {!substratumOptions?.some(
-                    option => option.name === 'Unspecified',
-                  ) && (
-                    <Picker.Item
-                      key="not_specified"
-                      label="Unspecified"
-                      value=""
-                    />
-                  )}
-                  {substratumOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.name}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
               </View>
               {/* Sampling Method */}
               <Text style={styles.LABEL}>Sampling Method</Text>
@@ -829,52 +714,18 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                     values.samplingMethod = itemValue;
                   }}
                 />
-                <Picker>
-                  {!samplingMethodOptions?.some(
-                    option => option.name === 'Unspecified',
-                  ) && (
-                    <Picker.Item
-                      key="not_specified"
-                      label="Unspecified"
-                      value=""
-                    />
-                  )}
-                  {samplingMethodOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.name}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
               </View>
 
               {/* Sampling Effort */}
               <Text style={styles.LABEL}>Sampling Effort</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
-                <Picker
+                <CustomPicker
                   selectedValue={values.samplingEffortMeasure}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
+                  options={samplingEffortOptions}
+                  onValueChange={(itemValue: any) => {
                     setFieldValue('samplingEffortMeasure', itemValue);
-                  }}>
-                  {!samplingEffortOptions?.some(
-                    option => option.name === 'Unspecified',
-                  ) && (
-                    <Picker.Item
-                      key="not_specified"
-                      label="Unspecified"
-                      value=""
-                    />
-                  )}
-                  {samplingEffortOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.name}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
+                  }}
+                />
               </View>
               <View style={styles.TEXT_INPUT_STYLE}>
                 <TextInput
@@ -900,20 +751,6 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                       values.recordType = itemValue;
                     }}
                   />
-                  <Picker>
-                    {!recordTypeOptions?.some(
-                      option => option === 'Unspecified',
-                    ) && (
-                      <Picker.Item
-                        key="not_specified"
-                        label="Unspecified"
-                        value=""
-                      />
-                    )}
-                    {recordTypeOptions.map(option => (
-                      <Picker.Item key={option} label={option} value={option} />
-                    ))}
-                  </Picker>
                 </View>
               </View>
               {/* Capture Image */}
@@ -921,7 +758,11 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                 <Text style={styles.LABEL}>Site Image</Text>
                 <Button
                   icon={
-                    <Icon name="camera" type="font-awesome" color={'#008BE3'} />
+                    <Icon
+                      name="camera"
+                      type="font-awesome-5"
+                      color={'#008BE3'}
+                    />
                   }
                   title={' Capture Site Image'}
                   type="outline"
@@ -930,6 +771,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   onPress={async () => {
                     const cameraPermission =
                       await CameraVision.requestCameraPermission();
+                    console.log('cameraPermission', cameraPermission);
                     if (cameraPermission === 'authorized') {
                       setTakingPicture(true);
                     }
@@ -953,9 +795,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               </View>
 
               {/* Sampling Method */}
-              <View>
+              <View style={{zIndex: 999}}>
                 <Text style={styles.REQUIRED_LABEL}>Observed Taxa</Text>
-                <View style={[styles.AUTOCOMPLETE_CONTAINER, {zIndex: 2}]}>
+                <View style={[styles.AUTOCOMPLETE_CONTAINER, {zIndex: 999}]}>
                   <Autocomplete
                     data={filterTaxonList(taxonQuery)}
                     placeholder={'Type taxon name here'}
@@ -1040,14 +882,19 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                           size={13}
                           name="camera"
                           color="white"
-                          type="font-awesome"
+                          type="font-awesome-5"
                         />
                       </Button>
                     </TouchableOpacity>
                   ))}
                 </View>
                 {capturedPhotos.length > 0 ? (
-                  <ScrollView style={{backgroundColor: '#FFF', borderRadius: 5, padding: 10}}>
+                  <ScrollView
+                    style={{
+                      backgroundColor: '#FFF',
+                      borderRadius: 5,
+                      padding: 10,
+                    }}>
                     <Text
                       style={{
                         textAlign: 'center',
@@ -1079,7 +926,9 @@ export const OccurrenceFormScreen: React.FunctionComponent<
               </View>
 
               {/* Abiotic */}
-              <Text style={{...styles.REQUIRED_LABEL, marginTop: 20}}>Add abiotic data</Text>
+              <Text style={{...styles.REQUIRED_LABEL, marginTop: 20}}>
+                Add abiotic data
+              </Text>
               <AbioticForm
                 abioticData={abioticData}
                 scrollViewRef={scrollViewRef}

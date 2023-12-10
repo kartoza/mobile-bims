@@ -74,7 +74,7 @@ const FOOTER_STYLE: ViewStyle = {
   left: 0,
   bottom: 0,
   width: '100%',
-  height: Platform.OS === 'ios' ? 100 : 60,
+  height: Platform.OS === 'ios' ? 80 : 60,
 };
 
 const FOOTER_BUTTON_CONTAINER: ViewStyle = {
@@ -320,7 +320,7 @@ export const UnsyncedScreen: React.FunctionComponent<
         }}
         containerStyle={styles.HEADER_CONTAINER}
       />
-      <ScrollView style={{ marginBottom: 60, height: 1 }}>
+      <ScrollView style={{ marginBottom: 80, height: 1 }}>
         {unsynced.map((_unsynced: UnsyncedInterface, index: number) => (
           <UnsyncedItem
             key={'unsynced_' + index}

@@ -1,12 +1,21 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 import React, {useEffect, useState} from 'react';
-import {View, TouchableOpacity, Text, Dimensions, Keyboard} from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+  Keyboard,
+  SafeAreaView,
+  LogBox,
+} from 'react-native';
 import {TextInput} from 'react-native-paper';
 import Abiotic from '../../models/abiotic/abiotic';
 import {loadAbioticData} from '../../models/abiotic/abiotic.store';
 import {styles} from '../../screens/form-screen/styles';
 import Autocomplete from 'react-native-autocomplete-input';
 import {spacing} from '../../theme/spacing';
-import { Icon } from '@rneui/themed';
+import {Icon} from '@rneui/themed';
 
 export interface AbioticDataInterface {
   abiotic: Abiotic;
@@ -31,6 +40,10 @@ export default function AbioticForm(props: AbioticFormInterface) {
   const filteredOptions = abioticOptions.filter(option =>
     option.description.toLowerCase().includes(inputText.toLowerCase()),
   );
+
+  useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+  }, []);
 
   useEffect(() => {
     if (props.abioticData && abioticData.length === 0) {
@@ -92,8 +105,8 @@ export default function AbioticForm(props: AbioticFormInterface) {
   };
 
   return (
-    <View>
-      <View style={[styles.AUTOCOMPLETE_CONTAINER, {top: 0}]}>
+    <View style={{zIndex: 10}}>
+      <SafeAreaView style={[styles.AUTOCOMPLETE_CONTAINER, {top: 0}]}>
         <Autocomplete
           data={inputText.length >= 2 ? filteredOptions : []}
           value={inputText}
@@ -111,7 +124,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
             nestedScrollEnabled: true,
             style: {
               maxHeight: 150,
-              zIndex: 9999
+              zIndex: 10,
             },
             keyExtractor: item => item.id.toString(),
             renderItem: ({item}) => (
@@ -133,7 +146,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
             ),
           }}
         />
-      </View>
+      </SafeAreaView>
       <View style={{ marginTop: spacing[6], marginBottom: -spacing[7] }}>
         {abioticData.map(abioticSingleData => (
           <TextInput

@@ -1,7 +1,9 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {Text, View, StyleSheet, Platform} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {styles} from '../../screens/form-screen/styles';
+import { CustomPicker } from '../form-input/custom-picker';
 
 const pickerStyles = StyleSheet.create({
   picker: {
@@ -26,6 +28,7 @@ interface SASSPickerInterface {
   value?: string;
 }
 const SASSTaxaRatings = ['1', 'A', 'B', 'C', 'D'];
+
 function SASSPicker(props: SASSPickerInterface) {
   const [dropdownValue, setDropdownValue] = useState<string>(
     props.value ? props.value : '',
@@ -36,7 +39,7 @@ function SASSPicker(props: SASSPickerInterface) {
     }
   }, [props.value]);
   return (
-    <View style={{ display: 'flex' }}>
+    <View style={{display: 'flex'}}>
       {props.label ? (
         <Text
           style={{
@@ -57,26 +60,26 @@ function SASSPicker(props: SASSPickerInterface) {
           alignItems: 'center',
           paddingTop: 5,
         }}>
-        <Picker
-          style={pickerStyles.picker}
-          dropdownIconColor={'#FFFFFF'}
-          dropdownIconRippleColor={'#FFFFFF'}
+        <CustomPicker
+          iosStyle={{
+            width: '100%',
+            alignItems: 'center',
+          }}
+          selectedValue={dropdownValue}
+          unspecifiedLabel={'-'}
+          options={SASSTaxaRatings.map(sassTaxaRating => {
+            return {
+              id: sassTaxaRating,
+              name: sassTaxaRating,
+            };
+          })}
           onValueChange={(newValue: string) => {
             if (props.onValueChange) {
               props.onValueChange(newValue);
             }
             setDropdownValue(newValue);
           }}
-          selectedValue={dropdownValue}>
-          <Picker.Item label={''} value={''} />
-          {SASSTaxaRatings.map(sassTaxaRating => (
-            <Picker.Item
-              label={sassTaxaRating}
-              value={sassTaxaRating}
-              key={sassTaxaRating}
-            />
-          ))}
-        </Picker>
+        />
       </View>
     </View>
   );
@@ -137,7 +140,7 @@ export function SassTaxaForm(prop: SassTaxaFormInterface) {
   }, [taxaValues]);
 
   return (
-    <View style={{ backgroundColor: '#FFFFFF' }}>
+    <View style={{backgroundColor: '#FFFFFF'}}>
       <View style={styles.SASS_TAXA_FORM}>
         <View style={styles.SASS_TAXA_DROPDOWN}>
           <SASSPicker

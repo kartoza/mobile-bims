@@ -2,7 +2,7 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:FbisMobile.xcodeproj">
+      location = "group:/Users/user/Documents/Kartoza/mobile-bims/ios/FBIS.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Pods/Pods.xcodeproj">

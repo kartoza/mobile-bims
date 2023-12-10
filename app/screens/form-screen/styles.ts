@@ -5,6 +5,7 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
+import { white } from 'react-native-paper/lib/typescript/styles/colors';
 
 const CONTAINER: ViewStyle = {
   height: '100%',
@@ -146,11 +147,11 @@ const HEADER_CONTAINER: ViewStyle = {
   height:
     80 +
     (Platform.OS === 'ios'
-      ? 120
+      ? 50
       : StatusBar.currentHeight
       ? StatusBar.currentHeight
       : 0),
-  paddingTop: Platform.OS === 'ios' ? 0 : 0,
+  paddingTop: Platform.OS === 'ios' ? 25 : 0,
   marginTop: Platform.OS === 'ios' ? -25 : 0,
 };
 
@@ -189,6 +190,7 @@ const AUTOCOMPLETE_CONTAINER: ViewStyle = {
   right: 0,
   top: 35,
   zIndex: 10,
+  backgroundColor: '#FFFFFF',
 };
 
 const AUTOCOMPLETE_LIST: ViewStyle = {
@@ -200,9 +202,9 @@ const AUTOCOMPLETE_LIST: ViewStyle = {
 
 const AUTOCOMPLETE_LIST_TEXT: TextStyle = {
   color: 'black',
+  backgroundColor: '#ffffff',
   fontSize: 14,
-  margin: 2,
-  backgroundColor: 'white',
+  margin: 2
 };
 
 const OBSERVED_TAXA_LIST: ViewStyle = {

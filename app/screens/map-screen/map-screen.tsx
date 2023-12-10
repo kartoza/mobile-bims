@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
 import React, {
@@ -7,6 +8,7 @@ import React, {
   useCallback,
   useRef,
 } from 'react';
+import {Clusterer, useClusterer} from 'react-native-clusterer';
 import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
 import {ParamListBase, useFocusEffect} from '@react-navigation/native';
 import {SearchBar, Button, Icon, Badge} from '@rneui/themed';
@@ -18,7 +20,8 @@ import {
   Modal,
   Alert,
   TouchableOpacity,
-  Platform
+  Platform,
+  Dimensions,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {
@@ -74,8 +77,14 @@ import RNFS from 'react-native-fs';
 import {color} from '../../theme/color';
 import Site from '../../models/site/site';
 import {AuthContext} from '../../App';
-import { TaxonGroup } from '../../models/taxon/taxon';
-import { fontStyles } from '../../theme/font';
+import {TaxonGroup} from '../../models/taxon/taxon';
+import {fontStyles} from '../../theme/font';
+import { GeoJsonProperties } from 'geojson';
+import type {supercluster} from 'react-native-clusterer';
+import { Point } from '../../components/point';
+
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+// import MapView from 'react-native-map-clustering';
 
 const mapViewRef = createRef();
 let SUBS: {unsubscribe: () => void} | null = null;
@@ -84,6 +93,17 @@ export interface MapScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
 }
 
+export const initialRegion = {
+  latitude: 17.150642213990213,
+  latitudeDelta: 102.40413819692193,
+  longitude: -90.13384625315666,
+  longitudeDelta: 72.32146382331848,
+};
+
+const MAP_WIDTH = Dimensions.get('window').width;
+const MAP_HEIGHT = Dimensions.get('window').height - 80;
+const MAP_DIMENSIONS = {width: MAP_WIDTH, height: MAP_HEIGHT};
+
 export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   // const {navigation} = props;
   const {signOut} = React.useContext(AuthContext);
@@ -91,7 +111,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [markers, setMarkers] = useState<any[]>([]);
   const [newSiteMarker, setNewSiteMarker] = useState<any>(null);
   const [search, setSearch] = useState('');
-  const [region, setRegion] = useState<any>(null);
+  const [region, setRegion] = useState<any>(initialRegion);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
@@ -109,7 +129,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [showBiodiversityModule, setShowBiodiversityModule] = useState(false);
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
   const [formStatus, setFormStatus] = useState<string>('closed');
-  const [riverLayerAvailable, setRiverLayerAvailable] = useState<boolean>(false);
+  const [riverLayerAvailable, setRiverLayerAvailable] =
+    useState<boolean>(false);
   const [downloadLayerVisible, setDownloadLayerVisible] =
     useState<boolean>(false);
   const [downloadSiteVisible, setDownloadSiteVisible] =
@@ -117,10 +138,36 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [mapViewKey, setMapViewKey] = useState<number>(
     Math.floor(Math.random() * 100),
   );
+  const [geojsonMarkers, setGeojsonMarkers] = useState<any>([]);
+  const geojson = [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [125.6, 10.1],
+      },
+      properties: {
+        name: 'Dinagat Islands',
+      },
+    },
+  ];
+  const [points, supercluster] = useClusterer(
+    geojsonMarkers,
+    MAP_DIMENSIONS,
+    region,
+    {
+      minPoints: 50,
+    },
+  );
+
+  const insets = useSafeAreaInsets();
+  const statusBarHeight = insets.top;
 
   const drawMarkers = (data: any[]) => {
     let _markers: any[];
+    let _geojsonMarkers: any[];
     _markers = [];
+    _geojsonMarkers = [];
     data.forEach(_data => {
       _markers.push({
         coordinate: {
@@ -133,9 +180,31 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         newData: _data.newData,
         selected: _data.selected,
       });
+      _geojsonMarkers.push({
+        type: 'Feature',
+        id: _data.id,
+        geometry: {
+          type: 'Point',
+          coordinates: [
+            parseFloat(_data.longitude),
+            parseFloat(_data.latitude),
+          ],
+        },
+        properties: {
+          title: '' + _data.id,
+          key: _data.id,
+          synced: _data.synced,
+          newData: _data.newData,
+          selected: _data.selected,
+        },
+      });
     });
     _markers.sort((a, b) => (a.newData ? 1 : b.newData ? -1 : 0));
+    _geojsonMarkers.sort((a, b) =>
+      a.properties.newData ? 1 : b.properties.newData ? -1 : 0,
+    );
     setMarkers(_markers);
+    setGeojsonMarkers(_geojsonMarkers);
   };
 
   useEffect(() => {
@@ -180,9 +249,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           setShowBiodiversityModule(false);
         }
         setIsLoading(false);
-        await delay(500);
-        setIsFetchingSites(false);
       }
+      await delay(500);
+      setIsFetchingSites(false);
     },
     [latitude, longitude],
   );
@@ -226,6 +295,14 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       if (marker) {
         try {
           if (site.id === marker.key) {
+            if (mapViewRef.current) {
+              mapViewRef.current.animateToRegion({
+                latitude: site.latitude,
+                longitude: site.longitude,
+                latitudeDelta: 0.25,
+                longitudeDelta: 0.25,
+              });
+            }
             setSelectedSite(site);
             setSelectedMarker(marker);
             setShowBiodiversityModule(true);
@@ -249,7 +326,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         coordinate: e.nativeEvent.coordinate,
       });
     }
-    deselectMarkers();
+    if (selectedMarker) {
+      deselectMarkers();
+    }
   };
 
   const updateSearch = (_search: React.SetStateAction<string>) => {
@@ -397,6 +476,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             if (site.id === newSiteId) {
               setSelectedSite(site);
               addRecordClicked();
+              drawMarkers(_sites);
             }
             delay(500).then(() => {
               setSelectedMarker(newSiteMarker);
@@ -429,6 +509,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const addNewSiteMode = async () => {
+    setShowBiodiversityModule(false);
     setIsAddSite(true);
     if (latitude && longitude) {
       setNewSiteMarker({
@@ -574,11 +655,25 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   );
 
   const navigateToUnsyncedList = () => {
+    const currentRegion = region;
     props.navigation.navigate({
       name: 'UnsyncedList',
       params: {
-        onBack: () => refreshMap(true),
-        syncRecord: () => syncData(true),
+        onBack: async () => {
+          await refreshMap();
+          if (mapViewRef && mapViewRef.current && currentRegion) {
+            // @ts-ignore
+            mapViewRef.current.animateToRegion(currentRegion, 1000);
+          }
+          setFormStatus('map');
+        },
+        syncRecord: () => {
+          if (mapViewRef && mapViewRef.current && currentRegion) {
+            // @ts-ignore
+            mapViewRef.current.animateToRegion(currentRegion, 1000);
+          }
+          syncData(true);
+        },
       },
       merge: true,
     });
@@ -770,7 +865,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       const _taxonGroups = await loadTaxonGroups();
       setTaxonGroups(_taxonGroups);
       if (!token) {
-        sign;
+        signOut();
       }
       if (isMounted) {
         delay(500).then(() => {
@@ -838,7 +933,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       return;
     }
     setIsLoading(true);
-    // await downloadTiles(currentRegion, zoomLevel);
     let _sites: any[] = [];
     const api = new SitesApi();
     await api.setup();
@@ -859,6 +953,32 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     });
   };
 
+  const initial_region = {
+    latitude: 52.5,
+    longitude: 19.2,
+    latitudeDelta: 8.5,
+    longitudeDelta: 8.5,
+  };
+
+  const _handlePointPress = (
+    point:
+      | supercluster.PointFeature<GeoJSON.GeoJsonProperties>
+      | supercluster.ClusterFeatureClusterer<GeoJSON.GeoJsonProperties>,
+  ) => {
+    if (point.properties?.getClusterExpansionRegion) {
+      const toRegion = point.properties?.getClusterExpansionRegion();
+      //@ts-ignore
+      mapViewRef.current?.animateToRegion(toRegion, 500);
+    } else {
+      const selected = markers.find(marker => {
+        return marker.key + '' === point.properties?.title;
+      });
+      if (selected) {
+        markerSelected(selected);
+      }
+    }
+  };
+
   // @ts-ignore
   return (
     <View style={styles.CONTAINER}>
@@ -873,9 +993,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         downloadSiteClicked={() => setDownloadSiteVisible(true)}
       />
 
-      <View style={styles.SEARCH_BAR_CONTAINER}>
+      <View style={[styles.SEARCH_BAR_CONTAINER, {marginTop: insets.top}]}>
         <SearchBar
-          placeholder="Search site code"
+          placeholder={'Search site code'}
           lightTheme
           round
           onChangeText={updateSearch}
@@ -938,12 +1058,17 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           key={mapViewKey}
           provider={PROVIDER_DEFAULT}
           ref={mapViewRef}
-          onRegionChange={onRegionChange}
-          followsUserLocation
-          style={styles.MAP}
+          onRegionChangeComplete={onRegionChange}
+          style={[
+            styles.MAP,
+            Platform.OS === 'ios'
+              ? {
+                  height: Dimensions.get('window').height - insets.top - 140,
+                }
+              : {},
+          ]}
           loadingEnabled={true}
           showsUserLocation={true}
-          moveOnMarkerPress={true}
           mapType={'satellite'}
           onPress={(e: {nativeEvent: {coordinate: any}}) => {
             mapSelected(e).catch(error => console.log(error));
@@ -961,36 +1086,15 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               tileSize={256}
             />
           )}
-          {markers.map((marker, index) => {
+          {points.map((item: any) => {
             return (
-              <Marker
-                key={marker.key}
-                coordinate={marker.coordinate}
-                title={marker.siteCode}
-                pointerEvents="auto"
-                ref={(ref: any) => {
-                  marker.ref = ref;
-                }}
-                onDeselect={() => {
-                  if (Platform.OS !== 'ios') {
-                    deselectMarkers();
-                  }
-                }}
-                onPress={(e: any) => {
-                  e.stopPropagation();
-                  markerSelected(marker);
-                }}
-                pinColor={
-                  marker === selectedMarker
-                    ? 'blue'
-                    : marker.newData
-                    ? 'yellow'
-                    : typeof marker.synced !== 'undefined'
-                    ? marker.synced
-                      ? 'gold'
-                      : 'red'
-                    : 'gold'
+              <Point
+                key={
+                  item.properties?.key ?? `point-${item.properties?.cluster_id}`
                 }
+                item={item}
+                selected={selectedMarker}
+                onPress={_handlePointPress}
               />
             );
           })}
@@ -1024,7 +1128,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           </View>
         </View>
       </Modal>
-      <View style={styles.TOP_LEFT_CONTAINER}>
+      <View
+        style={[
+          styles.TOP_LEFT_CONTAINER,
+          Platform.OS === 'ios' ? {marginTop: insets.top + 70} : {},
+        ]}>
         <Icon
           solid
           name="circle"
@@ -1053,13 +1161,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
               color={color.primaryFBIS}
               icon={
                 <Icon
-                  name="close"
+                  name="times"
                   type="font-awesome-5"
                   size={23}
                   color="white"
                 />
               }
-              onPress={() => setDownloadLayerVisible(false)}
+              onPress={() => {
+                setDownloadLayerVisible(false);
+                setDownloadSiteVisible(false);
+              }}
             />
             <Button
               title={downloadLayerVisible ? 'Download River' : 'Download Sites'}
@@ -1304,7 +1415,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
                     titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
-                    containerStyle={{width: '30%'}}
+                    containerStyle={styles.MID_BOTTOM_BUTTON_CONTAINER}
                     onPress={() => {
                       addNewSite('river').then(err => console.log(err));
                     }}
@@ -1315,10 +1426,12 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     raised
                     buttonStyle={styles.MID_BOTTOM_BUTTON}
                     titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
-                    containerStyle={{
-                      width: '30%',
-                      marginLeft: 5,
-                    }}
+                    containerStyle={[
+                      styles.MID_BOTTOM_BUTTON_CONTAINER,
+                      {
+                        marginLeft: 5,
+                      },
+                    ]}
                     onPress={() => {
                       addNewSite('wetland').then(err => console.log(err));
                     }}
@@ -1339,12 +1452,15 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                 </>
               ) : null}
             </View>
-            <View style={{ paddingTop: 10 }}>
+            <View style={{paddingTop: 10}}>
               <Button
                 title="Cancel"
                 type="outline"
                 raised
-                buttonStyle={[styles.MID_BOTTOM_BUTTON, {backgroundColor: '#58595B'}]}
+                buttonStyle={[
+                  styles.MID_BOTTOM_BUTTON,
+                  {backgroundColor: '#58595B'},
+                ]}
                 titleStyle={{color: '#ffffff', fontSize: 12}}
                 containerStyle={{width: '50%'}}
                 onPress={() => {
