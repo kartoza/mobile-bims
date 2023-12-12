@@ -47,6 +47,7 @@ import {
   useCameraDevices,
 } from 'react-native-vision-camera';
 import CustomHeader from '../../components/header/header';
+import { CustomPicker } from '../../components/form-input/custom-picker';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -81,27 +82,27 @@ function BiotopeRadioButtons(props: BiotopeRadioButtonsInterface) {
           value={biotopeValue}>
           <View style={styles.BIOTOPE_CONTAINER}>
             <View style={styles.BIOTOPE_ROW}>
-              <RadioButton value={'0'} />
+              <RadioButton.Android value={'0'} />
               <Text style={styles.BIOTOPE_RADIO_LABEL}>0</Text>
             </View>
             <View style={styles.BIOTOPE_ROW}>
-              <RadioButton value={'1'} />
+              <RadioButton.Android value={'1'} />
               <Text style={styles.BIOTOPE_RADIO_LABEL}>1</Text>
             </View>
             <View style={styles.BIOTOPE_ROW}>
-              <RadioButton value={'2'} />
+              <RadioButton.Android value={'2'} />
               <Text style={styles.BIOTOPE_RADIO_LABEL}>2</Text>
             </View>
             <View style={styles.BIOTOPE_ROW}>
-              <RadioButton value={'3'} />
+              <RadioButton.Android value={'3'} />
               <Text style={styles.BIOTOPE_RADIO_LABEL}>3</Text>
             </View>
             <View style={styles.BIOTOPE_ROW}>
-              <RadioButton value={'4'} />
+              <RadioButton.Android value={'4'} />
               <Text style={styles.BIOTOPE_RADIO_LABEL}>4</Text>
             </View>
             <View style={styles.BIOTOPE_ROW}>
-              <RadioButton value={'5'} />
+              <RadioButton.Android value={'5'} />
               <Text style={styles.BIOTOPE_RADIO_LABEL}>5</Text>
             </View>
           </View>
@@ -131,6 +132,7 @@ export const SassFormScreen: React.FunctionComponent<
   const [loading, setLoading] = useState<boolean>(true);
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   const [biotopeValues, setBiotopeValues] = useState<any>({});
+  const [scrollEnabled, setScrollEnabled] = useState<boolean>(true);
   const [formInitialValues, setFormInitialValues] = useState<SassFormValues>({
     date: new Date(),
     sassTaxa: {},
@@ -422,34 +424,25 @@ export const SassFormScreen: React.FunctionComponent<
               {/* Source References */}
               <Text style={styles.LABEL}>Source Reference</Text>
               <View style={styles.TEXT_INPUT_STYLE}>
-                <Picker
+                <CustomPicker
                   selectedValue={sourceReference}
-                  numberOfLines={4}
-                  style={styles.PICKER_INPUT_STYLE}
-                  onValueChange={itemValue => {
+                  options={sourceReferenceOptions}
+                  onValueChange={(itemValue: any) => {
                     setSourceReference(itemValue);
                     setFieldValue('sourceReference', itemValue);
-                  }}>
-                  <Picker.Item
-                    key="not_specified"
-                    label="Unspecified"
-                    value=""
-                  />
-                  {sourceReferenceOptions.map(option => (
-                    <Picker.Item
-                      key={option.id}
-                      label={option.label()}
-                      value={option.id}
-                    />
-                  ))}
-                </Picker>
+                  }}
+                />
               </View>
               {/* Capture Image */}
               <View style={{marginTop: 10, marginBottom: 10}}>
                 <Text style={styles.LABEL}>Site Image</Text>
                 <Button
                   icon={
-                    <Icon name="camera" type="font-awesome" color={'#008BE3'} />
+                    <Icon
+                      name="camera"
+                      type="font-awesome-5"
+                      color={'#008BE3'}
+                    />
                   }
                   title={' Capture Site Image'}
                   type="outline"
@@ -480,7 +473,9 @@ export const SassFormScreen: React.FunctionComponent<
               <Text style={styles.LABEL_IMPORTANT}>Add abiotic data</Text>
               <AbioticForm
                 abioticData={abioticData}
-                onChange={_abioticData => setAbioticData(_abioticData)}
+                onChange={_abioticData => {
+                  setAbioticData(_abioticData);
+                }}
               />
 
               <View style={{marginTop: spacing[8]}} />
@@ -501,6 +496,7 @@ export const SassFormScreen: React.FunctionComponent<
                       <Button
                         buttonStyle={{
                           justifyContent: 'flex-start',
+                          width: '100%',
                           backgroundColor:
                             sassTaxaFormOpen[sassTaxaParent] ||
                             values.sassTaxa[sassTaxaParent]
@@ -509,7 +505,7 @@ export const SassFormScreen: React.FunctionComponent<
                         }}
                         titleStyle={{
                           fontSize: 15,
-                          fontWeight: '100',
+                          fontWeight: '300',
                         }}
                         style={{
                           paddingLeft: 0,

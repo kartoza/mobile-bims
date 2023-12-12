@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import Config from 'react-native-config';
 import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from 'react-native-screens/native-stack';
@@ -8,6 +9,7 @@ import {
   ImageStyle,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
@@ -16,8 +18,8 @@ import {styles} from './form-screen/styles';
 import {Button} from '@rneui/themed';
 import {Wallpaper} from '../components/wallpaper/wallpaper';
 import axios from 'axios';
-import {Switch} from '@rneui/base';
-import { AuthContext } from '../App';
+import {Icon, Switch} from '@rneui/base';
+import {AuthContext} from '../App';
 
 const logo = require('../components/logo/fbis_v2_logo.png');
 
@@ -49,6 +51,7 @@ export const LoginScreenPage: React.FunctionComponent<
   const [rememberMe, setRememberMe] = useState(false);
   const loginUrl = `${Config.API_URL}/mobile/api-token-auth/`;
   const {signIn} = React.useContext(AuthContext);
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const goToMapScreen = React.useMemo(
     () => () => props.navigation.navigate('map'),
@@ -77,14 +80,14 @@ export const LoginScreenPage: React.FunctionComponent<
 
   const login = async () => {
     const formData = new FormData();
-    formData.append('username', username);
+    formData.append('email', username);
     formData.append('password', password);
     setLoading(true);
     const axiosClient = axios.create();
     axiosClient.defaults.timeout = 5000;
     axiosClient
       .post(loginUrl, {
-        username: username,
+        email: username,
         password: password,
       })
       .then(async response => {
@@ -105,12 +108,11 @@ export const LoginScreenPage: React.FunctionComponent<
       })
       .catch(error => {
         const errorMessage = '' + error;
-        console.log(errorMessage);
         setLoading(false);
         if (errorMessage.includes('timeout')) {
           Alert.alert('Request Timeout', "The server can't be reached");
         } else {
-          Alert.alert('Login Failed', 'Invalid username or password');
+          Alert.alert('Login Failed', 'Invalid e-mail or password');
         }
       });
   };
@@ -127,25 +129,49 @@ export const LoginScreenPage: React.FunctionComponent<
           marginTop: 80,
         }}>
         <Image style={logoStyle} source={logo} resizeMode={'contain'} />
-        <Text style={styles.REQUIRED_LABEL}>Username</Text>
+        <Text style={styles.REQUIRED_LABEL}>E-mail</Text>
         <TextInput
           editable={!loading}
           style={styles.TEXT_INPUT_STYLE}
           value={username}
           autoCapitalize={'none'}
-          placeholder={'Username'}
+          placeholder={'E-mail address'}
           onChangeText={text => setUsername(text)}
         />
         <Text style={styles.REQUIRED_LABEL}>Password</Text>
-        <TextInput
-          editable={!loading}
-          autoCapitalize={'none'}
-          secureTextEntry={true}
-          style={styles.TEXT_INPUT_STYLE}
-          value={password}
-          placeholder={'Password'}
-          onChangeText={text => setPassword(text)}
-        />
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+          }}>
+          <TextInput
+            editable={!loading}
+            autoCapitalize={'none'}
+            secureTextEntry={!passwordVisible}
+            style={[styles.TEXT_INPUT_STYLE, {width: '100%'}]}
+            value={password}
+            placeholder={'Password'}
+            onChangeText={text => setPassword(text)}
+          />
+          <TouchableOpacity
+            onPress={() => setPasswordVisible(!passwordVisible)}
+            style={{
+              position: 'absolute',
+              right: 10,
+              height: '100%',
+              justifyContent: 'center',
+              paddingTop: 5,
+            }}>
+            <Icon
+              name={passwordVisible ? 'eye' : 'eye-slash'}
+              type="font-awesome-5"
+              color="rgb(138, 151, 161)"
+              size={20}
+            />
+          </TouchableOpacity>
+        </View>
         <View
           style={{flexDirection: 'row', alignItems: 'center', marginTop: 10}}>
           <Switch
