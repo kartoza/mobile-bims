@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
-import {View, Text, TextStyle, Alert} from 'react-native';
+import {View, Text, TextStyle, Alert, Platform, BackHandler} from 'react-native';
 import {Button, Header, Icon} from '@rneui/themed';
 import {styles} from '../form-screen/styles';
 import {ViewStyle} from 'react-native';
@@ -21,7 +21,7 @@ import {getSitesByField, removeSiteByField} from '../../models/site/site.store';
 import Site from '../../models/site/site';
 import SiteVisit from '../../models/site_visit/site_visit';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
-import {ScrollView} from 'react-native-gesture-handler';
+import {ScrollView, GestureHandlerRootView} from 'react-native-gesture-handler';
 import CustomHeader from '../../components/header/header';
 
 export interface UnsyncedScreenProps {
@@ -76,7 +76,7 @@ const FOOTER_STYLE: ViewStyle = {
   left: 0,
   bottom: 0,
   width: '100%',
-  height: 60,
+  height: Platform.OS === 'ios' ? 80 : 60,
 };
 
 const FOOTER_BUTTON_CONTAINER: ViewStyle = {
@@ -101,7 +101,7 @@ function UnsyncedItem(props: UnsyncedItemInterface) {
         <Icon
           name="trash"
           color={palette.white}
-          type="font-awesome"
+          type="font-awesome-5"
           size={25}
         />
       </Button>
@@ -110,9 +110,9 @@ function UnsyncedItem(props: UnsyncedItemInterface) {
         disabled={props.loading}
         onPress={e => props.onClickEdit(props.id, props.type)}>
         <Icon
-          name="pencil"
+          name="edit"
           color={palette.white}
-          type="font-awesome"
+          type="font-awesome-5"
           size={25}
         />
       </Button>
@@ -128,6 +128,13 @@ export const UnsyncedScreen: React.FunctionComponent<
   const [unsynced, setUnsynced] = useState<UnsyncedInterface[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const handleBackPress = () => {
+    if (typeof route.params.onBack !== 'undefined') {
+      route.params.onBack();
+    }
+    return false;
+  };
+
   const _capitalize = (word: string | undefined) => {
     if (!word) {
       return '';
@@ -136,12 +143,12 @@ export const UnsyncedScreen: React.FunctionComponent<
   };
 
   const parseSiteDesc = (siteData: Site) => {
-    const siteCode = siteData.siteCode
-      ? 'Site Code : ' + siteData.siteCode + '\n'
-      : '';
     return (
-      siteCode +
-      'Site Desc : ' +
+      'Site Code : ' +
+      (siteData.siteCode ? siteData.siteCode : '-') +
+      '\nUser Site Code : ' +
+      (siteData.userSiteCode ? siteData.userSiteCode : '-') +
+      '\nSite Description : ' +
       (siteData.description ? siteData.description : '-') +
       '\nEcosystem : ' +
       _capitalize(siteData.ecosystemType)
@@ -149,24 +156,33 @@ export const UnsyncedScreen: React.FunctionComponent<
   };
 
   const parseSiteVisitDesc = (siteVisit: SiteVisit) => {
-    const locationSite = siteVisit.site.siteCode
-      ? siteVisit.site.siteCode
-      : siteVisit.site.description;
-    return (
-      'Location Site : ' +
-      locationSite +
-      '\nModule : ' +
-      siteVisit.taxonGroup.name
-    );
+    try {
+      return (
+        'Site Code : ' +
+        (siteVisit.site.siteCode ? siteVisit.site.siteCode : '-') +
+        '\nUser Site Code : ' +
+        (siteVisit.site.userSiteCode ? siteVisit.site.userSiteCode : '-') +
+        '\nSite Description : ' +
+        (siteVisit.site.userSiteCode ? siteVisit.site.userSiteCode : '-') +
+        '\nModule : ' +
+        siteVisit.taxonGroup.name
+      );
+    } catch (e) {
+      return '-';
+    }
   };
 
   const parseSassSiteVisitDesc = async (sassSiteVisit: SassSiteVisit) => {
     const locationSites = await getSitesByField('id', sassSiteVisit.siteId);
     const locationSite = locationSites[0];
-    const siteCode = locationSite.siteCode
-      ? locationSite.siteCode
-      : locationSite.description;
-    return 'Location Site : ' + siteCode;
+    return (
+      'Site Code : ' +
+      (locationSite.siteCode ? locationSite.siteCode : '-') +
+      '\nUser Site Code : ' +
+      (locationSite.userSiteCode ? locationSite.userSiteCode : '-') +
+      '\nSite Description : ' +
+      (locationSite.description ? locationSite.description : '-')
+    );
   };
 
   const getUnsyncedData = async () => {
@@ -211,6 +227,10 @@ export const UnsyncedScreen: React.FunctionComponent<
 
   useEffect(() => {
     getUnsyncedData();
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => {
+      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+    };
   }, []);
 
   const handleClickEdit = (_id: number, _type: string) => {
@@ -307,7 +327,7 @@ export const UnsyncedScreen: React.FunctionComponent<
   };
 
   return (
-    <View style={{minHeight: '100%', marginBottom: 100}}>
+    <GestureHandlerRootView style={{minHeight: '100%', marginBottom: 100}}>
       <CustomHeader
         title={'Unsynced Data'}
         onBackPress={() => goToPreviousScreen(false)}
@@ -337,6 +357,6 @@ export const UnsyncedScreen: React.FunctionComponent<
           </Button>
         </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 };

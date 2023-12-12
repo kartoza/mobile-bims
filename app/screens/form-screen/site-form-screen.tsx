@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
 import RNFS from 'react-native-fs';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -112,7 +113,7 @@ export const SiteFormScreen: React.FunctionComponent<
     }
   };
 
-  const submitForm = async () => {
+  const submitForm = async (formValues: any) => {
     if (!updatedSiteData.latitude || !updatedSiteData.longitude) {
       Alert.alert('Error', 'You must have correct coordinates.', [
         {
@@ -154,7 +155,7 @@ export const SiteFormScreen: React.FunctionComponent<
           initialValues={{
             original_id: '-',
           }}
-          onSubmit={values => console.log(values)}>
+          onSubmit={values => submitForm(values)}>
           {({handleChange, handleBlur, handleSubmit, setFieldValue}) => (
             <View style={{marginBottom: 50}}>
               <View style={{height: 200, marginTop: 20}}>
@@ -293,7 +294,7 @@ export const SiteFormScreen: React.FunctionComponent<
                       );
                       let wetlandName = '';
                       if (wetlandData) {
-                        wetlandName = wetlandData['name'] || '-';
+                        wetlandName = wetlandData.name || '-';
                       }
                       setUpdatedSiteData({
                         ...updatedSiteData,
@@ -383,7 +384,7 @@ export const SiteFormScreen: React.FunctionComponent<
                       width: '100%',
                       backgroundColor: 'rgb(241, 137, 3)',
                     }}
-                    onPress={() => submitForm()}
+                    onPress={() => handleSubmit()}
                   />
                 </View>
               ) : null}

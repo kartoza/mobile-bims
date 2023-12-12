@@ -49,7 +49,7 @@ export function OverlayMenu(props: OverlayMenuProps) {
     await saveSites([]);
     await saveSassSiteVisits([]);
     setOverlayVisible(false);
-    props.refreshMap();
+    props.refreshMap(true);
     return;
   };
 

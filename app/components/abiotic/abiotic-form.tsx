@@ -1,11 +1,22 @@
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable @typescript-eslint/no-shadow */
 import React, {useEffect, useState} from 'react';
-import {View, TouchableOpacity, Text, Keyboard} from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  Keyboard,
+  SafeAreaView,
+  LogBox,
+  Platform,
+} from 'react-native';
 import {TextInput} from 'react-native-paper';
 import Abiotic from '../../models/abiotic/abiotic';
 import {loadAbioticData} from '../../models/abiotic/abiotic.store';
 import {styles} from '../../screens/form-screen/styles';
 import Autocomplete from 'react-native-autocomplete-input';
 import {spacing} from '../../theme/spacing';
+import {Icon} from '@rneui/themed';
 
 export interface AbioticDataInterface {
   abiotic: Abiotic;
@@ -16,24 +27,30 @@ interface AbioticFormInterface {
   onChange?: (abioticData: AbioticDataInterface[]) => void;
   abioticData?: any[];
   scrollViewRef?: any;
+  siteVisit: any;
 }
 
 export default function AbioticForm(props: AbioticFormInterface) {
   const [abioticOptions, setAbioticOptions] = useState<Abiotic[]>([]);
-  const [existingAbioticData, setExistingAbioticData] = useState<any[]>([]);
   const [abioticOptionList, setAbioticOptionList] = useState<Abiotic[]>([]);
-  const [selectedAbiotic, setSelectedAbiotic] = useState<string>('');
   const [abioticData, setAbioticData] = useState<AbioticDataInterface[]>([]);
   const [isAddAbiotic, setIsAddAbiotic] = useState<boolean>(true);
   const [inputText, setInputText] = useState('');
+  const [firstRender, setFirstRender] = useState<boolean>(true);
 
   const filteredOptions = abioticOptions.filter(option =>
     option.description.toLowerCase().includes(inputText.toLowerCase()),
   );
 
   useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+    if (!props.siteVisit) {
+      setFirstRender(false);
+    }
+  }, []);
+
+  useEffect(() => {
     if (props.abioticData && abioticData.length === 0) {
-      setExistingAbioticData(props.abioticData);
       const _existingData = [];
       for (const abioticOption of abioticOptionList) {
         for (const _abioticData of props.abioticData) {
@@ -80,29 +97,35 @@ export default function AbioticForm(props: AbioticFormInterface) {
     );
   }, [abioticData, abioticOptionList]);
 
-  const addAbiotic = () => {
-    setIsAddAbiotic(true);
-  };
-
   const deleteAbiotic = (abioticId: number) => {
     setAbioticData(current =>
       current.filter(_abioticData => _abioticData.abiotic.id !== abioticId),
     );
   };
 
+  useEffect(() => {
+    if (abioticData.length > 0 && firstRender) {
+      setFirstRender(false);
+    }
+  }, [abioticData]);
+
   return (
-    <View>
-      <View style={[styles.AUTOCOMPLETE_CONTAINER, {top: 0}]}>
+    <View style={{zIndex: 10}}>
+      <SafeAreaView style={[styles.AUTOCOMPLETE_CONTAINER, {top: 0}]}>
         <Autocomplete
           data={inputText.length >= 2 ? filteredOptions : []}
           value={inputText}
-          style={{ height: 'auto' }}
+          style={{height: Platform.OS === 'ios' ? 30 : 'auto'}}
           placeholder={'Type parameter name'}
           onChangeText={text => setInputText(text)}
           flatListProps={{
             keyboardShouldPersistTaps: 'always',
             horizontal: false,
             nestedScrollEnabled: true,
+            style: {
+              maxHeight: 150,
+              zIndex: 10,
+            },
             keyExtractor: item => item.id.toString(),
             renderItem: ({item}) => (
               <TouchableOpacity
@@ -123,7 +146,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
             ),
           }}
         />
-      </View>
+      </SafeAreaView>
       <View style={{ marginTop: spacing[7], marginBottom: -spacing[7] }}>
         {abioticData.map((abioticSingleData, index) => (
           <TextInput
@@ -132,10 +155,17 @@ export default function AbioticForm(props: AbioticFormInterface) {
             label={`${abioticSingleData.abiotic.description} (${abioticSingleData.abiotic.unit})`}
             keyboardType={'numeric'}
             value={abioticSingleData.value}
-            autoFocus={index === abioticData.length - 1}
+            autoFocus={!firstRender && index === abioticData.length - 1}
             right={
               <TextInput.Icon
-                icon="delete"
+                name={() => (
+                  <Icon
+                    name="trash"
+                    type="font-awesome-5"
+                    size={20}
+                    color="rgb(138, 151, 161)"
+                  />
+                )}
                 onPress={() => deleteAbiotic(abioticSingleData.abiotic.id)}
               />
             }

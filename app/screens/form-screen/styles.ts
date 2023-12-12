@@ -5,6 +5,7 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
+import { white } from 'react-native-paper/lib/typescript/styles/colors';
 
 const CONTAINER: ViewStyle = {
   height: '100%',
@@ -126,6 +127,10 @@ const PICKER_INPUT_STYLE: ViewStyle = {
   width: '120%',
 };
 
+const ACTION_SHEETS_STYLE: ViewStyle = {
+  paddingTop: 10,
+};
+
 const PICKER_SM_INPUT_STYLE: ViewStyle = {
   // transform: [{ scaleX: 0.70 }, { scaleY: 0.70 }],
   // left: 0,
@@ -142,11 +147,12 @@ const HEADER_CONTAINER: ViewStyle = {
   height:
     80 +
     (Platform.OS === 'ios'
-      ? 0
+      ? 50
       : StatusBar.currentHeight
       ? StatusBar.currentHeight
       : 0),
-  marginTop: Platform.OS === 'ios' ? -25 : 0,
+  paddingTop: Platform.OS === 'ios' ? 25 : 0,
+  marginTop: Platform.OS === 'ios' ? -25 : 10,
 };
 
 const SUBMIT_BUTTON: ViewStyle = {
@@ -183,11 +189,12 @@ const AUTOCOMPLETE_CONTAINER: ViewStyle = {
   position: 'absolute',
   right: 0,
   top: 35,
-  zIndex: 1,
+  zIndex: 10,
+  backgroundColor: '#FFFFFF',
 };
 
 const AUTOCOMPLETE_LIST: ViewStyle = {
-  backgroundColor: 'white',
+  backgroundColor: '#ffffff',
   padding: 5,
   borderBottomWidth: 0.2,
   borderBottomColor: 'rgba(0,0,0,0.21)',
@@ -195,9 +202,9 @@ const AUTOCOMPLETE_LIST: ViewStyle = {
 
 const AUTOCOMPLETE_LIST_TEXT: TextStyle = {
   color: 'black',
+  backgroundColor: '#ffffff',
   fontSize: 14,
-  margin: 2,
-  backgroundColor: 'white',
+  margin: 2
 };
 
 const OBSERVED_TAXA_LIST: ViewStyle = {
@@ -222,6 +229,7 @@ const SASS_TAXA_DROPDOWN: ViewStyle = {
 };
 
 export const styles = StyleSheet.create({
+  ACTION_SHEETS_STYLE,
   AUTOCOMPLETE_CONTAINER,
   AUTOCOMPLETE_LIST,
   AUTOCOMPLETE_LIST_TEXT,
