@@ -22,6 +22,8 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {
@@ -267,7 +269,6 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         await clearTemporaryNewSites();
         await getUnsyncedData();
         await getSites(latitude, longitude);
-        setSearch('');
       };
       reloadMap().catch(err => console.log(err));
       setOverlayVisible(false);
@@ -391,8 +392,11 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       if (shouldDeselectMarkers) {
         watchLocation();
       }
+      if (search) {
+        submitSearch();
+      }
     },
-    [getSites],
+    [getSites, search],
   );
 
   const addSiteVisit = React.useMemo(
@@ -486,9 +490,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             setSelectedSite(site);
           }
         }
-        setTimeout(() => {
-          setShowBiodiversityModule(true);
-        }, 300);
+        refreshMap();
         return;
       },
     });
@@ -518,10 +520,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   };
 
   const submitSearch = async () => {
-    setShowBiodiversityModule(false);
-    setSelectedMarker(null);
     setIsAddSite(false);
     setIsLoading(true);
+    let isSelectedInResult = false;
     const results = [];
     if (sites) {
       for (const index in sites) {
@@ -531,9 +532,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             ?.toLowerCase()
             .includes(search.toLowerCase())
         ) {
+          if (sites[index].id === selectedSite.id) {
+            isSelectedInResult = true;
+          }
           results.push(sites[index]);
         }
       }
+    }
+    if (!isSelectedInResult) {
+      setSelectedMarker(null);
+      setShowBiodiversityModule(false);
     }
     drawMarkers(results);
     fitMapToMarkers();
@@ -976,570 +984,588 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   // @ts-ignore
   return (
-    <View style={styles.CONTAINER}>
-      <OverlayMenu
-        visible={overlayVisible}
-        navigation={props.navigation}
-        refreshMap={() => {
-          watchLocation().catch(error => console.log(error));
-          refreshMap();
-        }}
-        downloadRiverClicked={() => setDownloadLayerVisible(true)}
-        downloadSiteClicked={() => setDownloadSiteVisible(true)}
-      />
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <View style={styles.CONTAINER}>
+        <OverlayMenu
+          visible={overlayVisible}
+          navigation={props.navigation}
+          refreshMap={() => {
+            watchLocation().catch(error => console.log(error));
+            refreshMap();
+          }}
+          downloadRiverClicked={() => setDownloadLayerVisible(true)}
+          downloadSiteClicked={() => setDownloadSiteVisible(true)}
+        />
 
-      <View style={[styles.SEARCH_BAR_CONTAINER, {marginTop: insets.top}]}>
-        <SearchBar
-          placeholder={'Search site code'}
-          lightTheme
-          round
-          onChangeText={updateSearch}
-          onClear={onClearSearch}
-          onSubmitEditing={submitSearch}
-          value={search}
-          showLoading={isLoading}
-          inputStyle={fontStyles.medium}
-          containerStyle={{width: '85%'}}
-          clearIcon={
-            <Icon
-              style={!search ? {display: 'none'} : {}}
-              name="times"
-              type="font-awesome-5"
-              size={20}
-              color="rgb(138, 151, 161)"
-              onPress={() => setSearch('')}
-            />
-          }
-          searchIcon={
-            <Icon
-              name="search"
-              type="font-awesome-5"
-              size={20}
-              color="rgb(138, 151, 161)"
-            />
-          }
-        />
-        <Button
-          containerStyle={{
-            backgroundColor: 'rgb(225, 232, 238)',
-            width: '15%',
-            justifyContent: 'center',
-          }}
-          type="clear"
-          raised
-          onPress={() => {
-            setOverlayVisible(false);
-            delay(100).then(() => setOverlayVisible(true));
-          }}
-          icon={
-            <Icon
-              name="bars"
-              type="font-awesome-5"
-              size={32}
-              color="rgb(138, 151, 161)"
-            />
-          }
-        />
-      </View>
-      <View
-        style={[
-          styles.MAP_VIEW_CONTAINER,
-          downloadLayerVisible || downloadSiteVisible
-            ? styles.MAP_VIEW_DOWNLOAD_RIVER
-            : {},
-        ]}>
-        <MapView
-          // @ts-ignore
-          key={mapViewKey}
-          provider={PROVIDER_DEFAULT}
-          ref={mapViewRef}
-          onRegionChangeComplete={onRegionChange}
-          style={[
-            styles.MAP,
-            Platform.OS === 'ios'
-              ? {
-                  height: Dimensions.get('window').height - insets.top - 140,
-                }
-              : {},
-          ]}
-          loadingEnabled={true}
-          showsUserLocation={true}
-          mapType={'satellite'}
-          onPress={(e: {nativeEvent: {coordinate: any}}) => {
-            mapSelected(e).catch(error => console.log(error));
-          }}>
-          {!isConnected ? (
-            <LocalTile
-              pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
-              tileSize={256}
-            />
-          ) : riverLayerAvailable ? (
-            <WMSTile urlTemplate={riverLayer} zIndex={99} tileSize={256} />
-          ) : (
-            <LocalTile
-              pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
-              tileSize={256}
-            />
-          )}
-          {points.map((item: any) => {
-            return (
-              <Point
-                key={
-                  item.properties?.key ?? `point-${item.properties?.cluster_id}`
-                }
-                item={item}
-                pinColor={
-                  item.properties?.key === selectedMarker?.properties?.key
-                    ? 'blue'
-                    : item.properties?.newData
-                    ? 'yellow'
-                    : typeof item.properties?.synced !== 'undefined'
-                    ? item.properties?.synced
-                      ? 'gold'
-                      : 'red'
-                    : 'gold'
-                }
-                onPress={_handlePointPress}
-                isAddSite={isAddSite}
+        <View style={[styles.SEARCH_BAR_CONTAINER, {marginTop: insets.top}]}>
+          <SearchBar
+            placeholder={'Search site code'}
+            lightTheme
+            round
+            onChangeText={updateSearch}
+            onClear={onClearSearch}
+            onSubmitEditing={submitSearch}
+            value={search}
+            showLoading={isLoading}
+            inputStyle={fontStyles.medium}
+            containerStyle={{width: '85%'}}
+            clearIcon={
+              <Icon
+                style={!search ? {display: 'none'} : {}}
+                name="times"
+                type="font-awesome-5"
+                size={20}
+                color="rgb(138, 151, 161)"
+                onPress={onClearSearch}
               />
-            );
-          })}
-          {newSiteMarker ? (
-            <Marker
-              key={'newRecord'}
-              coordinate={newSiteMarker.coordinate}
-              title={'New Record'}
-              pinColor={'orange'}
-            />
-          ) : null}
-        </MapView>
-      </View>
-
-      <Modal
-        transparent={true}
-        animationType={'none'}
-        visible={isLoading}
-        onRequestClose={() => {
-          setIsLoading(false);
-        }}>
-        <View style={styles.MODAL_BACKGROUND}>
-          <View style={styles.ACTIVITY_INDICATOR_WRAPPER}>
-            <ActivityIndicator
-              animating={isLoading}
-              size="large"
-              color="#ff8000"
-              style={styles.ACTIVITY_INDICATOR}
-            />
-            <Text style={styles.MODAL_TEXT}>Loading...</Text>
-          </View>
+            }
+            searchIcon={
+              <Icon
+                name="search"
+                type="font-awesome-5"
+                size={20}
+                color="rgb(138, 151, 161)"
+              />
+            }
+          />
+          <Button
+            containerStyle={{
+              backgroundColor: 'rgb(225, 232, 238)',
+              width: '15%',
+              justifyContent: 'center',
+            }}
+            type="clear"
+            raised
+            onPress={() => {
+              setOverlayVisible(false);
+              delay(100).then(() => setOverlayVisible(true));
+            }}
+            icon={
+              <Icon
+                name="bars"
+                type="font-awesome-5"
+                size={32}
+                color="rgb(138, 151, 161)"
+              />
+            }
+          />
         </View>
-      </Modal>
-      <View
-        style={[
-          styles.TOP_LEFT_CONTAINER,
-          Platform.OS === 'ios'
-            ? {marginTop: insets.top + 70}
-            : {marginTop: 70},
-        ]}>
-        <Icon
-          solid
-          name="circle"
-          type="font-awesome-5"
-          size={10}
-          color={isConnected ? '#42D417' : '#AFAFAF'}
-        />
-        <Text style={styles.ONLINE_STATUS}>
-          {isConnected ? 'Online' : 'Offline'}
-        </Text>
-      </View>
-
-      {downloadLayerVisible || downloadSiteVisible ? (
-        <>
-          <View style={styles.TOP_CENTER_CONTAINER}>
-            <Text style={styles.TOP_CENTER_TEXT}>
-              Zoom into desired region to
-              {downloadLayerVisible
-                ? ' download river layer '
-                : ' download sites '}
-              for offline use.
-            </Text>
-          </View>
-          <View style={styles.MID_BOTTOM_CONTAINER}>
-            <Button
-              color={color.primaryFBIS}
-              icon={
-                <Icon
-                  name="times"
-                  type="font-awesome-5"
-                  size={23}
-                  color="white"
-                />
-              }
-              onPress={() => {
-                setDownloadLayerVisible(false);
-                setDownloadSiteVisible(false);
-              }}
-            />
-            <Button
-              title={downloadLayerVisible ? 'Download River' : 'Download Sites'}
-              containerStyle={{
-                backgroundColor: 'rgb(225, 232, 238)',
-                justifyContent: 'center',
-              }}
-              type="clear"
-              onPress={() =>
-                downloadLayerVisible ? downloadMap() : downloadSitesByExtent()
-              }
-            />
-          </View>
-        </>
-      ) : null}
-
-      {isSyncing ? (
         <View
-          style={{
-            position: 'absolute',
-            backgroundColor: 'transparent',
-            zIndex: 999,
-            width: '100%',
-            height: '100%',
-          }}>
-          <View style={styles.MID_BOTTOM_CONTAINER}>
-            <View style={styles.MID_BOTTOM_CONTENTS}>
-              <Text style={styles.MID_BOTTOM_TEXT}>Sync is on</Text>
-              <Text style={styles.MID_BOTTOM_SUB_TEXT}>{syncMessage}</Text>
-              <Progress.Bar
-                color={'rgb(241, 137, 3)'}
-                height={12}
-                progress={syncProgress}
-                width={250}
+          style={[
+            styles.MAP_VIEW_CONTAINER,
+            downloadLayerVisible || downloadSiteVisible
+              ? styles.MAP_VIEW_DOWNLOAD_RIVER
+              : {},
+          ]}>
+          <MapView
+            // @ts-ignore
+            key={mapViewKey}
+            provider={PROVIDER_DEFAULT}
+            ref={mapViewRef}
+            onRegionChangeComplete={onRegionChange}
+            style={[
+              styles.MAP,
+              Platform.OS === 'ios'
+                ? {
+                    height: Dimensions.get('window').height - insets.top - 140,
+                  }
+                : {},
+            ]}
+            loadingEnabled={true}
+            showsUserLocation={true}
+            mapType={'satellite'}
+            onPress={(e: {nativeEvent: {coordinate: any}}) => {
+              mapSelected(e).catch(error => console.log(error));
+            }}>
+            {!isConnected ? (
+              <LocalTile
+                pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
+                tileSize={256}
               />
+            ) : riverLayerAvailable ? (
+              <WMSTile urlTemplate={riverLayer} zIndex={99} tileSize={256} />
+            ) : (
+              <LocalTile
+                pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
+                tileSize={256}
+              />
+            )}
+            {points.map((item: any) => {
+              return (
+                <Point
+                  key={
+                    item.properties?.key ??
+                    `point-${item.properties?.cluster_id}`
+                  }
+                  item={item}
+                  pinColor={
+                    item.properties?.key === selectedMarker?.properties?.key
+                      ? 'blue'
+                      : item.properties?.newData
+                      ? 'yellow'
+                      : typeof item.properties?.synced !== 'undefined'
+                      ? item.properties?.synced
+                        ? 'gold'
+                        : 'red'
+                      : 'gold'
+                  }
+                  onPress={_handlePointPress}
+                  isAddSite={isAddSite}
+                />
+              );
+            })}
+            {newSiteMarker ? (
+              <Marker
+                key={'newRecord'}
+                coordinate={newSiteMarker.coordinate}
+                title={'New Record'}
+                pinColor={'orange'}
+              />
+            ) : null}
+          </MapView>
+        </View>
+
+        <Modal
+          transparent={true}
+          animationType={'none'}
+          visible={isLoading}
+          onRequestClose={() => {
+            setIsLoading(false);
+          }}>
+          <View style={styles.MODAL_BACKGROUND}>
+            <View style={styles.ACTIVITY_INDICATOR_WRAPPER}>
+              <ActivityIndicator
+                animating={isLoading}
+                size="large"
+                color="#ff8000"
+                style={styles.ACTIVITY_INDICATOR}
+              />
+              <Text style={styles.MODAL_TEXT}>Loading...</Text>
             </View>
           </View>
-        </View>
-      ) : (
-        <View />
-      )}
-
-      {showBiodiversityModule ? (
+        </Modal>
         <View
           style={[
-            styles.BOTTOM_CONTAINER,
-            {backgroundColor: 'rgba(255,255,255,0.80)'},
+            styles.TOP_LEFT_CONTAINER,
+            Platform.OS === 'ios'
+              ? {marginTop: insets.top + 70}
+              : {marginTop: 70},
           ]}>
+          <Icon
+            solid
+            name="circle"
+            type="font-awesome-5"
+            size={10}
+            color={isConnected ? '#42D417' : '#AFAFAF'}
+          />
+          <Text style={styles.ONLINE_STATUS}>
+            {isConnected ? 'Online' : 'Offline'}
+          </Text>
+        </View>
+
+        {downloadLayerVisible || downloadSiteVisible ? (
+          <>
+            <View style={styles.TOP_CENTER_CONTAINER}>
+              <Text style={styles.TOP_CENTER_TEXT}>
+                Zoom into desired region to
+                {downloadLayerVisible
+                  ? ' download river layer '
+                  : ' download sites '}
+                for offline use.
+              </Text>
+            </View>
+            <View style={styles.MID_BOTTOM_CONTAINER}>
+              <Button
+                color={color.primaryFBIS}
+                icon={
+                  <Icon
+                    name="times"
+                    type="font-awesome-5"
+                    size={23}
+                    color="white"
+                  />
+                }
+                onPress={() => {
+                  setDownloadLayerVisible(false);
+                  setDownloadSiteVisible(false);
+                }}
+              />
+              <Button
+                title={
+                  downloadLayerVisible ? 'Download River' : 'Download Sites'
+                }
+                containerStyle={{
+                  backgroundColor: 'rgb(225, 232, 238)',
+                  justifyContent: 'center',
+                }}
+                type="clear"
+                onPress={() =>
+                  downloadLayerVisible ? downloadMap() : downloadSitesByExtent()
+                }
+              />
+            </View>
+          </>
+        ) : null}
+
+        {isSyncing ? (
+          <View
+            style={{
+              position: 'absolute',
+              backgroundColor: 'transparent',
+              zIndex: 999,
+              width: '100%',
+              height: '100%',
+            }}>
+            <View style={styles.MID_BOTTOM_CONTAINER}>
+              <View style={styles.MID_BOTTOM_CONTENTS}>
+                <Text style={styles.MID_BOTTOM_TEXT}>Sync is on</Text>
+                <Text style={styles.MID_BOTTOM_SUB_TEXT}>{syncMessage}</Text>
+                <Progress.Bar
+                  color={'rgb(241, 137, 3)'}
+                  height={12}
+                  progress={syncProgress}
+                  width={250}
+                />
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View />
+        )}
+
+        {showBiodiversityModule ? (
           <View
             style={[
-              styles.MODULE_TEXT_CONTAINER,
-              {backgroundColor: 'transparent', width: '100%'},
+              styles.BOTTOM_CONTAINER,
+              {backgroundColor: 'rgba(255,255,255,0.80)'},
             ]}>
-            <TouchableOpacity onPress={() => openSite(selectedSite.id)}>
-              <Text style={[styles.MODULE_TEXT, {color: color.secondaryFBIS}]}>
-                Add Record to{' '}
-                {selectedSite.siteCode !== '-'
-                  ? selectedSite.siteCode
-                  : selectedSite.userSiteCode}{' '}
-              </Text>
-            </TouchableOpacity>
-            <View
-              style={{
-                width: '100%',
-                marginBottom: 10,
-              }}>
-              <Text
-                style={[
-                  styles.MODULE_TEXT_COLOR,
-                  fontStyles.small,
-                  {
-                    textAlign: 'center',
-                  },
-                ]}>
-                Ecosystem Type :{' '}
-                {selectedSite.ecosystemType
-                  ? selectedSite.ecosystemType[0].toUpperCase() +
-                    selectedSite.ecosystemType.substring(
-                      1,
-                      selectedSite.ecosystemType.length,
-                    )
-                  : 'Unspecified'}
-              </Text>
-            </View>
             <View
               style={[
-                styles.MODULE_TEXT_COLOR,
-                {
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-evenly',
-                  paddingLeft: spacing[4],
-                  paddingRight: spacing[4],
-                },
+                styles.MODULE_TEXT_CONTAINER,
+                {backgroundColor: 'transparent', width: '100%'},
               ]}>
+              <TouchableOpacity onPress={() => openSite(selectedSite.id)}>
+                <Text
+                  style={[styles.MODULE_TEXT, {color: color.secondaryFBIS}]}>
+                  Add Record to{' '}
+                  {selectedSite.siteCode !== '-'
+                    ? selectedSite.siteCode
+                    : selectedSite.userSiteCode}{' '}
+                </Text>
+              </TouchableOpacity>
               <View
                 style={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  width: '50%',
+                  width: '100%',
+                  marginBottom: 10,
                 }}>
-                <Icon
-                  name="water"
-                  type="font-awesome-5"
-                  size={11}
-                  color={'grey'}
-                />
                 <Text
                   style={[
                     styles.MODULE_TEXT_COLOR,
                     fontStyles.small,
-                    {paddingLeft: spacing[1], width: '90%'},
+                    {
+                      textAlign: 'center',
+                    },
                   ]}>
-                  {selectedSite.riverName ? selectedSite.riverName : '-'}
+                  Ecosystem Type :{' '}
+                  {selectedSite.ecosystemType
+                    ? selectedSite.ecosystemType[0].toUpperCase() +
+                      selectedSite.ecosystemType.substring(
+                        1,
+                        selectedSite.ecosystemType.length,
+                      )
+                    : 'Unspecified'}
                 </Text>
               </View>
               <View
-                style={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  width: '50%',
-                }}>
-                <Icon
-                  name="map-pin"
-                  type="font-awesome-5"
-                  size={11}
-                  color={'grey'}
-                />
-                <Text
-                  style={[
-                    styles.MODULE_TEXT_COLOR,
-                    {paddingLeft: spacing[1], fontSize: 11},
-                  ]}>
-                  LAT: {selectedSite.latitude?.toFixed(2)} LON:{' '}
-                  {selectedSite.longitude?.toFixed(2)}
-                </Text>
+                style={[
+                  styles.MODULE_TEXT_COLOR,
+                  {
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-evenly',
+                    paddingLeft: spacing[4],
+                    paddingRight: spacing[4],
+                  },
+                ]}>
+                <View
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '50%',
+                  }}>
+                  <Icon
+                    name="water"
+                    type="font-awesome-5"
+                    size={11}
+                    color={'grey'}
+                  />
+                  <Text
+                    style={[
+                      styles.MODULE_TEXT_COLOR,
+                      fontStyles.small,
+                      {paddingLeft: spacing[1], width: '90%'},
+                    ]}>
+                    {selectedSite.riverName ? selectedSite.riverName : '-'}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '50%',
+                  }}>
+                  <Icon
+                    name="map-pin"
+                    type="font-awesome-5"
+                    size={11}
+                    color={'grey'}
+                  />
+                  <Text
+                    style={[
+                      styles.MODULE_TEXT_COLOR,
+                      {paddingLeft: spacing[1], fontSize: 11},
+                    ]}>
+                    LAT: {selectedSite.latitude?.toFixed(2)} LON:{' '}
+                    {selectedSite.longitude?.toFixed(2)}
+                  </Text>
+                </View>
               </View>
+              <Text style={styles.MODULE_TEXT}>Select Biodiversity Module</Text>
             </View>
-            <Text style={styles.MODULE_TEXT}>Select Biodiversity Module</Text>
-          </View>
-          <View
-            style={[
-              styles.MODULE_BUTTONS_CONTAINER,
-              {backgroundColor: 'transparent'},
-            ]}>
-            {taxonGroups
-              .filter(
-                (taxonGroup: any) =>
-                  !taxonGroup.name.toLowerCase().includes('algae') &&
-                  !taxonGroup.name.toLowerCase().includes('odonate') &&
-                  !taxonGroup.name.toLowerCase().includes('invert'),
-              )
-              .map(
-                (taxonGroup: {id: React.Key | null | undefined; name: any}) => (
-                  <View style={styles.MODULE_BUTTONS} key={taxonGroup.id}>
-                    <Button
-                      type="outline"
-                      raised
-                      buttonStyle={styles.MID_BOTTOM_BUTTON}
-                      titleStyle={{color: '#ffffff'}}
-                      containerStyle={{width: '100%'}}
-                      onPress={() => addSiteVisit(taxonGroup.id as number)}>
-                      <Text
-                        style={[
-                          fontStyles.mediumSmall,
-                          {color: '#ffffff', fontWeight: 'bold'},
-                        ]}>
-                        {taxonGroup.name}
-                      </Text>
-                    </Button>
-                  </View>
-                ),
-              )}
-          </View>
-          {selectedSite.ecosystemType &&
-          selectedSite.ecosystemType.toLowerCase() === 'river' ? (
             <View
-              style={{
-                width: '100%',
-                paddingBottom: spacing[2],
-                alignItems: 'center',
-              }}>
-              <Button
-                title="Add SASS"
-                type="outline"
-                raised
-                buttonStyle={styles.SASS_BUTTON}
-                titleStyle={{color: '#ffffff'}}
-                onPress={() => addSassClicked()}
-              />
+              style={[
+                styles.MODULE_BUTTONS_CONTAINER,
+                {backgroundColor: 'transparent'},
+              ]}>
+              {taxonGroups
+                .filter(
+                  (taxonGroup: any) =>
+                    !taxonGroup.name.toLowerCase().includes('algae') &&
+                    !taxonGroup.name.toLowerCase().includes('odonate') &&
+                    !taxonGroup.name.toLowerCase().includes('invert'),
+                )
+                .map(
+                  (taxonGroup: {
+                    id: React.Key | null | undefined;
+                    name: any;
+                  }) => (
+                    <View style={styles.MODULE_BUTTONS} key={taxonGroup.id}>
+                      <Button
+                        type="outline"
+                        raised
+                        buttonStyle={styles.MID_BOTTOM_BUTTON}
+                        titleStyle={{color: '#ffffff'}}
+                        containerStyle={{width: '100%'}}
+                        onPress={() => addSiteVisit(taxonGroup.id as number)}>
+                        <Text
+                          style={[
+                            fontStyles.mediumSmall,
+                            {color: '#ffffff', fontWeight: 'bold'},
+                          ]}>
+                          {taxonGroup.name}
+                        </Text>
+                      </Button>
+                    </View>
+                  ),
+                )}
             </View>
-          ) : null}
-        </View>
-      ) : null}
-
-      {isAddSite ? (
-        <>
-          <View style={styles.TOP_CENTER_CONTAINER}>
-            <Text style={styles.TOP_CENTER_TEXT}>
-              Default is add site at current location. Click on map to change
-              site location.
-            </Text>
-          </View>
-          <View style={styles.MID_BOTTOM_CONTAINER}>
-            <View style={styles.MID_BOTTOM_CONTENTS}>
-              <Text
-                style={[styles.MID_BOTTOM_TEXT, {paddingBottom: spacing[2]}]}>
-                Add Site
-              </Text>
-              {newSiteMarker ? (
-                <Text style={{paddingBottom: spacing[3], fontSize: 11}}>
-                  LAT: {newSiteMarker.coordinate.latitude?.toFixed(2)} LON:{' '}
-                  {newSiteMarker.coordinate.longitude?.toFixed(2)}
-                </Text>
-              ) : null}
-              <View style={{flexDirection: 'row'}}>
-                {newSiteMarker ? (
-                  <>
-                    <Button
-                      title="River"
-                      type="outline"
-                      raised
-                      buttonStyle={styles.MID_BOTTOM_BUTTON}
-                      titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
-                      containerStyle={styles.MID_BOTTOM_BUTTON_CONTAINER}
-                      onPress={() => {
-                        addNewSite('river').then(err => console.log(err));
-                      }}
-                    />
-                    <Button
-                      title="Wetland"
-                      type="outline"
-                      raised
-                      buttonStyle={styles.MID_BOTTOM_BUTTON}
-                      titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
-                      containerStyle={[
-                        styles.MID_BOTTOM_BUTTON_CONTAINER,
-                        {
-                          marginLeft: 5,
-                        },
-                      ]}
-                      onPress={() => {
-                        addNewSite('wetland').then(err => console.log(err));
-                      }}
-                    />
-                    <Button
-                      title={'Open\nWaterbody'}
-                      type="outline"
-                      raised
-                      buttonStyle={styles.MID_BOTTOM_BUTTON}
-                      titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
-                      containerStyle={{width: '30%', marginLeft: 5}}
-                      onPress={() => {
-                        addNewSite('open waterbody').then(err =>
-                          console.log(err),
-                        );
-                      }}
-                    />
-                  </>
-                ) : null}
-              </View>
-              <View style={{paddingTop: 10}}>
+            {selectedSite.ecosystemType &&
+            selectedSite.ecosystemType.toLowerCase() === 'river' ? (
+              <View
+                style={{
+                  width: '100%',
+                  paddingBottom: spacing[2],
+                  alignItems: 'center',
+                }}>
                 <Button
-                  title="Cancel"
+                  title="Add SASS"
                   type="outline"
                   raised
-                  buttonStyle={[
-                    styles.MID_BOTTOM_BUTTON,
-                    {backgroundColor: '#58595B'},
-                  ]}
-                  titleStyle={{color: '#ffffff', fontSize: 12}}
-                  containerStyle={{width: '50%'}}
-                  onPress={() => {
-                    setNewSiteMarker(null);
-                    setIsAddSite(false);
+                  buttonStyle={styles.SASS_BUTTON}
+                  titleStyle={{color: '#ffffff'}}
+                  onPress={() => addSassClicked()}
+                />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {isAddSite ? (
+          <>
+            <View style={styles.TOP_CENTER_CONTAINER}>
+              <Text style={styles.TOP_CENTER_TEXT}>
+                Default is add site at current location. Click on map to change
+                site location.
+              </Text>
+            </View>
+            <View style={styles.MID_BOTTOM_CONTAINER}>
+              <View style={styles.MID_BOTTOM_CONTENTS}>
+                <Text
+                  style={[styles.MID_BOTTOM_TEXT, {paddingBottom: spacing[2]}]}>
+                  Add Site
+                </Text>
+                {newSiteMarker ? (
+                  <Text style={{paddingBottom: spacing[3], fontSize: 11}}>
+                    LAT: {newSiteMarker.coordinate.latitude?.toFixed(2)} LON:{' '}
+                    {newSiteMarker.coordinate.longitude?.toFixed(2)}
+                  </Text>
+                ) : null}
+                <View style={{flexDirection: 'row'}}>
+                  {newSiteMarker ? (
+                    <>
+                      <Button
+                        title="River"
+                        type="outline"
+                        raised
+                        buttonStyle={styles.MID_BOTTOM_BUTTON}
+                        titleStyle={[
+                          fontStyles.mediumSmall,
+                          {color: '#ffffff'},
+                        ]}
+                        containerStyle={styles.MID_BOTTOM_BUTTON_CONTAINER}
+                        onPress={() => {
+                          addNewSite('river').then(err => console.log(err));
+                        }}
+                      />
+                      <Button
+                        title="Wetland"
+                        type="outline"
+                        raised
+                        buttonStyle={styles.MID_BOTTOM_BUTTON}
+                        titleStyle={[
+                          fontStyles.mediumSmall,
+                          {color: '#ffffff'},
+                        ]}
+                        containerStyle={[
+                          styles.MID_BOTTOM_BUTTON_CONTAINER,
+                          {
+                            marginLeft: 5,
+                          },
+                        ]}
+                        onPress={() => {
+                          addNewSite('wetland').then(err => console.log(err));
+                        }}
+                      />
+                      <Button
+                        title={'Open\nWaterbody'}
+                        type="outline"
+                        raised
+                        buttonStyle={styles.MID_BOTTOM_BUTTON}
+                        titleStyle={[
+                          fontStyles.mediumSmall,
+                          {color: '#ffffff'},
+                        ]}
+                        containerStyle={{width: '30%', marginLeft: 5}}
+                        onPress={() => {
+                          addNewSite('open waterbody').then(err =>
+                            console.log(err),
+                          );
+                        }}
+                      />
+                    </>
+                  ) : null}
+                </View>
+                <View style={{paddingTop: 10}}>
+                  <Button
+                    title="Cancel"
+                    type="outline"
+                    raised
+                    buttonStyle={[
+                      styles.MID_BOTTOM_BUTTON,
+                      {backgroundColor: '#58595B'},
+                    ]}
+                    titleStyle={{color: '#ffffff', fontSize: 12}}
+                    containerStyle={{width: '50%'}}
+                    onPress={() => {
+                      setNewSiteMarker(null);
+                      setIsAddSite(false);
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          </>
+        ) : null}
+
+        <View style={styles.BOTTOM_VIEW}>
+          <Button
+            icon={
+              <View
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <Icon
+                  name="map-marker"
+                  type="font-awesome-5"
+                  size={40}
+                  color={isAddSite ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
+                />
+                <Icon
+                  name="plus"
+                  type="font-awesome-5"
+                  size={22}
+                  color={'#FFF'}
+                  containerStyle={{
+                    position: 'absolute',
+                    zIndex: 99,
+                    height: '100%',
+                    paddingTop: spacing[1],
                   }}
                 />
               </View>
-            </View>
-          </View>
-        </>
-      ) : null}
-
-      <View style={styles.BOTTOM_VIEW}>
-        <Button
-          icon={
-            <View
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <Icon
-                name="map-marker"
-                type="font-awesome-5"
-                size={40}
-                color={isAddSite ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
-              />
-              <Icon
-                name="plus"
-                type="font-awesome-5"
-                size={22}
-                color={'#FFF'}
-                containerStyle={{
-                  position: 'absolute',
-                  zIndex: 99,
-                  height: '100%',
-                  paddingTop: spacing[1],
-                }}
-              />
-            </View>
-          }
-          onPress={() => addNewSiteMode()}
-          buttonStyle={styles.USER_BUTTON}
-          containerStyle={styles.USER_BUTTON_CONTAINER}
-          // TouchableComponent={TouchableWithoutFeedback}
-        />
-        <Button
-          icon={
-            <Icon
-              name="location-arrow"
-              type="font-awesome-5"
-              size={30}
-              color="#ffffff"
-            />
-          }
-          title=""
-          type="outline"
-          buttonStyle={styles.LOCATE_ME_BUTTON}
-          containerStyle={styles.LOCATE_ME_CONTAINER}
-          onPress={() => {
-            watchLocation().catch(error => console.log(error));
-          }}
-        />
-        <Button
-          icon={
-            <Icon
-              name="sync"
-              type="font-awesome-5"
-              size={30}
-              color={isSyncing ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
-            />
-          }
-          onPress={() => syncData()}
-          buttonStyle={styles.SYNC_BUTTON}
-          containerStyle={styles.SYNC_BUTTON_CONTAINER}
-          // TouchableComponent={TouchableWithoutFeedback}
-        />
-        {unsyncedData.length > 0 ? (
-          <Badge
-            value={unsyncedData.length}
-            status="error"
-            containerStyle={styles.SYNC_BADGE}
+            }
+            onPress={() => addNewSiteMode()}
+            buttonStyle={styles.USER_BUTTON}
+            containerStyle={styles.USER_BUTTON_CONTAINER}
+            // TouchableComponent={TouchableWithoutFeedback}
           />
-        ) : (
-          <View />
-        )}
+          <Button
+            icon={
+              <Icon
+                name="location-arrow"
+                type="font-awesome-5"
+                size={30}
+                color="#ffffff"
+              />
+            }
+            title=""
+            type="outline"
+            buttonStyle={styles.LOCATE_ME_BUTTON}
+            containerStyle={styles.LOCATE_ME_CONTAINER}
+            onPress={() => {
+              watchLocation().catch(error => console.log(error));
+            }}
+          />
+          <Button
+            icon={
+              <Icon
+                name="sync"
+                type="font-awesome-5"
+                size={30}
+                color={isSyncing ? 'rgb(241, 137, 3)' : 'rgb(196, 196, 196)'}
+              />
+            }
+            onPress={() => syncData()}
+            buttonStyle={styles.SYNC_BUTTON}
+            containerStyle={styles.SYNC_BUTTON_CONTAINER}
+            // TouchableComponent={TouchableWithoutFeedback}
+          />
+          {unsyncedData.length > 0 ? (
+            <Badge
+              value={unsyncedData.length}
+              status="error"
+              containerStyle={styles.SYNC_BADGE}
+            />
+          ) : (
+            <View />
+          )}
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };

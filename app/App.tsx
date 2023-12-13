@@ -61,7 +61,6 @@ const App = () => {
           ref={navigationRef}
           theme={undefined}
           initialState={initialNavigationState}
-          onStateChange={onNavigationStateChange}
         />
       </SafeAreaProvider>
     </RootStoreProvider>
