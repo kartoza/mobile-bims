@@ -470,7 +470,7 @@ export const SassFormScreen: React.FunctionComponent<
               </View>
 
               {/* Abiotic */}
-              <Text style={styles.LABEL_IMPORTANT}>Add abiotic data</Text>
+              <Text style={styles.LABEL_IMPORTANT}>Abiotic data</Text>
               <AbioticForm
                 abioticData={abioticData}
                 onChange={_abioticData => {

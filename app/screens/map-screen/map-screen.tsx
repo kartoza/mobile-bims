@@ -1242,9 +1242,27 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             <View
               style={[
                 styles.MODULE_TEXT_CONTAINER,
-                {backgroundColor: 'transparent', width: '100%'},
+                {
+                  backgroundColor: 'transparent',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                },
               ]}>
-              <TouchableOpacity onPress={() => openSite(selectedSite.id)}>
+              <TouchableOpacity
+                style={styles.CLOSE_BUTTON}
+                onPress={() => deselectMarkers()}>
+                <Icon
+                  name="times"
+                  type="font-awesome-5"
+                  size={25}
+                  iconStyle={{color: 'rgba(0, 0, 0, 0.5)'}}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{width: '75%'}}
+                onPress={() => openSite(selectedSite.id)}>
                 <Text
                   style={[styles.MODULE_TEXT, {color: color.secondaryFBIS}]}>
                   Add Record to{' '}
@@ -1371,25 +1389,24 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     </View>
                   ),
                 )}
+              {selectedSite.ecosystemType &&
+              selectedSite.ecosystemType.toLowerCase() === 'river' ? (
+                <View style={styles.MODULE_BUTTONS}>
+                  <Button
+                    title="Add SASS"
+                    type="outline"
+                    raised
+                    buttonStyle={[styles.MID_BOTTOM_BUTTON, styles.SASS_BUTTON]}
+                    containerStyle={{width: '100%'}}
+                    titleStyle={[
+                      fontStyles.mediumSmall,
+                      {color: '#ffffff', fontWeight: 'bold'}
+                    ]}
+                    onPress={() => addSassClicked()}
+                  />
+                </View>
+              ) : null}
             </View>
-            {selectedSite.ecosystemType &&
-            selectedSite.ecosystemType.toLowerCase() === 'river' ? (
-              <View
-                style={{
-                  width: '100%',
-                  paddingBottom: spacing[2],
-                  alignItems: 'center',
-                }}>
-                <Button
-                  title="Add SASS"
-                  type="outline"
-                  raised
-                  buttonStyle={styles.SASS_BUTTON}
-                  titleStyle={{color: '#ffffff'}}
-                  onPress={() => addSassClicked()}
-                />
-              </View>
-            ) : null}
           </View>
         ) : null}
 
@@ -1404,7 +1421,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             <View style={styles.MID_BOTTOM_CONTAINER}>
               <View style={styles.MID_BOTTOM_CONTENTS}>
                 <Text
-                  style={[styles.MID_BOTTOM_TEXT, {paddingBottom: spacing[2]}]}>
+                  style={[
+                    styles.MODULE_TEXT,
+                    {paddingBottom: spacing[2], paddingTop: spacing[4]},
+                  ]}>
                   Add Site
                 </Text>
                 {newSiteMarker ? (
@@ -1468,17 +1488,17 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
                     </>
                   ) : null}
                 </View>
-                <View style={{paddingTop: 10}}>
+                <View style={{flexDirection: 'row', paddingTop: 10}}>
                   <Button
                     title="Cancel"
                     type="outline"
                     raised
                     buttonStyle={[
                       styles.MID_BOTTOM_BUTTON,
-                      {backgroundColor: '#58595B'},
+                      {backgroundColor: '#58595B', height: 50},
                     ]}
-                    titleStyle={{color: '#ffffff', fontSize: 12}}
-                    containerStyle={{width: '50%'}}
+                    titleStyle={[fontStyles.mediumSmall, {color: '#ffffff'}]}
+                    containerStyle={styles.MID_BOTTOM_BUTTON_CONTAINER}
                     onPress={() => {
                       setNewSiteMarker(null);
                       setIsAddSite(false);
