@@ -206,8 +206,6 @@ const MID_BOTTOM_BUTTON_CONTAINER = {
 
 const SASS_BUTTON: ViewStyle = {
   backgroundColor: '#aaa600',
-  paddingLeft: 20,
-  paddingRight: 20,
   borderColor: '#aaa600',
 };
 
@@ -246,11 +244,19 @@ const MODULE_BUTTONS: ViewStyle = {
   marginBottom: 8,
 };
 
+const CLOSE_BUTTON = {
+  position: 'absolute',
+  top: 15,
+  right: 20,
+  zIndex: 1,
+};
+
 export const styles = StyleSheet.create({
   ACTIVITY_INDICATOR,
   ACTIVITY_INDICATOR_WRAPPER,
   BOTTOM_CONTAINER,
   BOTTOM_VIEW,
+  CLOSE_BUTTON,
   CONTAINER,
   LOCATE_ME_BUTTON,
   LOCATE_ME_CONTAINER,

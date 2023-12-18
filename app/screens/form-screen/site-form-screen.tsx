@@ -5,7 +5,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import React, {createRef, useCallback, useEffect, useState} from 'react';
 import {getSiteByField, saveSiteByField} from '../../models/site/site.store';
-import {Alert, Platform, ScrollView, View} from 'react-native';
+import {Alert, Platform, ScrollView, View, KeyboardAvoidingView} from 'react-native';
 import {Button} from '@rneui/base';
 import {styles} from './styles';
 import {Formik, isNaN} from 'formik';
@@ -131,7 +131,9 @@ export const SiteFormScreen: React.FunctionComponent<
   };
 
   return (
-    <View style={{height: '100%'}}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{flex: 1}}>
       <CustomHeader
         title={
           route.params.title
@@ -392,6 +394,6 @@ export const SiteFormScreen: React.FunctionComponent<
           )}
         </Formik>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };

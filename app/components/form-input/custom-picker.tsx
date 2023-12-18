@@ -17,13 +17,16 @@ export const CustomPicker = (props: any) => {
           {
             options: [
               'Cancel',
+              unspecifiedLabel,
               ...props.options.map((option: any) => option.name),
             ],
             cancelButtonIndex: 0,
           },
           buttonIndex => {
-            if (buttonIndex !== 0) {
-              const selectedOption: any = props.options[buttonIndex - 1];
+            if (buttonIndex === 1) {
+              props.onValueChange('');
+            } else if (buttonIndex > 1) {
+              const selectedOption: any = props.options[buttonIndex - 2];
               props.onValueChange(selectedOption.id);
             }
           },
@@ -39,6 +42,7 @@ export const CustomPicker = (props: any) => {
     <Picker
       selectedValue={props.selectedValue}
       style={styles.PICKER_INPUT_STYLE}
+      numberOfLines={3}
       onValueChange={itemValue => {
         props.onValueChange(itemValue);
       }}>

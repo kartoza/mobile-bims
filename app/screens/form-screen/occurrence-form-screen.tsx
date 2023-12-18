@@ -797,6 +797,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                 <Text style={styles.REQUIRED_LABEL}>Observed Taxa</Text>
                 <View style={[styles.AUTOCOMPLETE_CONTAINER, {zIndex: 999}]}>
                   <Autocomplete
+                    placeholderTextColor={'#666666'}
                     data={filterTaxonList(taxonQuery)}
                     placeholder={'Type taxon name here'}
                     value={taxonQuery}
@@ -940,7 +941,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
 
               {/* Abiotic */}
               <Text style={{...styles.REQUIRED_LABEL, marginTop: 20}}>
-                Add abiotic data
+                Abiotic data
               </Text>
               <AbioticForm
                 siteVisit={route.params.siteVisitId}

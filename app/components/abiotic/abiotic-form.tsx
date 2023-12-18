@@ -113,6 +113,7 @@ export default function AbioticForm(props: AbioticFormInterface) {
     <View style={{zIndex: 10}}>
       <SafeAreaView style={[styles.AUTOCOMPLETE_CONTAINER, {top: 0}]}>
         <Autocomplete
+          placeholderTextColor={'#666666'}
           data={inputText.length >= 2 ? filteredOptions : []}
           value={inputText}
           style={{height: Platform.OS === 'ios' ? 30 : 'auto'}}
