@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   BackHandler,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import {styles} from './styles';
 import { Button, Header, Dialog, Icon } from "@rneui/themed";
@@ -48,6 +50,7 @@ import {
 } from 'react-native-vision-camera';
 import CustomHeader from '../../components/header/header';
 import { CustomPicker } from '../../components/form-input/custom-picker';
+import { keyboardStyles } from './occurrence-form-screen';
 
 interface FormScreenProps {
   navigation: NativeStackNavigationProp<ParamListBase>;
@@ -338,7 +341,9 @@ export const SassFormScreen: React.FunctionComponent<
   }
 
   return (
-    <View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={keyboardStyles.container}>
       <Dialog
         isVisible={loading}
         overlayStyle={{backgroundColor: '#FFFFFF00', shadowColor: '#FFFFFF00'}}>
@@ -591,9 +596,7 @@ export const SassFormScreen: React.FunctionComponent<
                   {height: 100, textAlignVertical: 'top'},
                 ]}
                 onChange={e => {
-                  if (e.nativeEvent.text) {
-                    setFieldValue('otherBiota', e.nativeEvent.text);
-                  }
+                  setFieldValue('otherBiota', e.nativeEvent.text);
                 }}
               />
 
@@ -606,9 +609,7 @@ export const SassFormScreen: React.FunctionComponent<
                   {height: 100, textAlignVertical: 'top', marginBottom: 10},
                 ]}
                 onChange={e => {
-                  if (e.nativeEvent.text) {
-                    setFieldValue('comments', e.nativeEvent.text);
-                  }
+                  setFieldValue('comments', e.nativeEvent.text);
                 }}
               />
 
@@ -634,6 +635,6 @@ export const SassFormScreen: React.FunctionComponent<
           )}
         </Formik>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
