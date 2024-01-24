@@ -52,7 +52,7 @@ import CustomHeader from '../../components/header/header';
 import {CustomPicker} from '../../components/form-input/custom-picker';
 import {uriToBlob} from '../../utils/image';
 
-const keyboardStyles = StyleSheet.create({
+export const keyboardStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
