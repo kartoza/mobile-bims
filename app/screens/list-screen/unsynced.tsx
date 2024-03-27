@@ -292,9 +292,10 @@ export const UnsyncedScreen: React.FunctionComponent<
     );
   };
 
-  const goToPreviousScreen = React.useMemo(
-    () =>
-      async (sync: boolean = false) => {
+  const goToPreviousScreen = React.useCallback(
+    async (sync: boolean = false) => {
+      try {
+        console.log(route.params);
         props.navigation.pop();
         if (typeof route.params.onBack !== 'undefined') {
           await route.params.onBack();
@@ -302,7 +303,11 @@ export const UnsyncedScreen: React.FunctionComponent<
         if (sync) {
           await route.params.syncRecord();
         }
-      },
+      } catch (error) {
+        console.error('Error during goToPreviousScreen:', error);
+        // Handle the error appropriately (e.g., show an error message)
+      }
+    },
     [props.navigation, route.params],
   );
 
