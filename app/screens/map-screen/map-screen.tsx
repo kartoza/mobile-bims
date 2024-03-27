@@ -667,7 +667,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           await refreshMap();
           setFormStatus('map');
         },
-        syncRecord: () => {
+        syncRecord: async () => {
           if (mapViewRef && mapViewRef.current && currentRegion) {
             // @ts-ignore
             mapViewRef.current.animateToRegion(currentRegion, 1000);
@@ -993,6 +993,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             watchLocation().catch(error => console.log(error));
             refreshMap();
           }}
+          syncData={() => syncData(true)}
           downloadRiverClicked={() => setDownloadLayerVisible(true)}
           downloadSiteClicked={() => setDownloadSiteVisible(true)}
         />

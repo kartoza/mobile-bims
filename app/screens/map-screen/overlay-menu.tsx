@@ -14,6 +14,7 @@ export interface OverlayMenuProps {
   visible: boolean;
   navigation: NativeStackNavigationProp<ParamListBase>;
   refreshMap: Function;
+  syncData: Function;
   downloadRiverClicked?: Function;
   downloadSiteClicked?: Function;
 }
@@ -37,6 +38,9 @@ export function OverlayMenu(props: OverlayMenuProps) {
         name: 'UnsyncedList',
         params: {
           onBack: () => props.refreshMap(),
+          syncRecord: async () => {
+            props.syncData(true);
+          },
         },
         merge: true,
       });
