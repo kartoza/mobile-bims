@@ -9,8 +9,8 @@ import {
   SafeAreaView,
   LogBox,
   Platform,
+  TextInput,
 } from 'react-native';
-import {TextInput} from 'react-native-paper';
 import Abiotic from '../../models/abiotic/abiotic';
 import {loadAbioticData} from '../../models/abiotic/abiotic.store';
 import {styles} from '../../screens/form-screen/styles';
@@ -150,37 +150,63 @@ export default function AbioticForm(props: AbioticFormInterface) {
       </SafeAreaView>
       <View style={{ marginTop: spacing[7], marginBottom: -spacing[7] }}>
         {abioticData.map((abioticSingleData, index) => (
-          <TextInput
-            focusable={true}
+          <View
             key={abioticSingleData.abiotic.id}
-            label={`${abioticSingleData.abiotic.description} (${abioticSingleData.abiotic.unit})`}
-            keyboardType={'numeric'}
-            value={abioticSingleData.value}
-            autoFocus={!firstRender && index === abioticData.length - 1}
-            right={
-              <TextInput.Icon
-                name={() => (
-                  <Icon
-                    name="trash"
-                    type="font-awesome-5"
-                    size={20}
-                    color="rgb(138, 151, 161)"
-                  />
-                )}
-                onPress={() => deleteAbiotic(abioticSingleData.abiotic.id)}
+            style={{
+              marginTop: 8,
+              marginBottom: 4,
+            }}>
+            <Text style={styles.LABEL}>
+              {abioticSingleData.abiotic.description} (
+              {abioticSingleData.abiotic.unit})
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}>
+              <TextInput
+                focusable={true}
+                keyboardType={'numeric'}
+                value={abioticSingleData.value}
+                autoFocus={!firstRender && index === abioticData.length - 1}
+                style={[
+                  styles.TEXT_INPUT_STYLE,
+                  {
+                    flex: 1,
+                    paddingRight: 12,
+                  },
+                ]}
+                onChangeText={text => {
+                  setAbioticData(current =>
+                    current.map(obj => {
+                      if (obj.abiotic.id === abioticSingleData.abiotic.id) {
+                        return {...obj, value: text};
+                      }
+                      return obj;
+                    }),
+                  );
+                }}
               />
-            }
-            onChange={e => {
-              setAbioticData(current =>
-                current.map(obj => {
-                  if (obj.abiotic.id === abioticSingleData.abiotic.id) {
-                    return {...obj, value: e.nativeEvent.text};
-                  }
-                  return obj;
-                }),
-              );
-            }}
-          />
+              <TouchableOpacity
+                style={{
+                  marginLeft: 10,
+                  marginTop: 5,
+                  width: 40,
+                  height: 40,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={() => deleteAbiotic(abioticSingleData.abiotic.id)}>
+                <Icon
+                  name="trash"
+                  type="font-awesome-5"
+                  size={20}
+                  color="rgb(138, 151, 161)"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
         ))}
       </View>
     </View>

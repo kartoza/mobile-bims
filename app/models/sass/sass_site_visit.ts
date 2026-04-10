@@ -13,6 +13,13 @@ export default class SassSiteVisit {
   otherBiota?: string;
   accredited?: boolean;
   sourceReferenceId?: string;
+  syncError?: {
+    kind?: string;
+    status?: number;
+    message?: string;
+    debugMessage?: string;
+    updatedAt?: string;
+  };
 
   constructor(sassSiteVisit: any) {
     if (sassSiteVisit) {

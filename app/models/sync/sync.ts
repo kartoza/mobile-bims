@@ -8,6 +8,7 @@ import {saveSiteByField} from '../site/site.store';
 import SassSiteVisit from '../sass/sass_site_visit';
 import {SassApi} from '../../services/api/sass-api';
 import {saveSassSiteVisit} from '../sass/sass.store';
+import {GeneralApiProblem} from '../../services/api/api-problem';
 
 export interface SyncData {
   identifier: string;
@@ -48,6 +49,48 @@ export interface SyncResult {
   currentUnsyncedQueue?: any[];
 }
 
+export interface SyncErrorInfo {
+  kind: string;
+  status?: number;
+  message: string;
+  debugMessage: string;
+  updatedAt: string;
+}
+
+export interface SyncAttemptResult {
+  ok: boolean;
+  error?: SyncErrorInfo;
+}
+
+const buildSyncError = (
+  problem: GeneralApiProblem | {kind?: string; message?: string; status?: number},
+  fallbackMessage: string,
+): SyncErrorInfo => {
+  const message = problem?.message || fallbackMessage;
+  const detailParts = [message];
+
+  if (problem?.status) {
+    detailParts.push(`HTTP ${problem.status}`);
+  }
+  if (problem?.kind) {
+    detailParts.push(`Problem: ${problem.kind}`);
+  }
+
+  return {
+    kind: problem?.kind || 'unknown',
+    status: problem?.status,
+    message,
+    debugMessage: detailParts.join('\n'),
+    updatedAt: new Date().toISOString(),
+  };
+};
+
+const clearSyncError = (record: Site | SiteVisit | SassSiteVisit) => {
+  if ('syncError' in record) {
+    delete record.syncError;
+  }
+};
+
 /**
  * Push updated site visit to remote server
  */
@@ -62,10 +105,19 @@ export const pushUnsyncedSiteVisit = async (siteVisit: SiteVisit) => {
   if (apiResult.kind === 'ok') {
     siteVisit.id = apiResult.siteVisitId;
     siteVisit.synced = true;
+    clearSyncError(siteVisit);
     await saveSiteVisitByField('id', oldSiteVisitId, siteVisit);
-    return true;
+    return {ok: true} as SyncAttemptResult;
   } else {
-    return false;
+    siteVisit.syncError = buildSyncError(
+      apiResult,
+      'Failed to sync site visit.',
+    );
+    await saveSiteVisitByField('id', oldSiteVisitId, siteVisit);
+    return {
+      ok: false,
+      error: siteVisit.syncError,
+    } as SyncAttemptResult;
   }
 };
 
@@ -81,10 +133,16 @@ export const postLocationSite = async (site: Site) => {
     site.id = apiResult.siteId;
     site.siteCode = apiResult.siteCode;
     site.synced = true;
+    clearSyncError(site);
     await saveSiteByField('id', oldId, site);
-    return true;
+    return {ok: true} as SyncAttemptResult;
   } else {
-    return false;
+    site.syncError = buildSyncError(apiResult, 'Failed to sync location site.');
+    await saveSiteByField('id', oldId, site);
+    return {
+      ok: false,
+      error: site.syncError,
+    } as SyncAttemptResult;
   }
 };
 
@@ -104,9 +162,18 @@ export const pushUnsyncedSassSiteVisit = async (
   if (apiResult.kind === 'ok') {
     sassSiteVisit.id = apiResult.sassSiteVisitId;
     sassSiteVisit.synced = true;
+    clearSyncError(sassSiteVisit);
     await saveSassSiteVisit(sassSiteVisit, 'id', oldSiteVisitId);
-    return true;
+    return {ok: true} as SyncAttemptResult;
   } else {
-    return false;
+    sassSiteVisit.syncError = buildSyncError(
+      apiResult,
+      'Failed to sync SASS data.',
+    );
+    await saveSassSiteVisit(sassSiteVisit, 'id', oldSiteVisitId);
+    return {
+      ok: false,
+      error: sassSiteVisit.syncError,
+    } as SyncAttemptResult;
   }
 };

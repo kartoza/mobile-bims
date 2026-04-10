@@ -2,6 +2,7 @@
 
 import {Header} from '@rneui/themed';
 import React from 'react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {styles} from '../../screens/form-screen/styles';
 import {fontStyles} from '../../theme/font';
 
@@ -11,6 +12,7 @@ interface CustomHeaderInterface {
 }
 
 export default function CustomHeader(props: CustomHeaderInterface) {
+  const insets = useSafeAreaInsets();
   return (
     <Header
       placement="center"
@@ -39,7 +41,14 @@ export default function CustomHeader(props: CustomHeaderInterface) {
       centerContainerStyle={{
         justifyContent: 'center',
       }}
-      containerStyle={styles.HEADER_CONTAINER}
+      edges={['left', 'right']}
+      containerStyle={[
+        styles.HEADER_CONTAINER,
+        {
+          height: 60 + insets.top,
+          paddingTop: insets.top,
+        },
+      ]}
     />
   );
 }

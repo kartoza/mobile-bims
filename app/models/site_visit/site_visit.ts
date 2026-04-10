@@ -29,6 +29,13 @@ export default class SiteVisit {
   samplingEffotMeasure?: string;
   samplingEffortValue?: string;
   occurrencePhotos?: OccurrencePhoto[];
+  syncError?: {
+    kind?: string;
+    status?: number;
+    message?: string;
+    debugMessage?: string;
+    updatedAt?: string;
+  };
 
   constructor(siteVisit: any) {
     if (siteVisit) {

@@ -23,7 +23,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import Autocomplete from 'react-native-autocomplete-input';
 import {styles} from './styles';
-import {Camera as CameraVision, useCameraDevices} from 'react-native-vision-camera';
+import {Camera as CameraVision, useCameraDevice} from 'react-native-vision-camera';
 import {
   loadTaxonGroups,
   loadTaxa,
@@ -133,8 +133,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
   const [taxaListBuffer, setTaxaListBuffer] = useState(0);
 
   let scrollViewRef = useRef();
-  const devices = useCameraDevices();
-  const device = devices.back;
+  const device = useCameraDevice('back');
   let cameraRef = useRef<CameraVision | null>(null);
 
   const recordTypeOptions = [
@@ -208,9 +207,12 @@ export const OccurrenceFormScreen: React.FunctionComponent<
       }
       setSelectedTaxon(null);
     }
-    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress,
+    );
     return () => {
-      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+      subscription.remove();
     };
   }, [takingPicture]);
 
@@ -509,17 +511,39 @@ export const OccurrenceFormScreen: React.FunctionComponent<
     setSiteImageData(base64Data.split(',')[1]);
   };
 
-  const openCamera = async (observedTaxon: Taxon) => {
-    // Open the camera
-    const cameraPermission = await CameraVision.requestCameraPermission();
-    if (cameraPermission === 'authorized') {
-      setSelectedTaxon(observedTaxon);
-      setTakingPicture(true);
+  const openCamera = async (observedTaxon: Taxon | null = null) => {
+    if (!device) {
+      Alert.alert(
+        'Camera Unavailable',
+        'No back camera is available on this device or emulator.',
+      );
+      return;
     }
+
+    const cameraPermission = await CameraVision.requestCameraPermission();
+    if (cameraPermission !== 'granted') {
+      Alert.alert(
+        'Camera Permission Required',
+        'Please allow camera access to capture a site image.',
+      );
+      return;
+    }
+
+    setSelectedTaxon(observedTaxon);
+    setTakingPicture(true);
   };
 
   const capturePhoto = async () => {
-    if (cameraRef !== null && cameraRef.current) {
+    if (!device || !cameraRef.current) {
+      Alert.alert(
+        'Camera Unavailable',
+        'Unable to access the camera right now.',
+      );
+      setTakingPicture(false);
+      return;
+    }
+
+    try {
       const _photo = await cameraRef.current.takePhoto();
       if (!selectedTaxon) {
         await fetchImage(`file://${_photo.path}`);
@@ -534,6 +558,12 @@ export const OccurrenceFormScreen: React.FunctionComponent<
         setCapturedPhotos(prevPhotos => [...prevPhotos, photo]);
       }
       setTakingPicture(false);
+    } catch (error) {
+      setTakingPicture(false);
+      Alert.alert(
+        'Capture Failed',
+        'The camera could not capture an image. Please try again.',
+      );
     }
   };
 
@@ -767,13 +797,7 @@ export const OccurrenceFormScreen: React.FunctionComponent<
                   type="outline"
                   raised
                   containerStyle={{width: '100%'}}
-                  onPress={async () => {
-                    const cameraPermission =
-                      await CameraVision.requestCameraPermission();
-                    if (cameraPermission === 'authorized') {
-                      setTakingPicture(true);
-                    }
-                  }}
+                  onPress={async () => openCamera()}
                 />
                 {siteImageData ? (
                   <View

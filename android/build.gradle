@@ -4,27 +4,20 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 buildscript {
     ext {
-        buildToolsVersion = "32.0.0"
+        buildToolsVersion = "35.0.0"
         minSdkVersion = 32
-        compileSdkVersion = 32
-        targetSdkVersion = 32
-        kotlinVersion = "1.7.10"
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        kotlinVersion = "2.1.20"
         playServicesLocationVersion = "21.0.1"
-
-        if (System.properties['os.arch'] == "aarch64") {
-            // For M1 Users we need to use the NDK 24 which added support for aarch64
-            ndkVersion = "24.0.8215888"
-        } else {
-            // Otherwise we default to the side-by-side NDK version from AGP.
-            ndkVersion = "21.4.7075529"
-        }
+        ndkVersion = "28.0.13004108"
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.1.1")
+        classpath("com.android.tools.build:gradle:8.9.2")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("de.undercouch:gradle-download-task:5.0.1")
         // NOTE: Do not place your application dependencies here; they belong
@@ -34,6 +27,9 @@ buildscript {
 
 allprojects {
     repositories {
+        maven {
+            url("$rootDir/../node_modules/@react-native-async-storage/async-storage/android/local_repo")
+        }
         maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
             url("$rootDir/../node_modules/react-native/android")
@@ -51,5 +47,44 @@ allprojects {
         }
         google()
         maven { url 'https://www.jitpack.io' }
+    }
+}
+
+subprojects { subproject ->
+    afterEvaluate {
+        def android = subproject.extensions.findByName("android")
+        if (android == null) {
+            return
+        }
+
+        if (android.hasProperty("compileOptions")) {
+            android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+            android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
+        }
+
+        if (android.hasProperty("buildFeatures")) {
+            android.buildFeatures.buildConfig = true
+        }
+
+        subproject.tasks.matching { task ->
+            task.hasProperty("kotlinOptions")
+        }.configureEach { task ->
+            task.kotlinOptions.jvmTarget = "17"
+        }
+
+        if (!android.hasProperty("namespace") || android.namespace != null) {
+            return
+        }
+
+        def manifestFile = android.sourceSets?.findByName("main")?.manifest?.srcFile
+        if (manifestFile == null || !manifestFile.exists()) {
+            return
+        }
+
+        def manifest = new XmlSlurper(false, false).parse(manifestFile)
+        def manifestPackage = manifest.@package?.text()
+        if (manifestPackage) {
+            android.namespace = manifestPackage
+        }
     }
 }

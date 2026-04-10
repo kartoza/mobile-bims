@@ -1,19 +1,40 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
-import RNFS from 'react-native-fs';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import React, {createRef, useCallback, useEffect, useState} from 'react';
+import * as MapLibreGL from '@maplibre/maplibre-react-native';
 import {getSiteByField, saveSiteByField} from '../../models/site/site.store';
-import {Alert, Platform, ScrollView, View, KeyboardAvoidingView} from 'react-native';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  View,
+  KeyboardAvoidingView,
+} from 'react-native';
 import {Button} from '@rneui/base';
 import {styles} from './styles';
 import {Formik, isNaN} from 'formik';
-import MapView, {LocalTile, Marker, WMSTile} from 'react-native-maps';
+import MapView, {
+  Marker,
+  PROVIDER_DEFAULT,
+  PROVIDER_GOOGLE,
+  UrlTile,
+  WMSTile,
+} from 'react-native-maps';
 import {FormInput} from '../../components/form-input/form-input';
 import {LogBox} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import {riverLayer, wetlandLayer} from '../../utils/offline-map';
+import {
+  baseMapLayer,
+  baseMapStyleUrl,
+  isMapLibreSourceTimeout,
+  probeOverlayTile,
+  riverLayer,
+  riverLayerMapLibre,
+  wetlandLayer,
+  wetlandLayerMapLibre,
+} from '../../utils/offline-map';
 import {load} from '../../utils/storage';
 import {Api} from '../../services/api/api';
 import {ApiResponse} from 'apisauce';
@@ -29,6 +50,9 @@ export interface FormScreenProps {
 }
 
 const mapViewRef = createRef();
+const androidCameraRef = createRef<MapLibreGL.CameraRef>();
+const MAP_PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT;
+const IS_ANDROID_MAPLIBRE = Platform.OS === 'android';
 
 export const SiteFormScreen: React.FunctionComponent<
   FormScreenProps
@@ -39,6 +63,7 @@ export const SiteFormScreen: React.FunctionComponent<
   const [editMode, setEditMode] = useState(route.params.editMode);
   const [updatedSiteData, setUpdatedSiteData] = useState({} as any);
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
+  const [overlayLayerAvailable, setOverlayLayerAvailable] = useState(false);
   const [username, setUsername] = useState<string>('');
   const [fetchingRiverName, setFetchingRiverName] = useState<boolean>(false);
 
@@ -130,6 +155,56 @@ export const SiteFormScreen: React.FunctionComponent<
     goToMapScreen(updatedSiteData.id);
   };
 
+  const siteCoordinate =
+    updatedSiteData.latitude && updatedSiteData.longitude
+      ? ([
+          parseFloat(updatedSiteData.longitude),
+          parseFloat(updatedSiteData.latitude),
+        ] as [number, number])
+      : null;
+
+  const overlayTileUrl =
+    siteData.ecosystemType !== 'wetland'
+      ? riverLayerMapLibre
+      : wetlandLayerMapLibre;
+  const overlaySourceId = 'site-overlay-layer';
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!isConnected) {
+      setOverlayLayerAvailable(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    probeOverlayTile(overlayTileUrl).then(isAvailable => {
+      if (isActive) {
+        setOverlayLayerAvailable(isAvailable);
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [isConnected, overlayTileUrl]);
+
+  useEffect(() => {
+    if (!IS_ANDROID_MAPLIBRE) {
+      return;
+    }
+
+    MapLibreGL.Logger.setLogCallback(log => {
+      if (isMapLibreSourceTimeout(log, overlaySourceId)) {
+        setOverlayLayerAvailable(false);
+        return true;
+      }
+
+      return false;
+    });
+  }, []);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -162,68 +237,134 @@ export const SiteFormScreen: React.FunctionComponent<
             <View style={{marginBottom: 50}}>
               <View style={{height: 200, marginTop: 20}}>
                 {siteData && siteData.longitude && siteData.latitude ? (
-                  <MapView
-                    mapType={'satellite'}
-                    // @ts-ignore
-                    ref={mapViewRef}
-                    initialRegion={{
-                      latitude: parseFloat(siteData.latitude),
-                      longitude: parseFloat(siteData.longitude),
-                      latitudeDelta: 0.02,
-                      longitudeDelta: 0.02,
-                    }}
-                    style={{
-                      height: '100%',
-                      marginVertical: 0,
-                    }}
-                    showsUserLocation={true}
-                    moveOnMarkerPress={true}
-                    onPress={e => {
-                      if (!editMode) {
-                        return false;
-                      }
-                      const coordinate = e.nativeEvent.coordinate;
-                      // setUpdated(true);
-                      setUpdatedSiteData({
-                        ...updatedSiteData,
-                        ...{
-                          latitude: coordinate.latitude,
-                          longitude: coordinate.longitude,
-                        },
-                      });
-                    }}>
-                    {siteData.ecosystemType !== 'wetland' ? (
-                      !isConnected ? (
-                        <LocalTile
-                          pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
-                          tileSize={256}
-                        />
-                      ) : (
-                        <WMSTile
-                          urlTemplate={riverLayer}
-                          zIndex={99}
-                          tileSize={256}
-                        />
-                      )
-                    ) : (
-                      <WMSTile
-                        urlTemplate={wetlandLayer}
-                        zIndex={99}
-                        tileSize={256}
-                      />
-                    )}
-                    {updatedSiteData.latitude && updatedSiteData.longitude ? (
-                      <Marker
-                        pinColor={'gold'}
-                        key={updatedSiteData.id}
-                        title={'Site'}
-                        coordinate={{
-                          latitude: parseFloat(updatedSiteData.latitude),
-                          longitude: parseFloat(updatedSiteData.longitude),
+                  IS_ANDROID_MAPLIBRE ? (
+                    <MapLibreGL.MapView
+                      style={{
+                        height: '100%',
+                        marginVertical: 0,
+                      }}
+                      mapStyle={baseMapStyleUrl}
+                      logoEnabled={false}
+                      onPress={(event: MapLibreGL.OnPressEvent) => {
+                        if (!editMode) {
+                          return;
+                        }
+
+                        setUpdatedSiteData({
+                          ...updatedSiteData,
+                          latitude: event.coordinates[1],
+                          longitude: event.coordinates[0],
+                        });
+                      }}>
+                      <MapLibreGL.Camera
+                        ref={androidCameraRef}
+                        defaultSettings={{
+                          centerCoordinate: [
+                            parseFloat(siteData.longitude),
+                            parseFloat(siteData.latitude),
+                          ],
+                          zoomLevel: 14,
                         }}
                       />
-                    ) : null}
-                  </MapView>
+                      <MapLibreGL.UserLocation
+                        visible={true}
+                        renderMode="native"
+                        androidRenderMode="normal"
+                      />
+                      {isConnected && overlayLayerAvailable ? (
+                        <MapLibreGL.RasterSource
+                          id={overlaySourceId}
+                          tileSize={256}
+                          tileUrlTemplates={[overlayTileUrl]}>
+                          <MapLibreGL.RasterLayer id="site-overlay-raster" />
+                        </MapLibreGL.RasterSource>
+                      ) : null}
+                      {siteCoordinate ? (
+                        <MapLibreGL.MarkerView
+                          coordinate={siteCoordinate}
+                          anchor={{x: 0.5, y: 0.5}}>
+                          <View
+                            style={{
+                              width: 18,
+                              height: 18,
+                              borderRadius: 9,
+                              backgroundColor: 'gold',
+                              borderWidth: 2,
+                              borderColor: '#fff',
+                            }}
+                          />
+                        </MapLibreGL.MarkerView>
+                      ) : null}
+                    </MapLibreGL.MapView>
+                  ) : (
+                    <MapView
+                      provider={MAP_PROVIDER}
+                      mapType={baseMapLayer ? 'none' : 'satellite'}
+                      // @ts-ignore
+                      ref={mapViewRef}
+                      initialRegion={{
+                        latitude: parseFloat(siteData.latitude),
+                        longitude: parseFloat(siteData.longitude),
+                        latitudeDelta: 0.02,
+                        longitudeDelta: 0.02,
+                      }}
+                      style={{
+                        height: '100%',
+                        marginVertical: 0,
+                      }}
+                      showsUserLocation={true}
+                      moveOnMarkerPress={true}
+                      onPress={e => {
+                        if (!editMode) {
+                          return false;
+                        }
+                        const coordinate = e.nativeEvent.coordinate;
+                        setUpdatedSiteData({
+                          ...updatedSiteData,
+                          ...{
+                            latitude: coordinate.latitude,
+                            longitude: coordinate.longitude,
+                          },
+                        });
+                      }}>
+                      {isConnected && baseMapLayer ? (
+                        <UrlTile
+                          urlTemplate={baseMapLayer}
+                          zIndex={0}
+                          tileSize={256}
+                          shouldReplaceMapContent={true}
+                        />
+                      ) : null}
+                      {isConnected ? (
+                        siteData.ecosystemType !== 'wetland' ? (
+                          <WMSTile
+                            urlTemplate={riverLayer}
+                            zIndex={99}
+                            tileSize={256}
+                          />
+                        ) : (
+                          <WMSTile
+                            urlTemplate={wetlandLayer}
+                            zIndex={99}
+                            tileSize={256}
+                          />
+                        )
+                      ) : (
+                        <></>
+                      )}
+                      {updatedSiteData.latitude && updatedSiteData.longitude ? (
+                        <Marker
+                          pinColor={'gold'}
+                          key={updatedSiteData.id}
+                          title={'Site'}
+                          coordinate={{
+                            latitude: parseFloat(updatedSiteData.latitude),
+                            longitude: parseFloat(updatedSiteData.longitude),
+                          }}
+                        />
+                      ) : null}
+                    </MapView>
+                  )
                 ) : null}
               </View>
               <FormInput
