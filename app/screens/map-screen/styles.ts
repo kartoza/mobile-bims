@@ -42,6 +42,8 @@ const SEARCH_BAR_CONTAINER: ViewStyle = {
   height: 65,
   marginTop: Platform.OS === 'ios' ? 0 : 60,
   flexDirection: 'row',
+  zIndex: 2000,
+  elevation: 2000,
 };
 const MAP_VIEW_DOWNLOAD_RIVER: ViewStyle = {
   borderColor: color.primaryFBIS,
@@ -56,6 +58,9 @@ const MAP_VIEW_CONTAINER: ViewStyle = {
       ? StatusBar.currentHeight
       : 0) -
     65,
+  zIndex: 0,
+  elevation: 0,
+  overflow: 'hidden',
 };
 const MAP: ViewStyle = {
   height:
@@ -128,6 +133,8 @@ const TOP_LEFT_CONTAINER: ViewStyle = {
   paddingLeft: 5,
   paddingRight: 5,
   backgroundColor: 'rgba(0,0,0,0.25)',
+  zIndex: 1500,
+  elevation: 1500,
 };
 
 const TOP_CENTER_CONTAINER: ViewStyle = {
@@ -138,11 +145,13 @@ const TOP_CENTER_CONTAINER: ViewStyle = {
   justifyContent: 'center',
   alignItems: 'center',
   backgroundColor: 'rgba(0,0,0,0.50)',
-  top: 0,
+  top: 75,
   marginTop: Platform.OS === 'ios' ? 140 : 70,
   borderRadius: 5,
   alignSelf: 'center',
   padding: 15,
+  zIndex: 1500,
+  elevation: 1500,
 };
 
 const TOP_CENTER_TEXT: TextStyle = {

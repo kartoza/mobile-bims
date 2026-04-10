@@ -78,19 +78,17 @@ import com.android.build.OutputFile
  * ]
  */
 
-project.ext.react = [
-    enableHermes: false,  // clean and rebuild if changing
-]
-
 project.ext.envConfigFiles = [
     debug: ".env.development",
     release: ".env.production",
     default: ".env"
 ]
 
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+react {
+    autolinkLibrariesWithApp()
+}
 
-apply plugin: "com.facebook.react"
+apply from: file("../../node_modules/react-native-config/android/dotenv.gradle")
 
 // apply from: "../../node_modules/react-native/react.gradle"
 
@@ -109,27 +107,7 @@ def enableSeparateBuildPerCPUArchitecture = false
  */
 def enableProguardInReleaseBuilds = false
 
-/**
- * The preferred build flavor of JavaScriptCore.
- *
- * For example, to use the international variant, you can use:
- * `def jscFlavor = 'org.webkit:android-jsc-intl:+'`
- *
- * The international variant includes ICU i18n library and necessary data
- * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
- * give correct results when using with locales other than en-US.  Note that
- * this variant is about 6MiB larger per architecture than default.
- */
-def jscFlavor = 'org.webkit:android-jsc:+'
-
-/**
- * Whether to enable the Hermes VM.
- *
- * This should be set on project.ext.react and that value will be read here. If it is not set
- * on project.ext.react, JavaScript will not be compiled to Hermes Bytecode
- * and the benefits of using Hermes will therefore be sharply reduced.
- */
-def enableHermes = project.ext.react.get("enableHermes", false);
+def enableHermes = project.findProperty("hermesEnabled")?.toBoolean() ?: true
 
 /**
  * Architectures to build native code for.
@@ -154,7 +132,7 @@ android {
         versionName "0.7"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
         missingDimensionStrategy 'react-native-camera', 'general'
-        manifestPlaceholders=[GOOGLE_API_KEY:project.env.get("GOOGLE_API_KEY")]
+        manifestPlaceholders=[GOOGLE_API_KEY:project.env.get("GOOGLE_API_KEY") ?: ""]
 
         if (isNewArchitectureEnabled()) {
             // We configure the NDK build only if you decide to opt-in for the New Architecture.
@@ -273,10 +251,7 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
 
-    //noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-native:+"  // From node_modules
-
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
+    implementation("com.facebook.react:react-android")
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
         exclude group:'com.facebook.fbjni'
@@ -292,17 +267,13 @@ dependencies {
     }
 
     if (enableHermes) {
-        //noinspection GradleDynamicVersion
-        implementation("com.facebook.react:hermes-engine:+") { // From node_modules
+        implementation("com.facebook.react:hermes-android") {
             exclude group:'com.facebook.fbjni'
         }
-    } else {
-        implementation jscFlavor
     }
 
     implementation 'androidx.appcompat:appcompat:1.1.0-rc01'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-alpha02'
-    implementation project(':react-native-fs')
     implementation 'com.google.android.gms:play-services-location:21.0.1'
 }
 
@@ -329,8 +300,6 @@ task copyDownloadableDepsToLibs(type: Copy) {
     into 'libs'
 }
 
-apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 project.ext.vectoricons = [
     iconFontNames: [ 'FontAwesome.ttf', 'MaterialCommunityIcons.ttf', 'FontAwesome5_Brands.ttf', 'FontAwesome5_Regular.ttf', 'FontAwesome5_Solid.ttf' ] // Name of the font files you want to copy
 ]

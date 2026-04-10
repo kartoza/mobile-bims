@@ -1,6 +1,7 @@
 import React, {FunctionComponent, memo, useEffect, useState} from 'react';
-import {Text, StyleSheet, View} from 'react-native';
-import {Marker as MapsMarker, Callout} from 'react-native-maps';
+import {Text, StyleSheet, View, Platform, TouchableOpacity} from 'react-native';
+import {Marker as MapsMarker} from 'react-native-maps';
+import {MarkerView as MapLibreMarkerView} from '@maplibre/maplibre-react-native';
 
 import type * as GeoJSON from 'geojson';
 import type {supercluster} from 'react-native-clusterer';
@@ -15,10 +16,11 @@ interface Props {
   onPress: (item: IPoint) => void;
   isAddSite: boolean;
   pinColor: string;
+  useMapLibre?: boolean;
 }
 
 export const Point: FunctionComponent<Props> = memo(
-  ({item, onPress, isAddSite, pinColor}) => {
+  ({item, onPress, isAddSite, pinColor, useMapLibre = false}) => {
     const [key, setKey] = useState<string>(
       `${
         item.properties?.cluster_id ?? `point-${item.properties?.key}`
@@ -33,12 +35,61 @@ export const Point: FunctionComponent<Props> = memo(
       );
     }, [pinColor]);
 
+    const coordinate = [
+      item.geometry.coordinates[0],
+      item.geometry.coordinates[1],
+    ] as [number, number];
+
+    if (useMapLibre && Platform.OS === 'android') {
+      const isCluster = !!item.properties?.cluster;
+      const isSelected = pinColor === 'blue';
+
+      return (
+        <MapLibreMarkerView
+          key={key}
+          coordinate={coordinate}
+          anchor={{x: 0.5, y: 0.5}}
+          allowOverlap={isCluster || isSelected}
+          isSelected={isSelected}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            hitSlop={0}
+            pressRetentionOffset={0}
+            style={
+              isCluster ? styles.clusterTouchTarget : styles.pointTouchTarget
+            }
+            onPress={() => {
+              if (!isAddSite) {
+                onPress(item);
+              }
+            }}>
+            {isCluster ? (
+              <View style={styles.clusterMarker}>
+                <Text style={styles.clusterMarkerText}>
+                  {item.properties.point_count}
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.pointMarker,
+                  {
+                    backgroundColor: pinColor,
+                  },
+                ]}
+              />
+            )}
+          </TouchableOpacity>
+        </MapLibreMarkerView>
+      );
+    }
+
     return (
       <MapsMarker
         key={key}
         coordinate={{
-          latitude: item.geometry.coordinates[1],
-          longitude: item.geometry.coordinates[0],
+          latitude: coordinate[1],
+          longitude: coordinate[0],
         }}
         pinColor={pinColor}
         tracksViewChanges={false}
@@ -91,5 +142,24 @@ const styles = StyleSheet.create({
   clusterMarkerText: {
     color: '#fff',
     fontSize: 16,
+  },
+  clusterTouchTarget: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pointTouchTarget: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pointMarker: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
 });

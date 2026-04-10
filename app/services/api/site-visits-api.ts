@@ -6,6 +6,16 @@ import {getGeneralApiProblem} from './api-problem';
 import {getSiteByField} from '../../models/site/site.store';
 import RNFS from "react-native-fs";
 
+const normalizeBase64Image = (imageData?: string | null) => {
+  if (!imageData) {
+    return imageData;
+  }
+  if (imageData.startsWith('data:')) {
+    return imageData;
+  }
+  return `data:image/jpeg;base64,${imageData}`;
+};
+
 const imageToBase64 = async (imageUri: string) => {
   const response = await fetch('file://' + imageUri);
   const blob = await response.blob();
@@ -46,7 +56,7 @@ export class SiteVisitsApi extends Api {
       substratum: siteVisit.substratum,
       sampling_method: siteVisit.samplingMethod,
       source_reference_id: siteVisit.sourceReferenceId,
-      site_image: siteVisit.siteImage,
+      site_image: normalizeBase64Image(siteVisit.siteImage),
       abiotic: siteVisit.abiotic,
       sampling_effort_type: siteVisit.samplingEffotMeasure,
       sampling_effort: siteVisit.samplingEffortValue,

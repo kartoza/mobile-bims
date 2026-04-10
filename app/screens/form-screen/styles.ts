@@ -1,10 +1,4 @@
-import {
-  TextStyle,
-  ViewStyle,
-  Platform,
-  StyleSheet,
-  StatusBar,
-} from 'react-native';
+import {TextStyle, ViewStyle, StyleSheet} from 'react-native';
 import { white } from 'react-native-paper/lib/typescript/styles/colors';
 
 const CONTAINER: ViewStyle = {
@@ -142,17 +136,12 @@ const MULTIPLE_INPUT_STYLE: ViewStyle = {
   flexDirection: 'row',
 };
 
+// Base height only — CustomHeader adds insets.top at render time
 const HEADER_CONTAINER: ViewStyle = {
   backgroundColor: '#005198',
-  height:
-    80 +
-    (Platform.OS === 'ios'
-      ? 50
-      : StatusBar.currentHeight
-      ? StatusBar.currentHeight
-      : 0),
-  paddingTop: Platform.OS === 'ios' ? 25 : 0,
-  marginTop: Platform.OS === 'ios' ? -25 : 10,
+  height: 60,
+  paddingTop: 0,
+  marginTop: 0,
 };
 
 const SUBMIT_BUTTON: ViewStyle = {

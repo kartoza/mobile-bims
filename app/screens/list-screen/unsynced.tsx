@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamListBase} from '@react-navigation/native';
 import {View, Text, TextStyle, Alert, Platform, BackHandler} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Button, Header, Icon} from '@rneui/themed';
 import {styles} from '../form-screen/styles';
 import {ViewStyle} from 'react-native';
@@ -33,6 +34,7 @@ interface UnsyncedInterface {
   type: 'site' | 'sass' | 'site_visit';
   name: string;
   desc?: string;
+  syncError?: string;
   created: Date;
 }
 
@@ -58,6 +60,12 @@ const TITLE_STYLE: TextStyle = {
 
 const SUBTITLE_STYLE: TextStyle = {
   ...fontStyles.medium,
+};
+
+const ERROR_TEXT_STYLE: TextStyle = {
+  ...fontStyles.medium,
+  color: palette.angry,
+  marginTop: spacing[2],
 };
 
 const ITEM_CONTENT: ViewStyle = {
@@ -93,6 +101,9 @@ function UnsyncedItem(props: UnsyncedItemInterface) {
           {props.created ? props.created?.toDateString() : '-'}
         </Text>
         <Text style={SUBTITLE_STYLE}>{props.desc}</Text>
+        {props.syncError ? (
+          <Text style={ERROR_TEXT_STYLE}>Last sync error: {props.syncError}</Text>
+        ) : null}
       </View>
       <Button
         disabled={props.loading}
@@ -125,6 +136,7 @@ export const UnsyncedScreen: React.FunctionComponent<
 > = props => {
   // @ts-ignore
   const {route} = props;
+  const insets = useSafeAreaInsets();
   const [unsynced, setUnsynced] = useState<UnsyncedInterface[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -197,6 +209,7 @@ export const UnsyncedScreen: React.FunctionComponent<
         id: unsyncedSite.id,
         name: 'Location Site',
         desc: parseSiteDesc(unsyncedSite),
+        syncError: unsyncedSite.syncError?.debugMessage,
         type: 'site',
         created: new Date(unsyncedSite.datetime * 1000),
       });
@@ -206,6 +219,7 @@ export const UnsyncedScreen: React.FunctionComponent<
         id: unsyncedSiteVisit.id,
         name: 'Site Visit',
         desc: parseSiteVisitDesc(unsyncedSiteVisit),
+        syncError: unsyncedSiteVisit.syncError?.debugMessage,
         created: new Date(unsyncedSiteVisit.date),
         type: 'site_visit',
       });
@@ -215,6 +229,7 @@ export const UnsyncedScreen: React.FunctionComponent<
         id: unsyncedSassData.id,
         name: 'SASS Data',
         desc: await parseSassSiteVisitDesc(unsyncedSassData),
+        syncError: unsyncedSassData.syncError?.debugMessage,
         created: new Date(unsyncedSassData.date),
         type: 'sass',
       });
@@ -227,9 +242,12 @@ export const UnsyncedScreen: React.FunctionComponent<
 
   useEffect(() => {
     getUnsyncedData();
-    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress,
+    );
     return () => {
-      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+      subscription.remove();
     };
   }, []);
 
@@ -337,7 +355,7 @@ export const UnsyncedScreen: React.FunctionComponent<
         title={'Unsynced Data'}
         onBackPress={() => goToPreviousScreen(false)}
       />
-      <ScrollView style={{marginBottom: 60, height: 1}}>
+      <ScrollView style={{marginBottom: (Platform.OS === 'ios' ? 80 : 60) + insets.bottom, height: 1}}>
         {unsynced.map((_unsynced: UnsyncedInterface, index: number) => (
           <UnsyncedItem
             key={'unsynced_' + index}
@@ -352,7 +370,7 @@ export const UnsyncedScreen: React.FunctionComponent<
           />
         ))}
       </ScrollView>
-      <View style={FOOTER_STYLE}>
+      <View style={[FOOTER_STYLE, {height: (Platform.OS === 'ios' ? 80 : 60) + insets.bottom, paddingBottom: insets.bottom}]}>
         <View style={FOOTER_BUTTON_CONTAINER}>
           <Button
             disabled={unsynced.length == 0}

@@ -46,7 +46,7 @@ import {spacing} from '../../theme/spacing';
 import RNFS from 'react-native-fs';
 import {
   Camera as CameraVision,
-  useCameraDevices,
+  useCameraDevice,
 } from 'react-native-vision-camera';
 import CustomHeader from '../../components/header/header';
 import { CustomPicker } from '../../components/form-input/custom-picker';
@@ -148,8 +148,7 @@ export const SassFormScreen: React.FunctionComponent<
   const formikRef = useRef();
   const scrollViewRef = useRef();
   const cameraRef = useRef();
-  const devices = useCameraDevices();
-  const device = devices.back;
+  const device = useCameraDevice('back');
 
   useEffect(() => {
     if (
@@ -178,9 +177,12 @@ export const SassFormScreen: React.FunctionComponent<
         scrollViewRef.current.scrollTo({y: lastYPosition, animated: false});
       }
     }
-    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress,
+    );
     return () => {
-      BackHandler.removeEventListener('hardwareBackPress', handleBackPress);
+      subscription.remove();
     };
   }, [takingPicture]);
 
@@ -306,12 +308,48 @@ export const SassFormScreen: React.FunctionComponent<
     setSiteImageData(base64Data.split(',')[1]);
   };
 
+  const openCamera = async () => {
+    if (!device) {
+      Alert.alert(
+        'Camera Unavailable',
+        'No back camera is available on this device or emulator.',
+      );
+      return;
+    }
+
+    const cameraPermission = await CameraVision.requestCameraPermission();
+    if (cameraPermission !== 'granted') {
+      Alert.alert(
+        'Camera Permission Required',
+        'Please allow camera access to capture a site image.',
+      );
+      return;
+    }
+
+    setTakingPicture(true);
+  };
+
   const capturePhoto = async () => {
-    if (cameraRef !== null && cameraRef.current) {
+    if (!device || !cameraRef.current) {
+      Alert.alert(
+        'Camera Unavailable',
+        'Unable to access the camera right now.',
+      );
+      setTakingPicture(false);
+      return;
+    }
+
+    try {
       const _photo = await cameraRef.current.takePhoto();
       await fetchImage(`file://${_photo.path}`);
       await RNFS.unlink(_photo.path);
       setTakingPicture(false);
+    } catch (error) {
+      setTakingPicture(false);
+      Alert.alert(
+        'Capture Failed',
+        'The camera could not capture an image. Please try again.',
+      );
     }
   };
 
@@ -454,7 +492,7 @@ export const SassFormScreen: React.FunctionComponent<
                   raised
                   containerStyle={{width: '100%', marginBottom: 20}}
                   onPress={() => {
-                    setTakingPicture(true);
+                    openCamera().catch(error => console.log(error));
                   }}
                 />
                 {siteImageData ? (

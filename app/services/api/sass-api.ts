@@ -4,6 +4,16 @@ import {getGeneralApiProblem} from './api-problem';
 import SassSiteVisit from '../../models/sass/sass_site_visit';
 import {getSiteByField} from '../../models/site/site.store';
 
+const normalizeBase64Image = (imageData?: string | null) => {
+  if (!imageData) {
+    return imageData;
+  }
+  if (imageData.startsWith('data:')) {
+    return imageData;
+  }
+  return `data:image/jpeg;base64,${imageData}`;
+};
+
 export class SassApi extends Api {
   /**
    * Post a site visit
@@ -16,6 +26,7 @@ export class SassApi extends Api {
       siteId = site.id;
     }
     sassSiteVisit.siteId = siteId;
+    sassSiteVisit.siteImage = normalizeBase64Image(sassSiteVisit.siteImage);
     const response: ApiResponse<any> = await this.apisauce.post(
       url,
       sassSiteVisit,

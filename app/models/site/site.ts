@@ -19,6 +19,13 @@ export default class Site {
   userWetlandName?: string;
   wetlandName?: string;
   wetlandData?: object;
+  syncError?: {
+    kind?: string;
+    status?: number;
+    message?: string;
+    debugMessage?: string;
+    updatedAt?: string;
+  };
 
   constructor(data: {
     id: number;
@@ -45,6 +52,13 @@ export default class Site {
     userWetlandName?: string;
     wetlandName?: string;
     wetlandData?: object;
+    syncError?: {
+      kind?: string;
+      status?: number;
+      message?: string;
+      debugMessage?: string;
+      updatedAt?: string;
+    };
   }) {
     if (this.newData && typeof this.synced === 'undefined') {
       this.synced = false;
@@ -112,6 +126,9 @@ export default class Site {
     // @ts-ignore
     this.userWetlandName = data.userWetlandName || data.user_wetland_name || '';
     this.wetlandData = data.wetlandData || {};
+    if (data.syncError) {
+      this.syncError = data.syncError;
+    }
     return this;
   }
 }

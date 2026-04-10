@@ -25,6 +25,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import * as MapLibreGL from '@maplibre/maplibre-react-native';
 import Geolocation from 'react-native-geolocation-service';
 import MapView, {
   Details,
@@ -33,13 +34,14 @@ import MapView, {
   WMSTile,
   PROVIDER_GOOGLE,
   PROVIDER_DEFAULT,
-  LocalTile,
+  UrlTile,
 } from 'react-native-maps';
 import {styles} from './styles';
 import {
   postLocationSite,
   pushUnsyncedSassSiteVisit,
   pushUnsyncedSiteVisit,
+  SyncAttemptResult,
 } from '../../models/sync/sync';
 import {delay} from '../../utils/delay';
 import NetInfo from '@react-native-community/netinfo';
@@ -74,20 +76,32 @@ import {
 import {AbioticApi} from '../../services/api/abiotic-api';
 import {saveAbioticData} from '../../models/abiotic/abiotic.store';
 import {spacing} from '../../theme/spacing';
-import {downloadTiles, getZoomLevel, riverLayer} from '../../utils/offline-map';
-import RNFS from 'react-native-fs';
+import {
+  baseMapLayer,
+  baseMapStyleUrl,
+  downloadTiles,
+  getZoomLevel,
+  hasOfflineRiverTiles,
+  isMapLibreSourceTimeout,
+  localRiverTileUrl,
+  probeOverlayTile,
+  riverLayer,
+  riverLayerMapLibre,
+} from '../../utils/offline-map';
 import {color} from '../../theme/color';
 import Site from '../../models/site/site';
 import {AuthContext} from '../../App';
 import {TaxonGroup} from '../../models/taxon/taxon';
 import {fontStyles} from '../../theme/font';
-import {GeoJsonProperties} from 'geojson';
+import type * as GeoJSON from 'geojson';
 import type {supercluster} from 'react-native-clusterer';
 import {Point} from '../../components/point';
 
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const mapViewRef = createRef();
+const androidMapViewRef = createRef<MapLibreGL.MapViewRef>();
+const androidCameraRef = createRef<MapLibreGL.CameraRef>();
 let SUBS: {unsubscribe: () => void} | null = null;
 
 export interface MapScreenProps {
@@ -104,10 +118,19 @@ export const initialRegion = {
 const MAP_WIDTH = Dimensions.get('window').width;
 const MAP_HEIGHT = Dimensions.get('window').height - 80;
 const MAP_DIMENSIONS = {width: MAP_WIDTH, height: MAP_HEIGHT};
+const MAP_PROVIDER = Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT;
+const IS_ANDROID_MAPLIBRE = Platform.OS === 'android';
+const DEFAULT_CAMERA_PADDING = {
+  paddingTop: 0,
+  paddingRight: 0,
+  paddingBottom: 0,
+  paddingLeft: 0,
+};
 
 export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   // const {navigation} = props;
   const {signOut} = React.useContext(AuthContext);
+  const pendingRegionRestoreRef = useRef<Region | null>(null);
   const [sites, setSites] = useState<any[]>([]);
   const [newSiteMarker, setNewSiteMarker] = useState<any>(null);
   const [search, setSearch] = useState('');
@@ -130,6 +153,8 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   const [isConnected, setIsConnected] = useState<boolean | null>(false);
   const [formStatus, setFormStatus] = useState<string>('closed');
   const [riverLayerAvailable, setRiverLayerAvailable] =
+    useState<boolean>(false);
+  const [offlineRiverAvailable, setOfflineRiverAvailable] =
     useState<boolean>(false);
   const [downloadLayerVisible, setDownloadLayerVisible] =
     useState<boolean>(false);
@@ -162,6 +187,73 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   const insets = useSafeAreaInsets();
   const statusBarHeight = insets.top;
+
+  const regionFromVisibleBounds = useCallback(
+    (visibleBounds: [GeoJSON.Position, GeoJSON.Position]) => {
+      const [northEast, southWest] = visibleBounds;
+      const north = northEast[1];
+      const east = northEast[0];
+      const south = southWest[1];
+      const west = southWest[0];
+
+      return {
+        latitude: (north + south) / 2,
+        longitude: (east + west) / 2,
+        latitudeDelta: Math.max(Math.abs(north - south), 0.0001),
+        longitudeDelta: Math.max(Math.abs(east - west), 0.0001),
+      };
+    },
+    [],
+  );
+
+  const animateToRegionCompat = useCallback(
+    (nextRegion: Region, animationDuration: number = 1000) => {
+      if (IS_ANDROID_MAPLIBRE) {
+        androidCameraRef.current?.setCamera({
+          centerCoordinate: [nextRegion.longitude, nextRegion.latitude],
+          zoomLevel: getZoomLevel(nextRegion.longitudeDelta),
+          padding: DEFAULT_CAMERA_PADDING,
+          animationDuration,
+          animationMode: 'easeTo',
+        });
+        return;
+      }
+
+      // @ts-ignore
+      mapViewRef.current?.animateToRegion(nextRegion, animationDuration);
+    },
+    [],
+  );
+
+  const centerOnCoordinate = useCallback(
+    async (
+      latitudeValue: number,
+      longitudeValue: number,
+      animationDuration: number = 500,
+    ) => {
+      if (IS_ANDROID_MAPLIBRE) {
+        androidCameraRef.current?.setCamera({
+          centerCoordinate: [longitudeValue, latitudeValue],
+          padding: DEFAULT_CAMERA_PADDING,
+          animationDuration,
+          animationMode: 'easeTo',
+        });
+        return;
+      }
+
+      if (mapViewRef.current) {
+        const currentCamera = await mapViewRef.current.getCamera();
+        mapViewRef.current.animateCamera({
+          ...currentCamera,
+          center: {
+            latitude: latitudeValue,
+            longitude: longitudeValue,
+          },
+        });
+      }
+    },
+    [],
+  );
 
   const drawMarkers = (data: any[]) => {
     let _geojsonMarkers: any[];
@@ -200,17 +292,44 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   }, [downloadLayerVisible, downloadSiteVisible]);
 
   useEffect(() => {
-    if (isConnected) {
-      fetch('https://maps.kartoza.com/geoserver/web/', {method: 'HEAD'})
-        .then(result => result.ok)
-        .then(ok => {
-          setRiverLayerAvailable(ok);
-        })
-        .catch(error => {
-          setRiverLayerAvailable(false);
-        });
+    let isActive = true;
+
+    if (!isConnected) {
+      setRiverLayerAvailable(false);
+      return () => {
+        isActive = false;
+      };
     }
+
+    probeOverlayTile(riverLayerMapLibre).then(isAvailable => {
+      if (isActive) {
+        setRiverLayerAvailable(isAvailable);
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, [isConnected]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!IS_ANDROID_MAPLIBRE) {
+        return undefined;
+      }
+
+      MapLibreGL.Logger.setLogCallback(log => {
+        if (isMapLibreSourceTimeout(log, 'river-layer')) {
+          setRiverLayerAvailable(false);
+          return true;
+        }
+
+        return false;
+      });
+
+      return undefined;
+    }, []),
+  );
 
   const getSites = useCallback(
     async (_latitude?: Number | undefined, _longitude?: Number | undefined) => {
@@ -263,6 +382,41 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     return allUnsyncedData;
   };
 
+  const isSiteIdMatch = (left: unknown, right: unknown) => {
+    if (typeof left === 'undefined' || typeof right === 'undefined') {
+      return false;
+    }
+    return String(left) === String(right);
+  };
+
+  const siteHasUnsyncedData = (siteId: unknown) => {
+    return unsyncedData.some((record: any) => {
+      if (isSiteIdMatch(record.id, siteId) && typeof record.latitude !== 'undefined') {
+        return true;
+      }
+      if (record.site && isSiteIdMatch(record.site.id, siteId)) {
+        return true;
+      }
+      if (isSiteIdMatch(record.siteId, siteId)) {
+        return true;
+      }
+      return false;
+    });
+  };
+
+  const getPointPinColor = (item: any) => {
+    if (item.properties?.key === selectedMarker?.properties?.key) {
+      return 'blue';
+    }
+    if (item.properties?.newData) {
+      return 'yellow';
+    }
+    if (siteHasUnsyncedData(item.properties?.key)) {
+      return 'red';
+    }
+    return 'gold';
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       const reloadMap = async () => {
@@ -288,16 +442,10 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         if (marker) {
           try {
             if (site.id === marker.id) {
-              if (mapViewRef.current) {
-                const currentCamera = await mapViewRef.current.getCamera();
-                mapViewRef.current.animateCamera({
-                  ...currentCamera,
-                  center: {
-                    latitude: site.latitude,
-                    longitude: site.longitude,
-                  },
-                });
-              }
+              await centerOnCoordinate(
+                parseFloat(site.latitude),
+                parseFloat(site.longitude),
+              );
               setSelectedSite(site);
               setSelectedMarker(marker);
               setShowBiodiversityModule(true);
@@ -309,7 +457,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         }
       }
     },
-    [isAddSite, sites, region],
+    [centerOnCoordinate, isAddSite, sites],
   );
 
   const deselectMarkers = () => {
@@ -317,10 +465,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setShowBiodiversityModule(false);
   };
 
-  const mapSelected = async (e: {nativeEvent: {coordinate: any}}) => {
+  const mapSelected = async (coordinate: {
+    latitude: number;
+    longitude: number;
+  }) => {
     if (isAddSite) {
       setNewSiteMarker({
-        coordinate: e.nativeEvent.coordinate,
+        coordinate,
       });
     }
     if (selectedMarker) {
@@ -332,45 +483,106 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setSearch(_search);
   };
 
-  // @ts-ignore
-  const watchLocation = useCallback(async () => {
-    await Geolocation.getCurrentPosition(
-      (position: {
-        coords: {
-          latitude: Number | undefined;
-          longitude: Number | undefined;
-        };
-      }) => {
-        if (mapViewRef && mapViewRef.current) {
-          setLatitude(position.coords.latitude);
-          setLongitude(position.coords.longitude);
+  const requestLocationPermission = useCallback(async () => {
+    try {
+      const result = await request(
+        Platform.OS === 'ios'
+          ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
+          : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+      );
+
+      return result === 'granted';
+    } catch (error) {
+      console.log('location permission error:', error);
+      return false;
+    }
+  }, []);
+
+  const watchLocation = useCallback(
+    async ({
+      showPermissionAlert = false,
+      showTimeoutAlert = false,
+    }: {
+      showPermissionAlert?: boolean;
+      showTimeoutAlert?: boolean;
+    } = {}) => {
+      await Geolocation.getCurrentPosition(
+        (position: {
+          coords: {
+            latitude: Number | undefined;
+            longitude: Number | undefined;
+          };
+        }) => {
+          const {latitude: posLat, longitude: posLon} = position.coords;
+          setLatitude(posLat);
+          setLongitude(posLon);
+          save('lastLocation', {latitude: posLat, longitude: posLon});
           if (
             sites.length === 0 &&
-            latitude !== position.coords.latitude &&
-            longitude !== position.coords.longitude &&
+            latitude !== posLat &&
+            longitude !== posLon &&
             !isFetchingSites
           ) {
-            getSites(position.coords.latitude, position.coords.longitude);
+            getSites(posLat, posLon);
           }
-          // @ts-ignore
-          mapViewRef.current.animateToRegion({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+          animateToRegionCompat({
+            latitude: posLat,
+            longitude: posLon,
             latitudeDelta: 0.25,
             longitudeDelta: 0.25,
           });
-        }
-      },
-      (error: {message: string}) => {
-        Alert.alert(
-          error.message,
-          'The app needs location permissions. ' +
-            'Please grant this permission to continue using this feature.',
-        );
-      },
-      {enableHighAccuracy: true, timeout: 1000},
-    );
-  }, [getSites]);
+        },
+        (error: {code?: number; message: string}) => {
+          console.log('watchLocation error:', error);
+
+          if (error.code === 1 && showPermissionAlert) {
+            Alert.alert(
+              'Location Permission Required',
+              'The app needs location permission to move to your current position.',
+            );
+            return;
+          }
+
+          if (error.code === 3 && showTimeoutAlert) {
+            Alert.alert(
+              'Location Request Timed Out',
+              'Unable to get your current location right now. Please try again.',
+            );
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+        },
+      );
+    },
+    [
+      animateToRegionCompat,
+      getSites,
+      isFetchingSites,
+      latitude,
+      longitude,
+      sites.length,
+    ],
+  );
+
+  const moveToCurrentLocation = useCallback(async () => {
+    const hasPermission = await requestLocationPermission();
+
+    if (!hasPermission) {
+      Alert.alert(
+        'Location Permission Required',
+        'Please allow location access, then tap the locate button again.',
+      );
+      return;
+    }
+
+    await watchLocation({
+      showPermissionAlert: true,
+      showTimeoutAlert: true,
+    });
+  }, [requestLocationPermission, watchLocation]);
 
   const zoomToSelected = useCallback((site: Site) => {
     if (!site) {
@@ -379,9 +591,14 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     setSelectedSite(site);
   }, []);
 
+  const remountMapPreservingRegion = useCallback((nextRegion?: Region) => {
+    pendingRegionRestoreRef.current = nextRegion || region;
+    setMapViewKey(Math.floor(Math.random() * 100));
+  }, [region]);
+
   const refreshMap = useCallback(
     async (shouldDeselectMarkers = false) => {
-      setMapViewKey(Math.floor(Math.random() * 100));
+      remountMapPreservingRegion();
       if (shouldDeselectMarkers) {
         setGeojsonMarkers([]);
         deselectMarkers();
@@ -396,7 +613,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         submitSearch();
       }
     },
-    [getSites, search],
+    [getSites, remountMapPreservingRegion, search],
   );
 
   const addSiteVisit = React.useMemo(
@@ -512,6 +729,26 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
 
   const fitMapToMarkers = () => {
     delay(300).then(() => {
+      if (IS_ANDROID_MAPLIBRE) {
+        if (!geojsonMarkers.length) {
+          return;
+        }
+
+        const coordinates = geojsonMarkers.map(
+          (marker: any) => marker.geometry.coordinates,
+        );
+        const longitudes = coordinates.map((coord: number[]) => coord[0]);
+        const latitudes = coordinates.map((coord: number[]) => coord[1]);
+
+        androidCameraRef.current?.fitBounds(
+          [Math.max(...longitudes), Math.max(...latitudes)],
+          [Math.min(...longitudes), Math.min(...latitudes)],
+          50,
+          500,
+        );
+        return;
+      }
+
       if (mapViewRef) {
         // @ts-ignore
         mapViewRef.current.fitToElements(true);
@@ -570,13 +807,13 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     if (_unsyncedData.length === 0) {
       return false;
     }
-    let syncResult = true;
+    let syncResult: SyncAttemptResult = {ok: true};
     for (let i = 0; i < _unsyncedData.length; i++) {
       setSyncMessage(`${i + 1} records of ${unsyncedData.length} are synced`);
       // Check if unsynced data is site visit or location site
       if (_unsyncedData[i].latitude) {
         syncResult = await postLocationSite(_unsyncedData[i]);
-        if (syncResult) {
+        if (syncResult.ok) {
           sitesUpdated = true;
         }
       } else if (_unsyncedData[i].taxonGroup) {
@@ -584,13 +821,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       } else {
         syncResult = await pushUnsyncedSassSiteVisit(_unsyncedData[i]);
       }
-      if (!syncResult) {
-        showError("One of the data can't be synchronized");
+      if (!syncResult.ok) {
+        showError(
+          syncResult.error?.debugMessage ||
+            "One of the data can't be synchronized",
+        );
 
         if (sitesUpdated) {
           await getSites();
         }
-        return unsyncedData;
+        return await getUnsyncedData();
       } else {
         unsyncedData[i].synced = true;
         setSyncProgress((i + 1) / unsyncedData.length);
@@ -650,13 +890,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
   );
 
   useEffect(() => {
-    if (mapViewRef && mapViewRef.current && region) {
-      // @ts-ignore
-      setTimeout(() => {
-        mapViewRef.current?.animateToRegion(region, 1000);
-      }, 500);
+    if (!pendingRegionRestoreRef.current) {
+      return;
     }
-  }, [mapViewKey]);
+    const regionToRestore = pendingRegionRestoreRef.current;
+    pendingRegionRestoreRef.current = null;
+    const timeoutId = setTimeout(() => {
+      animateToRegionCompat(regionToRestore);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [animateToRegionCompat, mapViewKey]);
 
   const navigateToUnsyncedList = () => {
     const currentRegion = region;
@@ -668,10 +911,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           setFormStatus('map');
         },
         syncRecord: async () => {
-          if (mapViewRef && mapViewRef.current && currentRegion) {
-            // @ts-ignore
-            mapViewRef.current.animateToRegion(currentRegion, 1000);
-          }
+          animateToRegionCompat(currentRegion);
           syncData(true);
         },
       },
@@ -817,7 +1057,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       return;
     }
 
-    if (force) {
+      if (force) {
       watchLocation();
     }
 
@@ -834,6 +1074,27 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       setIsSyncing(false);
     }
   };
+
+  const downloadRiverLayer = useCallback(async () => {
+    if (!(await checkConnection())) {
+      showError('No internet connection available, please try again later');
+      return;
+    }
+    setIsSyncing(true);
+    setSyncMessage('Downloading river layer...');
+    setSyncProgress(0);
+    try {
+      await downloadTiles(region, getZoomLevel(region.longitudeDelta));
+      setOfflineRiverAvailable(true);
+      Alert.alert('Download Complete', 'River layer is now available offline.');
+    } catch (error: any) {
+      showError('Failed to download river layer tiles.');
+    } finally {
+      setIsSyncing(false);
+      setSyncMessage('');
+      setSyncProgress(0);
+    }
+  }, [region]);
 
   useEffect(() => {
     // check first launch
@@ -867,24 +1128,25 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       if (!token) {
         signOut();
       }
+      setOfflineRiverAvailable(await hasOfflineRiverTiles());
+      const lastLocation = await load('lastLocation');
       if (isMounted) {
-        delay(500).then(() => {
-          try {
-            setIsLoading(false);
-            request(
-              Platform.OS === 'ios'
-                ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
-                : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-            ).then((res: string) => {
-              if (res === 'granted') {
-                watchLocation().catch(err => console.log(err));
-              } else {
-                // getSites()
-              }
+        delay(300).then(() => {
+          if (lastLocation?.latitude && lastLocation?.longitude) {
+            animateToRegionCompat({
+              latitude: lastLocation.latitude,
+              longitude: lastLocation.longitude,
+              latitudeDelta: 0.25,
+              longitudeDelta: 0.25,
             });
-          } catch (error) {
-            console.log('location set error:', error);
           }
+          delay(200).then(() => {
+            try {
+              setIsLoading(false);
+            } catch (error) {
+              console.log('location set error:', error);
+            }
+          });
         });
       }
     };
@@ -897,7 +1159,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       isMounted = false;
       unsubscribe();
     };
-  }, [props.navigation, watchLocation]);
+  }, [animateToRegionCompat, props.navigation]);
 
   const downloadMap = async () => {
     const currentRegion = region;
@@ -910,16 +1172,16 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
       return;
     }
     setIsLoading(true);
-    await downloadTiles(currentRegion, zoomLevel);
-    setMapViewKey(Math.floor(Math.random() * 100));
-    delay(500).then(() => {
-      if (mapViewRef && mapViewRef.current) {
-        // @ts-ignore
-        mapViewRef.current.animateToRegion(currentRegion, 1000);
-      }
+    try {
+      await downloadTiles(currentRegion, zoomLevel);
+      setOfflineRiverAvailable(true);
+      Alert.alert('Download Complete', 'River layer is now available offline.');
+    } catch (error: any) {
+      showError('Failed to download river layer tiles.');
+    } finally {
       setIsLoading(false);
       setDownloadLayerVisible(false);
-    });
+    }
   };
 
   const downloadSitesByExtent = async () => {
@@ -942,12 +1204,9 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     const maxLatitude = region.latitude + region.latitudeDelta / 2;
     const extent = `${minLongitude},${minLatitude},${maxLongitude},${maxLatitude}`;
     await fetchAndUpdateSites(0, 0, extent);
-    setMapViewKey(Math.floor(Math.random() * 100));
+    remountMapPreservingRegion(currentRegion);
     delay(500).then(() => {
-      if (mapViewRef && mapViewRef.current) {
-        // @ts-ignore
-        mapViewRef.current.animateToRegion(currentRegion, 1000);
-      }
+      animateToRegionCompat(currentRegion);
       setIsLoading(false);
       setDownloadSiteVisible(false);
     });
@@ -968,18 +1227,17 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
     ) => {
       if (point.properties?.getClusterExpansionRegion) {
         const toRegion = point.properties?.getClusterExpansionRegion();
-        //@ts-ignore
-        mapViewRef.current?.animateToRegion(toRegion, 500);
+        animateToRegionCompat(toRegion, 500);
       } else {
         const selected = geojsonMarkers.find((marker: any) => {
-          return marker.properties?.title + '' === point.properties?.title;
+          return marker.properties?.key === point.properties?.key;
         });
         if (selected) {
           markerSelected(selected);
         }
       }
     },
-    [geojsonMarkers, markerSelected],
+    [animateToRegionCompat, geojsonMarkers, markerSelected],
   );
 
   // @ts-ignore
@@ -1054,76 +1312,151 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         <View
           style={[
             styles.MAP_VIEW_CONTAINER,
-            downloadLayerVisible || downloadSiteVisible
-              ? styles.MAP_VIEW_DOWNLOAD_RIVER
-              : {},
+            downloadSiteVisible ? styles.MAP_VIEW_DOWNLOAD_RIVER : {},
           ]}>
-          <MapView
-            // @ts-ignore
-            key={mapViewKey}
-            provider={PROVIDER_DEFAULT}
-            ref={mapViewRef}
-            onRegionChangeComplete={onRegionChange}
-            style={[
-              styles.MAP,
-              Platform.OS === 'ios'
-                ? {
-                    height: Dimensions.get('window').height - insets.top - 140,
-                  }
-                : {},
-            ]}
-            loadingEnabled={true}
-            showsUserLocation={true}
-            mapType={'satellite'}
-            onPress={(e: {nativeEvent: {coordinate: any}}) => {
-              mapSelected(e).catch(error => console.log(error));
-            }}>
-            {!isConnected ? (
-              <LocalTile
-                pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
-                tileSize={256}
+          {IS_ANDROID_MAPLIBRE ? (
+            <MapLibreGL.MapView
+              key={mapViewKey}
+              ref={androidMapViewRef}
+              style={[
+                styles.MAP,
+                {
+                  height: Dimensions.get('window').height - insets.top - 120,
+                },
+              ]}
+              surfaceView={false}
+              mapStyle={baseMapStyleUrl}
+              logoEnabled={false}
+              onPress={(event: MapLibreGL.OnPressEvent) => {
+                mapSelected(event.coordinates).catch(error => console.log(error));
+              }}
+              onRegionDidChange={feature => {
+                setRegion(
+                  regionFromVisibleBounds(feature.properties.visibleBounds),
+                );
+              }}>
+              <MapLibreGL.Camera
+                ref={androidCameraRef}
+                defaultSettings={{
+                  centerCoordinate: [initialRegion.longitude, initialRegion.latitude],
+                  zoomLevel: getZoomLevel(initialRegion.longitudeDelta),
+                }}
               />
-            ) : riverLayerAvailable ? (
-              <WMSTile urlTemplate={riverLayer} zIndex={99} tileSize={256} />
-            ) : (
-              <LocalTile
-                pathTemplate={`${RNFS.DocumentDirectoryPath}/rivers/{z}/{x}/{y}.png`}
-                tileSize={256}
+              <MapLibreGL.UserLocation
+                visible={true}
+                renderMode="native"
+                androidRenderMode="normal"
               />
-            )}
-            {points.map((item: any) => {
-              return (
-                <Point
-                  key={
-                    item.properties?.key ??
-                    `point-${item.properties?.cluster_id}`
-                  }
-                  item={item}
-                  pinColor={
-                    item.properties?.key === selectedMarker?.properties?.key
-                      ? 'blue'
-                      : item.properties?.newData
-                      ? 'yellow'
-                      : typeof item.properties?.synced !== 'undefined'
-                      ? item.properties?.synced
-                        ? 'gold'
-                        : 'red'
-                      : 'gold'
-                  }
-                  onPress={_handlePointPress}
-                  isAddSite={isAddSite}
+              {(isConnected && riverLayerAvailable) ||
+              (!isConnected && offlineRiverAvailable) ? (
+                <MapLibreGL.RasterSource
+                  id="river-layer"
+                  tileSize={256}
+                  tileUrlTemplates={[
+                    isConnected ? riverLayerMapLibre : localRiverTileUrl,
+                  ]}>
+                  <MapLibreGL.RasterLayer id="river-layer-raster" />
+                </MapLibreGL.RasterSource>
+              ) : null}
+              {points.map((item: any) => {
+                return (
+                  <Point
+                    key={
+                      item.properties?.key ??
+                      `point-${item.properties?.cluster_id}`
+                    }
+                    item={item}
+                    pinColor={getPointPinColor(item)}
+                    onPress={_handlePointPress}
+                    isAddSite={isAddSite}
+                    useMapLibre={true}
+                  />
+                );
+              })}
+              {newSiteMarker ? (
+                <MapLibreGL.MarkerView
+                  coordinate={[
+                    newSiteMarker.coordinate.longitude,
+                    newSiteMarker.coordinate.latitude,
+                  ]}
+                  anchor={{x: 0.5, y: 0.5}}>
+                  <View
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      backgroundColor: 'orange',
+                      borderWidth: 2,
+                      borderColor: '#fff',
+                    }}
+                  />
+                </MapLibreGL.MarkerView>
+              ) : null}
+            </MapLibreGL.MapView>
+          ) : (
+            <MapView
+              // @ts-ignore
+              key={mapViewKey}
+              provider={MAP_PROVIDER}
+              ref={mapViewRef}
+              onRegionChangeComplete={onRegionChange}
+              style={[
+                styles.MAP,
+                Platform.OS === 'ios'
+                  ? {
+                      height: Dimensions.get('window').height - insets.top - 140,
+                    }
+                  : {},
+              ]}
+              loadingEnabled={true}
+              showsUserLocation={true}
+              mapType={baseMapLayer ? 'none' : 'satellite'}
+              onPress={(e: {nativeEvent: {coordinate: any}}) => {
+                mapSelected(e.nativeEvent.coordinate).catch(error =>
+                  console.log(error),
+                );
+              }}>
+              {isConnected && baseMapLayer ? (
+                <UrlTile
+                  urlTemplate={baseMapLayer}
+                  zIndex={0}
+                  tileSize={256}
+                  shouldReplaceMapContent={true}
                 />
-              );
-            })}
-            {newSiteMarker ? (
-              <Marker
-                key={'newRecord'}
-                coordinate={newSiteMarker.coordinate}
-                title={'New Record'}
-                pinColor={'orange'}
-              />
-            ) : null}
-          </MapView>
+              ) : null}
+              {isConnected && riverLayerAvailable ? (
+                <WMSTile urlTemplate={riverLayer} zIndex={99} tileSize={256} />
+              ) : offlineRiverAvailable ? (
+                <UrlTile
+                  urlTemplate={localRiverTileUrl}
+                  zIndex={99}
+                  tileSize={256}
+                />
+              ) : null}
+              {points.map((item: any) => {
+                return (
+                  <Point
+                    key={
+                      item.properties?.key ??
+                      `point-${item.properties?.cluster_id}`
+                    }
+                    item={item}
+                    pinColor={getPointPinColor(item)}
+                    onPress={_handlePointPress}
+                    isAddSite={isAddSite}
+                  />
+                );
+              })}
+              {newSiteMarker ? (
+                <Marker
+                  key={'newRecord'}
+                  coordinate={newSiteMarker.coordinate}
+                  title={'New Record'}
+                  pinColor={'orange'}
+                />
+              ) : null}
+            </MapView>
+          )}
         </View>
 
         <Modal
@@ -1148,9 +1481,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
         <View
           style={[
             styles.TOP_LEFT_CONTAINER,
-            Platform.OS === 'ios'
-              ? {marginTop: insets.top + 70}
-              : {marginTop: 70},
+            {marginTop: insets.top + 72},
           ]}>
           <Icon
             solid
@@ -1511,7 +1842,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
           </>
         ) : null}
 
-        <View style={styles.BOTTOM_VIEW}>
+        <View style={[styles.BOTTOM_VIEW, {paddingBottom: insets.bottom, height: 60 + insets.bottom}]}>
           <Button
             icon={
               <View
@@ -1559,7 +1890,7 @@ export const MapScreen: React.FunctionComponent<MapScreenProps> = props => {
             buttonStyle={styles.LOCATE_ME_BUTTON}
             containerStyle={styles.LOCATE_ME_CONTAINER}
             onPress={() => {
-              watchLocation().catch(error => console.log(error));
+              moveToCurrentLocation().catch(error => console.log(error));
             }}
           />
           <Button

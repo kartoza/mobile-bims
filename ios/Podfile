@@ -31,6 +31,7 @@ target 'FBIS' do
 
   post_install do |installer|
     react_native_post_install(installer)
+    $MLRN.post_install(installer) if defined?($MLRN) && $MLRN.respond_to?(:post_install)
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
   end
 end
